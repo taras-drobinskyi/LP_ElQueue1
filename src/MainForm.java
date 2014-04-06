@@ -259,7 +259,8 @@ public class MainForm extends  JFrame {
         labelText = l_client3.getText();
         stringWidth = l_client3.getFontMetrics(l_client3.getFont()).stringWidth(labelText);
         w_loc = (w_percent * 25) - (stringWidth / 2);
-        h_loc = l_client2.getLocation().y + l_client2.getHeight() + h_percent * 6;
+        //h_loc = l_client2.getLocation().y + l_client2.getHeight() + h_percent * 6;
+        h_loc = l_client4.getLocation().y - (h_percent * 2) - l_client3.getHeight();
         l_client3.setLocation(w_loc, h_loc);
         l_client3.setSize(stringWidth, dataHeight - h_percent * 3);
 
@@ -272,7 +273,8 @@ public class MainForm extends  JFrame {
         labelText = l_client4.getText();
         stringWidth = l_client4.getFontMetrics(l_client4.getFont()).stringWidth(labelText);
         w_loc = (w_percent * 25) - (stringWidth / 2);
-        h_loc = l_client3.getLocation().y + l_client3.getHeight() + h_percent * 2;
+        //h_loc = l_client3.getLocation().y + l_client3.getHeight() + h_percent * 2;
+        h_loc = formHeight - l_client4.getHeight() - h_percent;
         l_client4.setLocation(w_loc, h_loc);
         l_client4.setSize(stringWidth, dataHeight - h_percent * 3);
 
