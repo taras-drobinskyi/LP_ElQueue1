@@ -345,47 +345,19 @@ public class MainForm extends  JFrame {
         }
     }
 
-    private File getFileFromResource(String resourcePath){
-        File file = null;
-        String resource = resourcePath;
-        URL res = getClass().getResource(resource);
-        if (res.toString().startsWith("jar:")) {
-            try {
-                InputStream input = getClass().getResourceAsStream(resource);
-                file = File.createTempFile("tempfile", ".tmp");
-                OutputStream out = new FileOutputStream(file);
-                int read;
-                byte[] bytes = new byte[1024];
-
-                while ((read = input.read(bytes)) != -1) {
-                    out.write(bytes, 0, read);
-                }
-                file.deleteOnExit();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        } else {
-            //this will probably work in your IDE, but not from a JAR
-            file = new File(res.getFile());
-        }
-
-        if (file != null && !file.exists()) {
-            throw new RuntimeException("Error: File " + file + " not found!");
-        }
-        return file;
-    }
-
     //This method plays back audio data from an
     // audio file whose name is specified in the
     // text field.
     private void playAudio() {
         if (playbackFinished) {
             try {
+                ResourceFile rf = new ResourceFile("/resources/notify.wav");
+                File soundFile = rf.getFile();
                 //URL myURL = ClassLoader.getSystemResource("resources/notify.wav");
                 //System.out.println(myURL);
                 //File soundFile = new File(myURL.getPath());
                 //audioInputStream = AudioSystem.getAudioInputStream(soundFile);
-                audioInputStream = AudioSystem.getAudioInputStream(getFileFromResource("/resources/notify.wav"));
+                audioInputStream = AudioSystem.getAudioInputStream(soundFile);
                 audioFormat = audioInputStream.getFormat();
                 System.out.println(audioFormat);
 
