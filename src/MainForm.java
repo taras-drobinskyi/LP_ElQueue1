@@ -1,10 +1,7 @@
-import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Line2D;
-import java.io.*;
-import java.net.URL;
 
 /**
  * Created by forando on 06.04.14.
@@ -18,11 +15,7 @@ public class MainForm extends  JFrame {
     int client4 = 0;
     Timer timerClient1;
     Timer timerClient2;
-    AudioFormat audioFormat;
-    AudioInputStream audioInputStream;
-    SourceDataLine sourceDataLine;
-    boolean stopPlayback = false;
-    boolean playbackFinished = true;
+    Audio notificationSound;
     private JPanel rootPanel;
     private JLabel l_clientTitle;
     private JLabel l_terminal1;
@@ -69,6 +62,7 @@ public class MainForm extends  JFrame {
         timerClient2 = new Timer(BLINKING_RATE, new TimerListener_Client(l_client2, 2));
         timerClient2.setInitialDelay(0);
         printer = new POS_PRINTER();
+        notificationSound = new Audio("/resources/notify.wav");
 
         addComponentListener(new ComponentListener(
 
@@ -115,7 +109,7 @@ public class MainForm extends  JFrame {
                             reasignClients34();
                             relocateMyComponents();
                             timerClient1.start();
-                            playAudio();
+                            notificationSound.Play();
                         }
                         break;
                     case 113: //terminal2 Button Pressed
@@ -124,7 +118,7 @@ public class MainForm extends  JFrame {
                             reasignClients34();
                             relocateMyComponents();
                             timerClient2.start();
-                            playAudio();
+                            notificationSound.Play();
                         }
                         break;
                     case 36://signal to print a ticket
@@ -345,47 +339,6 @@ public class MainForm extends  JFrame {
         }
     }
 
-    //This method plays back audio data from an
-    // audio file whose name is specified in the
-    // text field.
-    private void playAudio() {
-        if (playbackFinished) {
-            try {
-                ResourceFile rf = new ResourceFile("/resources/notify.wav");
-                File soundFile = rf.getFile();
-                //URL myURL = ClassLoader.getSystemResource("resources/notify.wav");
-                //System.out.println(myURL);
-                //File soundFile = new File(myURL.getPath());
-                //audioInputStream = AudioSystem.getAudioInputStream(soundFile);
-                audioInputStream = AudioSystem.getAudioInputStream(soundFile);
-                audioFormat = audioInputStream.getFormat();
-                System.out.println(audioFormat);
-
-                DataLine.Info dataLineInfo =
-                        new DataLine.Info(
-                                SourceDataLine.class,
-                                audioFormat);
-
-                sourceDataLine =
-                        (SourceDataLine) AudioSystem.getLine(
-                                dataLineInfo);
-
-                //Create a thread to play back the data and
-                // start it running.  It will run until the
-                // end of file, or the Stop button is
-                // clicked, whichever occurs first.
-                // Because of the data buffers involved,
-                // there will normally be a delay between
-                // the click on the Stop button and the
-                // actual termination of playback.
-                new PlayThread().start();
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.exit(0);
-            }//end catch
-        }
-    }//end playAudio
-
     private class TimerListener_Client implements ActionListener {
         private final static int maxBlinking = 4;
         private JLabel _label;
@@ -428,54 +381,4 @@ public class MainForm extends  JFrame {
 
         }
     }
-
-    //=============================================//
-//Inner class to play back the data from the
-// audio file.
-    class PlayThread extends Thread {
-        byte tempBuffer[] = new byte[10000];
-        int readFromInputStream;
-
-
-        public void run() {
-            playbackFinished = false;
-            try {
-                sourceDataLine.open(audioFormat);
-                sourceDataLine.start();
-
-                //Keep looping until the input read method
-                // returns -1 for empty stream or the
-                // user clicks the Stop button causing
-                // stopPlayback to switch from false to
-                // true.
-                while ((readFromInputStream = audioInputStream.read(
-                        tempBuffer, 0, tempBuffer.length)) != -1
-                        && !stopPlayback) {
-                    if (readFromInputStream > 0) {
-                        //Write data to the internal buffer of
-                        // the data line where it will be
-                        // delivered to the speaker.
-                        sourceDataLine.write(
-                                tempBuffer, 0, readFromInputStream);
-                    }//end if
-                }//end while
-                //Block and wait for internal buffer of the
-                // data line to empty.
-                sourceDataLine.drain();
-                sourceDataLine.close();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.exit(0);
-            }//end catch
-
-            playbackFinished = true;
-
-            //Prepare to playback another file
-            // stopBtn.setEnabled(false);
-            //playBtn.setEnabled(true);
-            stopPlayback = false;
-        }//end run
-    }//end inner class PlayThread
-//===================================//
 }
