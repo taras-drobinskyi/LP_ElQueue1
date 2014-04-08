@@ -3,7 +3,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Line2D;
-import java.io.File;
+import java.io.*;
 import java.net.URL;
 
 /**
@@ -49,7 +49,7 @@ public class MainForm extends  JFrame {
     POS_PRINTER printer;
 
     public MainForm(){
-        super("Hello World");
+        super("Продукт Компании \"ВЕРСИЯ\"");
 
         setContentPane(rootPanel);
         setUndecorated(true);
@@ -64,9 +64,9 @@ public class MainForm extends  JFrame {
 
         rootPanel.setLayout(null);
 
-        timerClient1 = new Timer(BLINKING_RATE, new TimerListener_Client1(l_client1, 1));
+        timerClient1 = new Timer(BLINKING_RATE, new TimerListener_Client(l_client1, 1));
         timerClient1.setInitialDelay(0);
-        timerClient2 = new Timer(BLINKING_RATE, new TimerListener_Client1(l_client2, 2));
+        timerClient2 = new Timer(BLINKING_RATE, new TimerListener_Client(l_client2, 2));
         timerClient2.setInitialDelay(0);
         printer = new POS_PRINTER();
 
@@ -157,7 +157,7 @@ public class MainForm extends  JFrame {
     public void paint(Graphics g) {
         super.paint(g);  // fixes the immediate problem.
         Graphics2D g2 = (Graphics2D) g;
-        g2.setColor(Color.blue);
+        g2.setColor(Color.white);
         g2.setRenderingHint(
                 RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
@@ -260,7 +260,7 @@ public class MainForm extends  JFrame {
         stringWidth = l_client3.getFontMetrics(l_client3.getFont()).stringWidth(labelText);
         w_loc = (w_percent * 25) - (stringWidth / 2);
         //h_loc = l_client2.getLocation().y + l_client2.getHeight() + h_percent * 6;
-        h_loc = l_client4.getLocation().y - (h_percent * 2) - l_client3.getHeight();
+        h_loc = l_client4.getLocation().y - l_client3.getHeight();
         l_client3.setLocation(w_loc, h_loc);
         l_client3.setSize(stringWidth, dataHeight - h_percent * 3);
 
@@ -312,8 +312,8 @@ public class MainForm extends  JFrame {
     }
 
     private void redrawLines() {
-        int left = w_percent * 3;
-        int right = w_percent * 100;
+        int left = 0;
+        int right = formWidth;
 
         int correction = 40;
 
@@ -345,17 +345,47 @@ public class MainForm extends  JFrame {
         }
     }
 
+    private File getFileFromResource(String resourcePath){
+        File file = null;
+        String resource = resourcePath;
+        URL res = getClass().getResource(resource);
+        if (res.toString().startsWith("jar:")) {
+            try {
+                InputStream input = getClass().getResourceAsStream(resource);
+                file = File.createTempFile("tempfile", ".tmp");
+                OutputStream out = new FileOutputStream(file);
+                int read;
+                byte[] bytes = new byte[1024];
+
+                while ((read = input.read(bytes)) != -1) {
+                    out.write(bytes, 0, read);
+                }
+                file.deleteOnExit();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        } else {
+            //this will probably work in your IDE, but not from a JAR
+            file = new File(res.getFile());
+        }
+
+        if (file != null && !file.exists()) {
+            throw new RuntimeException("Error: File " + file + " not found!");
+        }
+        return file;
+    }
+
     //This method plays back audio data from an
     // audio file whose name is specified in the
     // text field.
     private void playAudio() {
         if (playbackFinished) {
             try {
-                URL myURL = ClassLoader.getSystemResource("resources/notify.wav");
-                File soundFile =
-                        new File(myURL.getPath());
-                audioInputStream = AudioSystem.
-                        getAudioInputStream(soundFile);
+                //URL myURL = ClassLoader.getSystemResource("resources/notify.wav");
+                //System.out.println(myURL);
+                //File soundFile = new File(myURL.getPath());
+                //audioInputStream = AudioSystem.getAudioInputStream(soundFile);
+                audioInputStream = AudioSystem.getAudioInputStream(getFileFromResource("/resources/notify.wav"));
                 audioFormat = audioInputStream.getFormat();
                 System.out.println(audioFormat);
 
@@ -384,7 +414,7 @@ public class MainForm extends  JFrame {
         }
     }//end playAudio
 
-    private class TimerListener_Client1 implements ActionListener {
+    private class TimerListener_Client implements ActionListener {
         private final static int maxBlinking = 4;
         private JLabel _label;
         private Color bg;
@@ -393,7 +423,7 @@ public class MainForm extends  JFrame {
         private int alreadyBlinked = 0;
         private int _timerClientNumber;
 
-        public TimerListener_Client1(JLabel label, int timerClientNumber) {
+        public TimerListener_Client(JLabel label, int timerClientNumber) {
             this._label = label;
             fg = label.getForeground();
             bg = label.getBackground();

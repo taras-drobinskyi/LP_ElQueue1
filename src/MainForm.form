@@ -4,66 +4,81 @@
     <constraints>
       <xy x="20" y="20" width="500" height="400"/>
     </constraints>
-    <properties/>
+    <properties>
+      <background color="-6750055"/>
+      <preferredSize width="600" height="400"/>
+    </properties>
     <border type="none"/>
     <children>
       <component id="396fc" class="javax.swing.JLabel" binding="l_clientTitle">
         <constraints/>
         <properties>
+          <foreground color="-1"/>
           <text value="Клиент"/>
         </properties>
       </component>
       <component id="7f8ad" class="javax.swing.JLabel" binding="l_terminal1">
         <constraints/>
         <properties>
+          <foreground color="-1"/>
           <text value="1"/>
         </properties>
       </component>
       <component id="8e23c" class="javax.swing.JLabel" binding="l_terminal2">
         <constraints/>
         <properties>
+          <foreground color="-1"/>
           <text value="2"/>
         </properties>
       </component>
       <component id="32e29" class="javax.swing.JLabel" binding="l_terminalTitle">
         <constraints/>
         <properties>
+          <foreground color="-1"/>
           <text value="№ Кассы"/>
         </properties>
       </component>
       <component id="213b5" class="javax.swing.JLabel" binding="l_client1">
         <constraints/>
         <properties>
+          <background color="-6750055"/>
+          <foreground color="-256"/>
           <text value="001"/>
         </properties>
       </component>
       <component id="ebea7" class="javax.swing.JLabel" binding="l_client2">
         <constraints/>
         <properties>
+          <background color="-6750055"/>
+          <foreground color="-256"/>
           <text value="002"/>
         </properties>
       </component>
       <component id="1c33c" class="javax.swing.JLabel" binding="l_client3">
         <constraints/>
         <properties>
+          <foreground color="-1"/>
           <text value="003"/>
         </properties>
       </component>
       <component id="f80e8" class="javax.swing.JLabel" binding="l_client4">
         <constraints/>
         <properties>
+          <foreground color="-1"/>
           <text value="004"/>
         </properties>
       </component>
       <component id="b18a4" class="javax.swing.JLabel" binding="l_totalTitle">
         <constraints/>
         <properties>
+          <foreground color="-1"/>
           <text value="ВСЕГО:"/>
         </properties>
       </component>
       <component id="a9498" class="javax.swing.JLabel" binding="l_total">
         <constraints/>
         <properties>
+          <foreground color="-1"/>
           <text value="100"/>
         </properties>
       </component>
