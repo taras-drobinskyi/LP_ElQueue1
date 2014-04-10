@@ -12,19 +12,19 @@ import java.net.URL;
 
 public class ResourceFile {
     File file = null;
-    String resource = null;
+    String path = null;
     URL res = null;
 
-    public ResourceFile(String resource) {
-        this.resource = resource;
-        res = getClass().getResource(this.resource);
+    public ResourceFile(String path) {
+        this.path = path;
+        res = getClass().getResource(this.path);
     }
 
     public File getFile(){
         if (res == null) return null;
         if (res.toString().startsWith("jar:")) {
             try {
-                InputStream input = getClass().getResourceAsStream(resource);
+                InputStream input = getClass().getResourceAsStream(path);
                 file = File.createTempFile("tempfile", ".tmp");
                 OutputStream out = new FileOutputStream(file);
                 int read;

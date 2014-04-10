@@ -18,7 +18,7 @@ public class POS_PRINTER {
         cutP = new String(new char[]{0x1d,'V',1});
         newLine = new String(new char[]{0x0a, 0x0a, 0x0a, 0x0a});
         alignCenter = new String(new char[]{0x1b, 'a', 1});
-        setSize = new String(new char[]{0x1d, '!', 51});
+        setSize = new String(new char[]{0x1d, '!', 68});
         setUpsideDown = new String(new char[]{0x1b,'{', 1});
 
     }

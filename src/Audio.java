@@ -35,11 +35,11 @@ public class Audio {
                 System.out.println(audioFormat);
                 dataLineInfo =new DataLine.Info(SourceDataLine.class,audioFormat);
                 sourceDataLine =(SourceDataLine) AudioSystem.getLine(dataLineInfo);
-                //Create a thread to Play back the data and
+                //Create a thread to Play back the variables and
                 // start it running.  It will run until the
                 // end of file, or the Stop button is
                 // clicked, whichever occurs first.
-                // Because of the data buffers involved,
+                // Because of the variables buffers involved,
                 // there will normally be a delay between
                 // the click on the Stop button and the
                 // actual termination of playback.
@@ -51,7 +51,7 @@ public class Audio {
         }
     }
 
-    //Inner class to Play back the data from the
+    //Inner class to Play back the variables from the
 // notificationSound file.
     class PlayThread extends Thread {
         byte tempBuffer[] = new byte[10000];
@@ -73,15 +73,15 @@ public class Audio {
                         tempBuffer, 0, tempBuffer.length)) != -1
                         && !stopPlayback) {
                     if (readFromInputStream > 0) {
-                        //Write data to the internal buffer of
-                        // the data line where it will be
+                        //Write variables to the internal buffer of
+                        // the variables line where it will be
                         // delivered to the speaker.
                         sourceDataLine.write(
                                 tempBuffer, 0, readFromInputStream);
                     }//end if
                 }//end while
                 //Block and wait for internal buffer of the
-                // data line to empty.
+                // variables line to empty.
                 sourceDataLine.drain();
                 sourceDataLine.close();
 

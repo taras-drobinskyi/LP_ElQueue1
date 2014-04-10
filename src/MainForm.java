@@ -9,13 +9,19 @@ import java.awt.geom.Line2D;
 public class MainForm extends  JFrame {
     private static final int BLINKING_RATE = 500;
     int total = 0;
+    int lastClient = 0;
+    int nextClient = 0;
     int client1 = 0;
     int client2 = 0;
     int client3 = 0;
     int client4 = 0;
+    int buttonClicked = 0;
+    int ticketsPrinted = 0;
     Timer timerClient1;
     Timer timerClient2;
     Audio notificationSound;
+    POS_PRINTER printer;
+    XMLVARIABLES variables;
     private JPanel rootPanel;
     private JLabel l_clientTitle;
     private JLabel l_terminal1;
@@ -39,7 +45,6 @@ public class MainForm extends  JFrame {
     private Point hor_line3_p2 = new Point(200, 200);
     private Point ver_line1_p1 = new Point(100, 100);
     private Point ver_line1_p2 = new Point(200, 200);
-    POS_PRINTER printer;
 
     public MainForm(){
         super("Продукт Компании \"ВЕРСИЯ\"");
@@ -63,6 +68,21 @@ public class MainForm extends  JFrame {
         timerClient2.setInitialDelay(0);
         printer = new POS_PRINTER();
         notificationSound = new Audio("/resources/notify.wav");
+        variables = new XMLVARIABLES(APP.VARIABLES_PATH);
+
+        //init variables:
+        lastClient = variables.getLastClient();
+        total = lastClient + 1;
+        client1 = variables.getClientAsigned(1);
+        client2 = variables.getClientAsigned(2);
+        buttonClicked = variables.getButtonClicked();
+        ticketsPrinted = variables.getTicketsPrinted();
+        nextClient = variables.getNextClient();
+
+        client3 = nextClient;
+        if (client3>0){
+            client4 = client3 + 1;
+        }
 
         addComponentListener(new ComponentListener(
 
@@ -74,6 +94,7 @@ public class MainForm extends  JFrame {
                 formHeight = (int) r.getHeight();
                 w_percent = formWidth / 100;
                 h_percent = formHeight / 100;
+
                 relocateMyComponents();
             }
 
@@ -105,30 +126,53 @@ public class MainForm extends  JFrame {
                 switch (e.getKeyCode()) {
                     case 112: //terminal1 Button Pressed
                         if (client3 > 0) {
-                            client1 = client3;
+                            variables.setClientAsigned(1, variables.getNextClient());
+                            client1 = variables.getClientAsigned(1);
                             reasignClients34();
                             relocateMyComponents();
                             timerClient1.start();
                             notificationSound.Play();
                         }
+                        buttonClicked++;
+                        variables.setButtonClicked(buttonClicked);
                         break;
                     case 113: //terminal2 Button Pressed
                         if (client3 > 0) {
-                            client2 = client3;
+                            variables.setClientAsigned(2, variables.getNextClient());
+                            client2 = variables.getClientAsigned(2);
                             reasignClients34();
                             relocateMyComponents();
                             timerClient2.start();
                             notificationSound.Play();
                         }
+                        buttonClicked++;
+                        variables.setButtonClicked(buttonClicked);
+                        break;
+                    case 114: //terminal2 Button Pressed
+                        //reserve
+                        break;
+                    case 115: //terminal2 Button Pressed
+                        //reserve
+                        break;
+                    case 116: //Printer ERROR ON
+                        //reserve
+                        break;
+                    case 117: //Printer ERROR OFF
+                        //reserve
                         break;
                     case 36://signal to print a ticket
                         total++;
+                        variables.setLastClient(total - 1);
+                        lastClient = variables.getLastClient();
+                        ticketsPrinted ++;
+                        variables.setTicketsPrinted(ticketsPrinted);
 
                         printer.Print(total);
                         if (client3 == 0) {
-                            client3 = total;
+                            variables.setNextClient(variables.getLastClient());
+                            client3 = variables.getNextClient();
                         } else if (client3 > 0 && client4 == 0) {
-                            client4 = total;
+                            client4 = variables.getLastClient();
                         }
                         relocateMyComponents();
                         break;
@@ -288,7 +332,7 @@ public class MainForm extends  JFrame {
         l_totalTitle.setLocation(w_loc, h_loc);
         l_totalTitle.setSize(totalTitle_stringWidth, totalDataHeight - h_percent * 2);
 
-        l_total.setText(String.valueOf(total));
+        l_total.setText(String.valueOf(lastClient));
         l_total.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
         labelText = l_total.getText();
         stringWidth = l_total.getFontMetrics(l_total.getFont()).stringWidth(labelText);
@@ -298,7 +342,7 @@ public class MainForm extends  JFrame {
         l_total.setLocation(w_loc, h_loc);
         l_total.setSize(stringWidth, totalDataHeight - h_percent * 2);
 
-        if (total == 0) {
+        if (lastClient <= 0) {
             l_total.setText("");
         }
 
@@ -328,14 +372,16 @@ public class MainForm extends  JFrame {
 
     private void reasignClients34() {
         if (client4 > 0) {
-            client3 = client4;
-            if (client4 < total) {
+            variables.setNextClient(client4);
+            client3 = variables.getNextClient();
+            if (client4 < lastClient) {
                 client4++;
             } else {
                 client4 = 0;
             }
         } else {
-            client3 = 0;
+            variables.setNextClient(0);
+            client3 = variables.getNextClient();
         }
     }
 
