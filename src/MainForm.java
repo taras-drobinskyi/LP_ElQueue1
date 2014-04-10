@@ -8,6 +8,7 @@ import java.awt.geom.Line2D;
  */
 public class MainForm extends  JFrame {
     private static final int BLINKING_RATE = 500;
+    boolean PRINTER_ERROR = false;
     int total = 0;
     int lastClient = 0;
     int nextClient = 0;
@@ -19,6 +20,7 @@ public class MainForm extends  JFrame {
     int ticketsPrinted = 0;
     Timer timerClient1;
     Timer timerClient2;
+    Timer timerError;
     Audio notificationSound;
     POS_PRINTER printer;
     XMLVARIABLES variables;
@@ -62,17 +64,18 @@ public class MainForm extends  JFrame {
 
         rootPanel.setLayout(null);
 
-        timerClient1 = new Timer(BLINKING_RATE, new TimerListener_Client(l_client1, 1));
+        timerClient1 = new Timer(BLINKING_RATE, new TimerListener(l_client1, 1));
         timerClient1.setInitialDelay(0);
-        timerClient2 = new Timer(BLINKING_RATE, new TimerListener_Client(l_client2, 2));
+        timerClient2 = new Timer(BLINKING_RATE, new TimerListener(l_client2, 2));
         timerClient2.setInitialDelay(0);
+        timerError = new Timer(BLINKING_RATE, new TimerListener(l_totalTitle, 3));
+        timerError.setInitialDelay(0);
         printer = new POS_PRINTER();
         notificationSound = new Audio("/resources/notify.wav");
         variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
         //init variables:
         lastClient = variables.getLastClient();
-        total = lastClient + 1;
         client1 = variables.getClientAsigned(1);
         client2 = variables.getClientAsigned(2);
         buttonClicked = variables.getButtonClicked();
@@ -81,7 +84,11 @@ public class MainForm extends  JFrame {
 
         client3 = nextClient;
         if (client3>0){
-            client4 = client3 + 1;
+            if (client3 < lastClient) {
+                client4 = client3 + 1;
+            } else {
+                client4 = 0;
+            }
         }
 
         addComponentListener(new ComponentListener(
@@ -155,26 +162,38 @@ public class MainForm extends  JFrame {
                         //reserve
                         break;
                     case 116: //Printer ERROR ON
-                        //reserve
+                        PRINTER_ERROR = true;
+                        ticketsPrinted = 0;
+                        variables.setTicketsPrinted(ticketsPrinted);
+                        relocateMyComponents();
+                        timerError.start();
+                        notificationSound.Play();
                         break;
                     case 117: //Printer ERROR OFF
-                        //reserve
+                        PRINTER_ERROR = false;
+                        printer.Print(total);
                         break;
                     case 36://signal to print a ticket
-                        total++;
-                        variables.setLastClient(total - 1);
-                        lastClient = variables.getLastClient();
-                        ticketsPrinted ++;
-                        variables.setTicketsPrinted(ticketsPrinted);
-
-                        printer.Print(total);
-                        if (client3 == 0) {
-                            variables.setNextClient(variables.getLastClient());
-                            client3 = variables.getNextClient();
-                        } else if (client3 > 0 && client4 == 0) {
-                            client4 = variables.getLastClient();
+                        if (!PRINTER_ERROR) {
+                            if (total == 0) {
+                                total = lastClient + 1;
+                            } else {
+                                total++;
+                                variables.setLastClient(total - 1);
+                                lastClient = variables.getLastClient();
+                                if (client3 == 0) {
+                                    variables.setNextClient(variables.getLastClient());
+                                    nextClient = variables.getNextClient();
+                                    client3 = nextClient;
+                                } else if (client3 > 0 && client4 == 0) {
+                                    client4 = variables.getLastClient();
+                                }
+                                relocateMyComponents();
+                            }
+                            printer.Print(total);
+                            ticketsPrinted++;
+                            variables.setTicketsPrinted(ticketsPrinted);
                         }
-                        relocateMyComponents();
                         break;
                     default:
                         break;
@@ -324,15 +343,31 @@ public class MainForm extends  JFrame {
         //=====================TOTAL DATA ========================================
 
 
+        if (PRINTER_ERROR){
+            l_totalTitle.setText("ВСТАВЬТЕ БУМАГУ!");
+        }else {
+            l_totalTitle.setText("ВСЕГО:");
+        }
         l_totalTitle.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
         labelText = l_totalTitle.getText();
         int totalTitle_stringWidth = l_totalTitle.getFontMetrics(l_totalTitle.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 60) - (stringWidth / 2);
-        h_loc = h_percent * 85;
+        if (PRINTER_ERROR){
+            w_loc = formWidth - totalTitle_stringWidth;
+            h_loc = h_percent * 85;
+        }else {
+            w_loc = (w_percent * 60) - (stringWidth / 2);
+            h_loc = h_percent * 85;
+        }
         l_totalTitle.setLocation(w_loc, h_loc);
         l_totalTitle.setSize(totalTitle_stringWidth, totalDataHeight - h_percent * 2);
 
-        l_total.setText(String.valueOf(lastClient));
+        int restOfClients;
+        if (nextClient > 0){
+            restOfClients = lastClient - nextClient +1;
+        }else{
+            restOfClients = 0;
+        }
+        l_total.setText(String.valueOf(restOfClients));
         l_total.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
         labelText = l_total.getText();
         stringWidth = l_total.getFontMetrics(l_total.getFont()).stringWidth(labelText);
@@ -342,8 +377,10 @@ public class MainForm extends  JFrame {
         l_total.setLocation(w_loc, h_loc);
         l_total.setSize(stringWidth, totalDataHeight - h_percent * 2);
 
-        if (lastClient <= 0) {
+        if (PRINTER_ERROR){
             l_total.setText("");
+            l_client3.setText("");
+            l_client4.setText("");
         }
 
         redrawLines();
@@ -373,19 +410,21 @@ public class MainForm extends  JFrame {
     private void reasignClients34() {
         if (client4 > 0) {
             variables.setNextClient(client4);
-            client3 = variables.getNextClient();
-            if (client4 < lastClient) {
+            nextClient = variables.getNextClient();
+            client3 = nextClient;
+            if (client3 < lastClient) {
                 client4++;
             } else {
                 client4 = 0;
             }
         } else {
             variables.setNextClient(0);
-            client3 = variables.getNextClient();
+            nextClient = variables.getNextClient();
+            client3 = nextClient;
         }
     }
 
-    private class TimerListener_Client implements ActionListener {
+    private class TimerListener implements ActionListener {
         private final static int maxBlinking = 4;
         private JLabel _label;
         private Color bg;
@@ -394,7 +433,7 @@ public class MainForm extends  JFrame {
         private int alreadyBlinked = 0;
         private int _timerClientNumber;
 
-        public TimerListener_Client(JLabel label, int timerClientNumber) {
+        public TimerListener(JLabel label, int timerClientNumber) {
             this._label = label;
             fg = label.getForeground();
             bg = label.getBackground();
@@ -419,6 +458,9 @@ public class MainForm extends  JFrame {
                         break;
                     case 2:
                         timerClient2.stop();
+                        break;
+                    case 3:
+                        timerError.stop();
                         break;
                     default:
                         break;
