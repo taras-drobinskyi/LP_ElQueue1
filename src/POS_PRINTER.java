@@ -56,4 +56,37 @@ public class POS_PRINTER {
             return false;
         }
     }
+
+    public boolean Reset(){
+        try
+        {
+
+            //open printer as if it were a file
+            FileOutputStream os = new FileOutputStream("/dev/usb/lp0");
+            //wrap stream in "friendly" PrintStream
+            PrintStream ps = new PrintStream(os);
+
+            String Ptxt=  clearSettings;
+
+
+            //print text here
+            ps.println(Ptxt);
+
+            //form feed -- this is important
+            //Without the form feed, the text
+            //will simply sit in the print
+            //buffer until something else
+            //gets printed.
+            ps.print("\f");
+
+            //flush buffer and close
+            ps.close();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            System.out.println("Exception occurred: " + ex);
+            return false;
+        }
+    }
 }

@@ -85,6 +85,22 @@
           <text value="100"/>
         </properties>
       </component>
+      <component id="6afd6" class="javax.swing.JLabel" binding="l_client1_arrow">
+        <constraints/>
+        <properties>
+          <background color="-13434829"/>
+          <foreground color="-256"/>
+          <text value="&gt;"/>
+        </properties>
+      </component>
+      <component id="825ba" class="javax.swing.JLabel" binding="l_client2_arrow">
+        <constraints/>
+        <properties>
+          <background color="-13434829"/>
+          <foreground color="-256"/>
+          <text value="&gt;"/>
+        </properties>
+      </component>
     </children>
   </grid>
 </form>

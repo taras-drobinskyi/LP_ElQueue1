@@ -35,6 +35,8 @@ public class MainForm extends  JFrame {
     private JLabel l_client4;
     private JLabel l_totalTitle;
     private JLabel l_total;
+    private JLabel l_client1_arrow;
+    private JLabel l_client2_arrow;
     private int formWidth;
     private int formHeight;
     private int w_percent;
@@ -45,8 +47,6 @@ public class MainForm extends  JFrame {
     private Point hor_line2_p2 = new Point(200, 200);
     private Point hor_line3_p1 = new Point(100, 100);
     private Point hor_line3_p2 = new Point(200, 200);
-    private Point ver_line1_p1 = new Point(100, 100);
-    private Point ver_line1_p2 = new Point(200, 200);
 
     public MainForm(){
         super("Продукт Компании \"ВЕРСИЯ\"");
@@ -64,32 +64,47 @@ public class MainForm extends  JFrame {
 
         rootPanel.setLayout(null);
 
-        timerClient1 = new Timer(BLINKING_RATE, new TimerListener(l_client1, 1));
+        timerClient1 = new Timer(BLINKING_RATE, new TimerListener(1));
         timerClient1.setInitialDelay(0);
-        timerClient2 = new Timer(BLINKING_RATE, new TimerListener(l_client2, 2));
+        timerClient2 = new Timer(BLINKING_RATE, new TimerListener(2));
         timerClient2.setInitialDelay(0);
-        timerError = new Timer(BLINKING_RATE, new TimerListener(l_totalTitle, 3));
+        timerError = new Timer(BLINKING_RATE, new TimerListener(3));
         timerError.setInitialDelay(0);
         printer = new POS_PRINTER();
         notificationSound = new Audio("/resources/notify.wav");
         variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
         //init variables:
+        variables.setLastClient(variables.getLastClient() + 1);
         lastClient = variables.getLastClient();
         client1 = variables.getClientAsigned(1);
         client2 = variables.getClientAsigned(2);
         buttonClicked = variables.getButtonClicked();
         ticketsPrinted = variables.getTicketsPrinted();
         nextClient = variables.getNextClient();
-
+/*
         client3 = nextClient;
-        if (client3>0){
-            if (client3 < lastClient) {
-                client4 = client3 + 1;
+        if (nextClient>0){
+            if (nextClient < lastClient) {
+                client4 = nextClient + 1;
             } else {
                 client4 = 0;
             }
         }
+*/
+        client3 = nextClient;
+        if (nextClient == 0) {
+            nextClient = lastClient;
+            client3 = nextClient;
+        } else if (nextClient > 0 && nextClient<lastClient) {
+            client4 = nextClient + 1;
+        }else{
+            client4 = 0;
+        }
+
+        variables.setNextClient(nextClient);
+        total = lastClient + 1;
+        printer.Print(total);
 
         addComponentListener(new ComponentListener(
 
@@ -129,34 +144,53 @@ public class MainForm extends  JFrame {
 
             @Override
             public void keyPressed(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
                 //System.out.println("Pressed " + e.getKeyCode());
                 switch (e.getKeyCode()) {
                     case 112: //terminal1 Button Pressed
-                        if (client3 > 0) {
-                            variables.setClientAsigned(1, variables.getNextClient());
-                            client1 = variables.getClientAsigned(1);
+                        if (nextClient > 0) {
+                            client1 = nextClient;
                             reasignClients34();
                             relocateMyComponents();
                             timerClient1.start();
                             notificationSound.Play();
+                            variables.setClientAsigned(1, client1);
+                            variables.setNextClient(nextClient);
                         }
                         buttonClicked++;
                         variables.setButtonClicked(buttonClicked);
                         break;
                     case 113: //terminal2 Button Pressed
-                        if (client3 > 0) {
-                            variables.setClientAsigned(2, variables.getNextClient());
-                            client2 = variables.getClientAsigned(2);
+                        if (nextClient > 0) {
+                            client2 = nextClient;
                             reasignClients34();
                             relocateMyComponents();
                             timerClient2.start();
                             notificationSound.Play();
+                            variables.setClientAsigned(2, client2);
+                            variables.setNextClient(nextClient);
                         }
                         buttonClicked++;
                         variables.setButtonClicked(buttonClicked);
                         break;
-                    case 114: //terminal2 Button Pressed
-                        //reserve
+                    case 114: //Reset System
+                        total = 1;
+                        lastClient = 0;
+                        nextClient = 0;
+                        client1 = 0;
+                        client2 = 0;
+                        client3 = 0;
+                        client4 = 0;
+                        relocateMyComponents();
+                        printer.Print(total);
+                        variables.setLastClient(lastClient);
+                        variables.setNextClient(nextClient);
+                        variables.setClientAsigned(1, client1);
+                        variables.setClientAsigned(2, client2);
                         break;
                     case 115: //terminal2 Button Pressed
                         //reserve
@@ -168,28 +202,39 @@ public class MainForm extends  JFrame {
                         relocateMyComponents();
                         timerError.start();
                         notificationSound.Play();
+                        //incrementing lastClient by 1
+                        lastClient++;
+                        total = lastClient + 1;
+                        variables.setLastClient(lastClient);
+                        if (client3 == 0) {
+                            nextClient = lastClient;
+                            client3 = nextClient;
+                        } else if (client3 > 0 && client4 == 0) {
+                            client4 = lastClient;
+                        }
+                        variables.setNextClient(nextClient);
+                        //reinitialie Printer
+                        //printer.Reset();
                         break;
                     case 117: //Printer ERROR OFF
+                        timerError.stop();
                         PRINTER_ERROR = false;
                         printer.Print(total);
+                        relocateMyComponents();
                         break;
                     case 36://signal to print a ticket
                         if (!PRINTER_ERROR) {
-                            if (total == 0) {
-                                total = lastClient + 1;
-                            } else {
-                                total++;
-                                variables.setLastClient(total - 1);
-                                lastClient = variables.getLastClient();
-                                if (client3 == 0) {
-                                    variables.setNextClient(variables.getLastClient());
-                                    nextClient = variables.getNextClient();
-                                    client3 = nextClient;
-                                } else if (client3 > 0 && client4 == 0) {
-                                    client4 = variables.getLastClient();
-                                }
-                                relocateMyComponents();
+                            total++;
+                            lastClient = total - 1;
+                            if (client3 == 0) {
+                                nextClient = lastClient;
+                                client3 = nextClient;
+                            } else if (client3 > 0 && client4 == 0) {
+                                client4 = lastClient;
                             }
+                            relocateMyComponents();
+                            variables.setLastClient(lastClient);
+                            variables.setNextClient(nextClient);
                             printer.Print(total);
                             ticketsPrinted++;
                             variables.setTicketsPrinted(ticketsPrinted);
@@ -198,11 +243,6 @@ public class MainForm extends  JFrame {
                     default:
                         break;
                 }
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-
             }
         });
         rootPanel.setFocusable(true);
@@ -226,8 +266,6 @@ public class MainForm extends  JFrame {
         g2.draw(h_lin2);
         Line2D h_lin3 = new Line2D.Float(hor_line3_p1.x, hor_line3_p1.y, hor_line3_p2.x, hor_line3_p2.y);
         g2.draw(h_lin3);
-        Line2D v_lin1 = new Line2D.Float(ver_line1_p1.x, ver_line1_p1.y, ver_line1_p2.x, ver_line1_p2.y);
-        g2.draw(v_lin1);
     }
 
     private void relocateMyComponents() {
@@ -274,8 +312,18 @@ public class MainForm extends  JFrame {
         l_client1.setLocation(w_loc, h_loc);
         l_client1.setSize(stringWidth, tableDataHeight - h_percent * 5);
 
+        l_client1_arrow.setText(">");
+        l_client1_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client1_arrow.getText();
+        stringWidth = l_client1_arrow.getFontMetrics(l_client1_arrow.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        h_loc = h_percent * 18;
+        l_client1_arrow.setLocation(w_loc, h_loc);
+        l_client1_arrow.setSize(stringWidth, tableDataHeight - h_percent * 5);
+
         if (client1 == 0) {
             l_client1.setText("");
+            l_client1_arrow.setText("");
         }
 
         l_client2.setText(String.valueOf(client2));
@@ -287,8 +335,18 @@ public class MainForm extends  JFrame {
         l_client2.setLocation(w_loc, h_loc);
         l_client2.setSize(stringWidth, tableDataHeight - h_percent * 5);
 
+        l_client2_arrow.setText(">");
+        l_client2_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client2_arrow.getText();
+        stringWidth = l_client2_arrow.getFontMetrics(l_client2_arrow.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        h_loc = h_percent * 48;
+        l_client2_arrow.setLocation(w_loc, h_loc);
+        l_client2_arrow.setSize(stringWidth, tableDataHeight - h_percent * 5);
+
         if (client2 == 0) {
             l_client2.setText("");
+            l_client2_arrow.setText("");
         }
 
 
@@ -352,7 +410,7 @@ public class MainForm extends  JFrame {
         labelText = l_totalTitle.getText();
         int totalTitle_stringWidth = l_totalTitle.getFontMetrics(l_totalTitle.getFont()).stringWidth(labelText);
         if (PRINTER_ERROR){
-            w_loc = formWidth - totalTitle_stringWidth;
+            w_loc = (w_percent * 50) - (totalTitle_stringWidth/2);
             h_loc = h_percent * 85;
         }else {
             w_loc = (w_percent * 60) - (stringWidth / 2);
@@ -401,16 +459,12 @@ public class MainForm extends  JFrame {
         hor_line3_p1 = new Point(left, correction + l_client2.getLocation().y + l_client2.getHeight());
         hor_line3_p2 = new Point(right, correction + l_client2.getLocation().y + l_client2.getHeight());
 
-        ver_line1_p1 = new Point(w_percent * 50, correction + h_percent * 3);
-        ver_line1_p2 = new Point(w_percent * 50, correction + l_client2.getLocation().y + l_client2.getHeight());
-
         repaint();
     }
 
     private void reasignClients34() {
         if (client4 > 0) {
-            variables.setNextClient(client4);
-            nextClient = variables.getNextClient();
+            nextClient = client4;
             client3 = nextClient;
             if (client3 < lastClient) {
                 client4++;
@@ -418,25 +472,41 @@ public class MainForm extends  JFrame {
                 client4 = 0;
             }
         } else {
-            variables.setNextClient(0);
-            nextClient = variables.getNextClient();
+            nextClient = 0;
             client3 = nextClient;
         }
     }
 
     private class TimerListener implements ActionListener {
         private final static int maxBlinking = 4;
-        private JLabel _label;
+        private JLabel _clientLabel;
+        private JLabel _clientArrowLabel;
         private Color bg;
         private Color fg;
         private boolean isForeground = true;
         private int alreadyBlinked = 0;
         private int _timerClientNumber;
 
-        public TimerListener(JLabel label, int timerClientNumber) {
-            this._label = label;
-            fg = label.getForeground();
-            bg = label.getBackground();
+        public TimerListener(int timerClientNumber) {
+            switch (timerClientNumber) {
+                case 1:
+                    this._clientLabel = l_client1;
+                    this._clientArrowLabel = l_client1_arrow;
+                    break;
+                case 2:
+                    this._clientLabel = l_client2;
+                    this._clientArrowLabel = l_client2_arrow;
+                    break;
+                case 3:
+                    this._clientLabel = l_totalTitle;
+                    //the next line is just for not to do separate method for case 3
+                    this._clientArrowLabel = l_totalTitle;
+                    break;
+                default:
+                    break;
+            }
+            fg = _clientLabel.getForeground();
+            bg = _clientLabel.getBackground();
             this._timerClientNumber = timerClientNumber;
         }
 
@@ -444,9 +514,11 @@ public class MainForm extends  JFrame {
             if (alreadyBlinked <= maxBlinking * 2) {
                 alreadyBlinked++;
                 if (isForeground) {
-                    _label.setForeground(fg);
+                    _clientLabel.setForeground(fg);
+                    _clientArrowLabel.setForeground(fg);
                 } else {
-                    _label.setForeground(bg);
+                    _clientLabel.setForeground(bg);
+                    _clientArrowLabel.setForeground(bg);
                 }
                 isForeground = !isForeground;
             } else {
@@ -458,9 +530,6 @@ public class MainForm extends  JFrame {
                         break;
                     case 2:
                         timerClient2.stop();
-                        break;
-                    case 3:
-                        timerError.stop();
                         break;
                     default:
                         break;
