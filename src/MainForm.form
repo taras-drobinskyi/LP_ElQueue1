@@ -2,7 +2,7 @@
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="MainForm">
   <grid id="27dc6" binding="rootPanel" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
     <constraints>
-      <xy x="20" y="20" width="500" height="400"/>
+      <xy x="20" y="20" width="571" height="400"/>
     </constraints>
     <properties>
       <background color="-13434829"/>
@@ -75,12 +75,13 @@
           <background color="-13434829"/>
           <enabled value="true"/>
           <foreground color="-1"/>
-          <text value="ВСЕГО:"/>
+          <text value="ВСЕГО В ОЧЕРЕДИ:"/>
         </properties>
       </component>
       <component id="a9498" class="javax.swing.JLabel" binding="l_total">
         <constraints/>
         <properties>
+          <background color="-13434829"/>
           <foreground color="-1"/>
           <text value="100"/>
         </properties>
@@ -99,6 +100,15 @@
           <background color="-13434829"/>
           <foreground color="-256"/>
           <text value="&gt;"/>
+        </properties>
+      </component>
+      <component id="cbda3" class="javax.swing.JLabel" binding="l_takeTicket">
+        <constraints/>
+        <properties>
+          <background color="-13434829"/>
+          <enabled value="true"/>
+          <foreground color="-1"/>
+          <text value="ВОЗЬМИТЕ  БИЛЕТ"/>
         </properties>
       </component>
     </children>

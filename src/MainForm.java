@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
+ */
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -5,11 +9,10 @@ import java.awt.geom.Line2D;
 
 /**
  * Created by forando on 06.04.14.
+ * This is Main Form that indicates info for clients
  */
 public class MainForm extends  JFrame {
     private static final int BLINKING_RATE = 500;
-    boolean PRINTER_ERROR = false;
-    int total = 0;
     int lastClient = 0;
     int nextClient = 0;
     int client1 = 0;
@@ -20,10 +23,13 @@ public class MainForm extends  JFrame {
     int ticketsPrinted = 0;
     Timer timerClient1;
     Timer timerClient2;
+    Timer timerBottomLine;
     Timer timerError;
     Audio notificationSound;
     POS_PRINTER printer;
     XMLVARIABLES variables;
+    private boolean PRINTER_ERROR = false;
+    private int total = 0;
     private JPanel rootPanel;
     private JLabel l_clientTitle;
     private JLabel l_terminal1;
@@ -37,6 +43,7 @@ public class MainForm extends  JFrame {
     private JLabel l_total;
     private JLabel l_client1_arrow;
     private JLabel l_client2_arrow;
+    private JLabel l_takeTicket;
     private int formWidth;
     private int formHeight;
     private int w_percent;
@@ -47,8 +54,10 @@ public class MainForm extends  JFrame {
     private Point hor_line2_p2 = new Point(200, 200);
     private Point hor_line3_p1 = new Point(100, 100);
     private Point hor_line3_p2 = new Point(200, 200);
+    private int restOfClients;
 
     public MainForm(){
+        //Form Title
         super("Продукт Компании \"ВЕРСИЯ\"");
 
         setContentPane(rootPanel);
@@ -64,51 +73,15 @@ public class MainForm extends  JFrame {
 
         rootPanel.setLayout(null);
 
-        timerClient1 = new Timer(BLINKING_RATE, new TimerListener(1));
-        timerClient1.setInitialDelay(0);
-        timerClient2 = new Timer(BLINKING_RATE, new TimerListener(2));
-        timerClient2.setInitialDelay(0);
-        timerError = new Timer(BLINKING_RATE, new TimerListener(3));
-        timerError.setInitialDelay(0);
-        printer = new POS_PRINTER();
-        notificationSound = new Audio("/resources/notify.wav");
-        variables = new XMLVARIABLES(APP.VARIABLES_PATH);
+        initObjects();
 
-        //init variables:
-        variables.setLastClient(variables.getLastClient() + 1);
-        lastClient = variables.getLastClient();
-        client1 = variables.getClientAsigned(1);
-        client2 = variables.getClientAsigned(2);
-        buttonClicked = variables.getButtonClicked();
-        ticketsPrinted = variables.getTicketsPrinted();
-        nextClient = variables.getNextClient();
-/*
-        client3 = nextClient;
-        if (nextClient>0){
-            if (nextClient < lastClient) {
-                client4 = nextClient + 1;
-            } else {
-                client4 = 0;
-            }
-        }
-*/
-        client3 = nextClient;
-        if (nextClient == 0) {
-            nextClient = lastClient;
-            client3 = nextClient;
-        } else if (nextClient > 0 && nextClient<lastClient) {
-            client4 = nextClient + 1;
-        }else{
-            client4 = 0;
-        }
+        initVariables();
 
-        variables.setNextClient(nextClient);
+        //Print first ticket
         total = lastClient + 1;
         printer.Print(total);
 
-        addComponentListener(new ComponentListener(
-
-        ) {
+        addComponentListener(new ComponentListener() {
             @Override
             public void componentResized(ComponentEvent e) {
                 Rectangle r = e.getComponent().getBounds();
@@ -200,6 +173,7 @@ public class MainForm extends  JFrame {
                         ticketsPrinted = 0;
                         variables.setTicketsPrinted(ticketsPrinted);
                         relocateMyComponents();
+                        timerBottomLine.stop();
                         timerError.start();
                         notificationSound.Play();
                         //incrementing lastClient by 1
@@ -218,6 +192,7 @@ public class MainForm extends  JFrame {
                         break;
                     case 117: //Printer ERROR OFF
                         timerError.stop();
+                        timerBottomLine.start();
                         PRINTER_ERROR = false;
                         printer.Print(total);
                         relocateMyComponents();
@@ -245,6 +220,10 @@ public class MainForm extends  JFrame {
                 }
             }
         });
+
+        //start blinking bottom line
+        timerBottomLine.start();
+
         rootPanel.setFocusable(true);
         rootPanel.requestFocusInWindow();
         setVisible(true);
@@ -266,6 +245,52 @@ public class MainForm extends  JFrame {
         g2.draw(h_lin2);
         Line2D h_lin3 = new Line2D.Float(hor_line3_p1.x, hor_line3_p1.y, hor_line3_p2.x, hor_line3_p2.y);
         g2.draw(h_lin3);
+    }
+
+    private void initObjects(){
+        timerBottomLine = new Timer(2000, new TimerListener(0));
+        timerBottomLine.setInitialDelay(0);
+        timerClient1 = new Timer(BLINKING_RATE, new TimerListener(1));
+        timerClient1.setInitialDelay(0);
+        timerClient2 = new Timer(BLINKING_RATE, new TimerListener(2));
+        timerClient2.setInitialDelay(0);
+        timerError = new Timer(BLINKING_RATE, new TimerListener(3));
+        timerError.setInitialDelay(0);
+        printer = new POS_PRINTER();
+        notificationSound = new Audio("/resources/notify.wav");
+        variables = new XMLVARIABLES(APP.VARIABLES_PATH);
+    }
+
+    private void initVariables(){
+        variables.setLastClient(variables.getLastClient() + 1);
+        lastClient = variables.getLastClient();
+        client1 = variables.getClientAsigned(1);
+        client2 = variables.getClientAsigned(2);
+        buttonClicked = variables.getButtonClicked();
+        ticketsPrinted = variables.getTicketsPrinted();
+        nextClient = variables.getNextClient();
+
+        client3 = nextClient;
+        if (nextClient == 0) {
+            nextClient = lastClient;
+            client3 = nextClient;
+        } else if (nextClient > 0 && nextClient<lastClient) {
+            client4 = nextClient + 1;
+        }else{
+            client4 = 0;
+        }
+
+        variables.setNextClient(nextClient);
+
+        setRestOfClients();
+    }
+
+    private void setRestOfClients(){
+        if (nextClient > 0){
+            restOfClients = lastClient - nextClient +1;
+        }else{
+            restOfClients = 0;
+        }
     }
 
     private void relocateMyComponents() {
@@ -379,9 +404,12 @@ public class MainForm extends  JFrame {
         l_client3.setLocation(w_loc, h_loc);
         l_client3.setSize(stringWidth, dataHeight - h_percent * 3);
 
-        if (client3 == 0) {
+        //hiding this label:
+        l_client3.setText("");
+
+/*        if (client3 == 0) {
             l_client3.setText("");
-        }
+        }*/
 
         l_client4.setText(String.valueOf(client4));
         l_client4.setFont(new Font(fontName, Font.PLAIN, dataHeight));
@@ -393,50 +421,57 @@ public class MainForm extends  JFrame {
         l_client4.setLocation(w_loc, h_loc);
         l_client4.setSize(stringWidth, dataHeight - h_percent * 3);
 
-        if (client4 == 0) {
+        //hiding this label:
+        l_client4.setText("");
+
+/*        if (client4 == 0) {
             l_client4.setText("");
-        }
+        }*/
 
 
         //=====================TOTAL DATA ========================================
 
-
-        if (PRINTER_ERROR){
-            l_totalTitle.setText("ВСТАВЬТЕ БУМАГУ!");
-        }else {
-            l_totalTitle.setText("ВСЕГО:");
-        }
-        l_totalTitle.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
-        labelText = l_totalTitle.getText();
-        int totalTitle_stringWidth = l_totalTitle.getFontMetrics(l_totalTitle.getFont()).stringWidth(labelText);
-        if (PRINTER_ERROR){
-            w_loc = (w_percent * 50) - (totalTitle_stringWidth/2);
-            h_loc = h_percent * 85;
-        }else {
-            w_loc = (w_percent * 60) - (stringWidth / 2);
-            h_loc = h_percent * 85;
-        }
-        l_totalTitle.setLocation(w_loc, h_loc);
-        l_totalTitle.setSize(totalTitle_stringWidth, totalDataHeight - h_percent * 2);
-
-        int restOfClients;
-        if (nextClient > 0){
-            restOfClients = lastClient - nextClient +1;
-        }else{
-            restOfClients = 0;
-        }
+        setRestOfClients();
         l_total.setText(String.valueOf(restOfClients));
         l_total.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
         labelText = l_total.getText();
         stringWidth = l_total.getFontMetrics(l_total.getFont()).stringWidth(labelText);
         //w_loc = l_totalTitle.getLocation().x + totalTitle_stringWidth + w_percent;
-        w_loc = (w_percent * 101) - stringWidth;
+        w_loc = (w_percent * 101) - stringWidth - (w_percent * 2);
         h_loc = h_percent * 85;
         l_total.setLocation(w_loc, h_loc);
         l_total.setSize(stringWidth, totalDataHeight - h_percent * 2);
 
+
+        l_totalTitle.setText("ВСЕГО В ОЧЕРЕДИ:");
+        l_totalTitle.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
+        labelText = l_totalTitle.getText();
+        int totalTitle_stringWidth = l_totalTitle.getFontMetrics(l_totalTitle.getFont()).stringWidth(labelText);
+        w_loc = l_total.getLocation().x - (totalTitle_stringWidth) - (w_percent * 2);
+        h_loc = h_percent * 85;
+        l_totalTitle.setLocation(w_loc, h_loc);
+        l_totalTitle.setSize(totalTitle_stringWidth, totalDataHeight - h_percent * 2);
+
+        //===========================================================================
+
+        if (PRINTER_ERROR){
+            l_takeTicket.setText("ВСТАВЬТЕ БУМАГУ!");
+        }else {
+            l_takeTicket.setText("ВОЗЬМИТЕ БИЛЕТ");
+        }
+        l_takeTicket.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
+        labelText = l_takeTicket.getText();
+        stringWidth = l_takeTicket.getFontMetrics(l_takeTicket.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth/2);
+        h_loc = h_percent * 85;
+        l_takeTicket.setLocation(w_loc, h_loc);
+        l_takeTicket.setSize(stringWidth, totalDataHeight - h_percent * 2);
+        //the very first second they should not appear on screen:
+        l_takeTicket.setText("");
+
         if (PRINTER_ERROR){
             l_total.setText("");
+            l_totalTitle.setText("");
             l_client3.setText("");
             l_client4.setText("");
         }
@@ -463,6 +498,8 @@ public class MainForm extends  JFrame {
     }
 
     private void reasignClients34() {
+        int test = 0;
+        test++;
         if (client4 > 0) {
             nextClient = client4;
             client3 = nextClient;
@@ -479,63 +516,92 @@ public class MainForm extends  JFrame {
 
     private class TimerListener implements ActionListener {
         private final static int maxBlinking = 4;
-        private JLabel _clientLabel;
-        private JLabel _clientArrowLabel;
+        private JLabel label1;
+        private JLabel label2;
+        private JLabel label3;
         private Color bg;
         private Color fg;
         private boolean isForeground = true;
+        private boolean option1 = true;
         private int alreadyBlinked = 0;
         private int _timerClientNumber;
 
         public TimerListener(int timerClientNumber) {
             switch (timerClientNumber) {
-                case 1:
-                    this._clientLabel = l_client1;
-                    this._clientArrowLabel = l_client1_arrow;
+                case 0: //initialize bottom line blinking
+                    this.label1 = l_total;
+                    this.label2 = l_totalTitle;
+                    this.label3 = l_takeTicket;
                     break;
-                case 2:
-                    this._clientLabel = l_client2;
-                    this._clientArrowLabel = l_client2_arrow;
+                case 1: //termina1 pushbutton
+                    this.label1 = l_client1;
+                    this.label2 = l_client1_arrow;
                     break;
-                case 3:
-                    this._clientLabel = l_totalTitle;
-                    //the next line is just for not to do separate method for case 3
-                    this._clientArrowLabel = l_totalTitle;
+                case 2: //termina2 pushbutton
+                    this.label1 = l_client2;
+                    this.label2 = l_client2_arrow;
+                    break;
+                case 3: //Printer Error ON
+                    this.label1 = l_takeTicket;
                     break;
                 default:
                     break;
             }
-            fg = _clientLabel.getForeground();
-            bg = _clientLabel.getBackground();
+            fg = label1.getForeground();
+            bg = label1.getBackground();
             this._timerClientNumber = timerClientNumber;
         }
 
         public void actionPerformed(ActionEvent e) {
-            if (alreadyBlinked <= maxBlinking * 2) {
-                alreadyBlinked++;
-                if (isForeground) {
-                    _clientLabel.setForeground(fg);
-                    _clientArrowLabel.setForeground(fg);
-                } else {
-                    _clientLabel.setForeground(bg);
-                    _clientArrowLabel.setForeground(bg);
-                }
-                isForeground = !isForeground;
-            } else {
-                alreadyBlinked = 0;
-                isForeground = true;
-                switch (_timerClientNumber) {
-                    case 1:
-                        timerClient1.stop();
-                        break;
-                    case 2:
-                        timerClient2.stop();
-                        break;
-                    default:
-                        break;
-                }
-            }
 
+            switch (_timerClientNumber) {
+                case 0:
+                    if (!option1) {
+                        label3.setText("");
+                        label1.setText(String.valueOf(restOfClients));
+                        label2.setText("ВСЕГО В ОЧЕРЕДИ:");
+                    } else {
+                        label1.setText("");
+                        label2.setText("");
+                        label3.setText("ВОЗЬМИТЕ БИЛЕТ");
+                    }
+                    option1 = !option1;
+                    break;
+                case 3:
+                    if (option1) {
+                        label1.setText("");
+                    } else {
+                        label1.setText("ВСТАВЬТЕ БУМАГУ!");
+                    }
+                    option1 = !option1;
+                    break;
+                default:
+                    if (alreadyBlinked <= maxBlinking * 2) {
+                        alreadyBlinked++;
+                        if (isForeground) {
+                            label1.setForeground(fg);
+                            label2.setForeground(fg);
+                        } else {
+                            label1.setForeground(bg);
+                            label2.setForeground(bg);
+                        }
+                        isForeground = !isForeground;
+                    } else {
+                        alreadyBlinked = 0;
+                        isForeground = true;
+                        switch (_timerClientNumber) {
+                            case 1:
+                                timerClient1.stop();
+                                break;
+                            case 2:
+                                timerClient2.stop();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    break;
+            }
         }
     }
 }
