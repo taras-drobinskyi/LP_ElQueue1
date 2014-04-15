@@ -98,4 +98,8 @@ public class Audio {
             stopPlayback = false;
         }//end run
     }//end inner class PlayThread
+
+    public void Stop(){
+        stopPlayback = true;
+    }
 }

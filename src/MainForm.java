@@ -26,6 +26,7 @@ public class MainForm extends  JFrame {
     Timer timerBottomLine;
     Timer timerError;
     Audio notificationSound;
+    Audio errorSound;
     POS_PRINTER printer;
     XMLVARIABLES variables;
     private boolean PRINTER_ERROR = false;
@@ -175,7 +176,9 @@ public class MainForm extends  JFrame {
                         relocateMyComponents();
                         timerBottomLine.stop();
                         timerError.start();
-                        notificationSound.Play();
+                        notificationSound.Stop();
+                        errorSound.Play();
+                        //errorSound.Play();
                         //incrementing lastClient by 1
                         lastClient++;
                         total = lastClient + 1;
@@ -257,6 +260,7 @@ public class MainForm extends  JFrame {
         timerError = new Timer(BLINKING_RATE, new TimerListener(3));
         timerError.setInitialDelay(0);
         printer = new POS_PRINTER();
+        errorSound = new Audio("/resources/Windows_Exclamation.wav");
         notificationSound = new Audio("/resources/notify.wav");
         variables = new XMLVARIABLES(APP.VARIABLES_PATH);
     }
@@ -498,8 +502,6 @@ public class MainForm extends  JFrame {
     }
 
     private void reasignClients34() {
-        int test = 0;
-        test++;
         if (client4 > 0) {
             nextClient = client4;
             client3 = nextClient;
