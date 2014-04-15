@@ -102,4 +102,8 @@ public class Audio {
     public void Stop(){
         stopPlayback = true;
     }
+
+    public void Reset(){
+        stopPlayback = true;
+    }
 }

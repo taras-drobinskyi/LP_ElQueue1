@@ -178,6 +178,7 @@ public class MainForm extends  JFrame {
                         timerError.start();
                         notificationSound.Stop();
                         errorSound.Play();
+                        notificationSound.Reset();
                         //errorSound.Play();
                         //incrementing lastClient by 1
                         lastClient++;
@@ -260,8 +261,8 @@ public class MainForm extends  JFrame {
         timerError = new Timer(BLINKING_RATE, new TimerListener(3));
         timerError.setInitialDelay(0);
         printer = new POS_PRINTER();
-        errorSound = new Audio("/resources/Windows_Exclamation.wav");
-        notificationSound = new Audio("/resources/notify.wav");
+        errorSound = new Audio("/resources/notify.wav");
+        notificationSound = new Audio("/resources/chimes.wav");
         variables = new XMLVARIABLES(APP.VARIABLES_PATH);
     }
 
