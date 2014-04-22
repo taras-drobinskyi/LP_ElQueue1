@@ -11,8 +11,11 @@ import java.awt.geom.Line2D;
  * Created by forando on 06.04.14.
  * This is Main Form that indicates info for clients
  */
-public class MainForm extends  JFrame {
-    private static final int BLINKING_RATE = 500;
+public class MainForm extends JFrame {
+    static int standardBlinkRate;
+    static int clicksToChangeBattery;
+    static int ticketsToInsertPaper;
+    static int takeTicketBlinkRate;
     int lastClient = 0;
     int nextClient = 0;
     int client1 = 0;
@@ -21,8 +24,6 @@ public class MainForm extends  JFrame {
     int client4 = 0;
     int buttonClicked = 0;
     int ticketsPrinted = 0;
-    static int clicksToChangeBattery;
-    static int ticketsToInsertPaper;
     Timer timerClient1;
     Timer timerClient2;
     Timer timerBottomLine;
@@ -47,6 +48,8 @@ public class MainForm extends  JFrame {
     private JLabel l_client1_arrow;
     private JLabel l_client2_arrow;
     private JLabel l_takeTicket;
+    private JPanel mainUIPanel;
+    private JPanel messagePanel;
     private int formWidth;
     private int formHeight;
     private int w_percent;
@@ -59,7 +62,7 @@ public class MainForm extends  JFrame {
     private Point hor_line3_p2 = new Point(200, 200);
     private int restOfClients;
 
-    public MainForm(){
+    public MainForm() {
         //Form Title
         super("Продукт Компании \"ВЕРСИЯ\"");
 
@@ -67,24 +70,23 @@ public class MainForm extends  JFrame {
         setUndecorated(true);
 
         pack();
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);// locate Form in the center of the screen
-
-        this.setLayout(null);
 
         setExtendedState(JFrame.MAXIMIZED_BOTH);
 
-        rootPanel.setLayout(null);
-
-        initObjects();
+        mainUIPanel.setLayout(null);
 
         initVariables();
+        initObjects();
+
+       // messagePanel.setSize(formWidth, 0);
 
         //Print first ticket
         total = lastClient + 1;
         printer.Print(total);
 
-        addComponentListener(new ComponentListener() {
+        mainUIPanel.addComponentListener(new ComponentListener() {
             @Override
             public void componentResized(ComponentEvent e) {
                 Rectangle r = e.getComponent().getBounds();
@@ -253,22 +255,24 @@ public class MainForm extends  JFrame {
         g2.draw(h_lin3);
     }
 
-    private void initObjects(){
-        timerBottomLine = new Timer(2000, new TimerListener(0));
+    private void initObjects() {
+        timerBottomLine = new Timer(takeTicketBlinkRate, new TimerListener(0));
         timerBottomLine.setInitialDelay(0);
-        timerClient1 = new Timer(BLINKING_RATE, new TimerListener(1));
+        timerClient1 = new Timer(standardBlinkRate, new TimerListener(1));
         timerClient1.setInitialDelay(0);
-        timerClient2 = new Timer(BLINKING_RATE, new TimerListener(2));
+        timerClient2 = new Timer(standardBlinkRate, new TimerListener(2));
         timerClient2.setInitialDelay(0);
-        timerError = new Timer(BLINKING_RATE, new TimerListener(3));
+        timerError = new Timer(standardBlinkRate, new TimerListener(3));
         timerError.setInitialDelay(0);
         printer = new POS_PRINTER();
         errorSound = new Audio("/resources/notify.wav");
         notificationSound = new Audio("/resources/chimes.wav");
-        variables = new XMLVARIABLES(APP.VARIABLES_PATH);
     }
 
-    private void initVariables(){
+    private void initVariables() {
+
+        variables = new XMLVARIABLES(APP.VARIABLES_PATH);
+
         variables.setLastClient(variables.getLastClient() + 1);
         lastClient = variables.getLastClient();
         client1 = variables.getClientAsigned(1);
@@ -279,14 +283,16 @@ public class MainForm extends  JFrame {
 
         clicksToChangeBattery = variables.getClicksToChangeBattery();
         ticketsToInsertPaper = variables.getTicketsToInsertPaper();
+        standardBlinkRate = variables.getStandardBlinkRate();
+        takeTicketBlinkRate = variables.getTakeTicketBlinkRate();
 
         client3 = nextClient;
         if (nextClient == 0) {
             nextClient = lastClient;
             client3 = nextClient;
-        } else if (nextClient > 0 && nextClient<lastClient) {
+        } else if (nextClient > 0 && nextClient < lastClient) {
             client4 = nextClient + 1;
-        }else{
+        } else {
             client4 = 0;
         }
 
@@ -295,10 +301,10 @@ public class MainForm extends  JFrame {
         setRestOfClients();
     }
 
-    private void setRestOfClients(){
-        if (nextClient > 0){
-            restOfClients = lastClient - nextClient +1;
-        }else{
+    private void setRestOfClients() {
+        if (nextClient > 0) {
+            restOfClients = lastClient - nextClient + 1;
+        } else {
             restOfClients = 0;
         }
     }
@@ -464,22 +470,23 @@ public class MainForm extends  JFrame {
 
         //===========================================================================
 
-        if (PRINTER_ERROR){
+        if (PRINTER_ERROR) {
             l_takeTicket.setText("ВСТАВЬТЕ БУМАГУ!");
-        }else {
+        } else {
             l_takeTicket.setText("ВОЗЬМИТЕ БИЛЕТ");
         }
         l_takeTicket.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
         labelText = l_takeTicket.getText();
         stringWidth = l_takeTicket.getFontMetrics(l_takeTicket.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 50) - (stringWidth/2);
-        h_loc = h_percent * 85;
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        //h_loc = h_percent * 85;
+        h_loc = l_totalTitle.getLocation().y;
         l_takeTicket.setLocation(w_loc, h_loc);
         l_takeTicket.setSize(stringWidth, totalDataHeight - h_percent * 2);
         //the very first second they should not appear on screen:
         l_takeTicket.setText("");
 
-        if (PRINTER_ERROR){
+        if (PRINTER_ERROR) {
             l_total.setText("");
             l_totalTitle.setText("");
             l_client3.setText("");

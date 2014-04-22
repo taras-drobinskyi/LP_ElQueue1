@@ -7,6 +7,7 @@ import java.net.URL;
 
 /**
  * Created by forando on 08.04.14.
+ * Class that performs operation with resource file
  */
 
 
@@ -20,7 +21,7 @@ public class ResourceFile {
         res = getClass().getResource(this.path);
     }
 
-    public File getFile(){
+    public File getFile() {
         if (res == null) return null;
         if (res.toString().startsWith("jar:")) {
             try {

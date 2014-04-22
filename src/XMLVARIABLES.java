@@ -49,7 +49,7 @@ public class XMLVARIABLES {
         }
     }
 
-    private void saveDocument(){
+    private void saveDocument() {
         DOMSource source = new DOMSource(doc);
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer;
@@ -63,7 +63,8 @@ public class XMLVARIABLES {
             e.printStackTrace();
         }
     }
-    private Element getLastClientNode(){
+
+    private Element getLastClientNode() {
         Element rootElement = doc.getDocumentElement();
         NodeList counters_List = rootElement.getElementsByTagName("counters");
         Element counters_Node = (Element) counters_List.item(0);
@@ -74,17 +75,19 @@ public class XMLVARIABLES {
         NodeList lastclient_List = currentinfo_Node.getElementsByTagName("lastclient");
         return (Element) lastclient_List.item(0);
     }
-    public int getLastClient(){
+
+    public int getLastClient() {
         Element lastclient_Node = getLastClientNode();
         return Integer.valueOf(lastclient_Node.getTextContent());
     }
-    public void setLastClient(int val){
+
+    public void setLastClient(int val) {
         Element lastclient_Node = getLastClientNode();
         lastclient_Node.setTextContent(String.valueOf(val));
         saveDocument();
     }
 
-    private Element getNextClientNode(){
+    private Element getNextClientNode() {
         Element rootElement = doc.getDocumentElement();
         NodeList counters_List = rootElement.getElementsByTagName("counters");
         Element counters_Node = (Element) counters_List.item(0);
@@ -95,17 +98,19 @@ public class XMLVARIABLES {
         NodeList nextclient_List = currentinfo_Node.getElementsByTagName("nextclient");
         return (Element) nextclient_List.item(0);
     }
-    public int getNextClient(){
+
+    public int getNextClient() {
         Element nextclient_Node = getNextClientNode();
         return Integer.valueOf(nextclient_Node.getTextContent());
     }
-    public void setNextClient(int val){
+
+    public void setNextClient(int val) {
         Element nextclient_Node = getNextClientNode();
         nextclient_Node.setTextContent(String.valueOf(val));
         saveDocument();
     }
 
-    private Element getButtonClickedNode(){
+    private Element getButtonClickedNode() {
         Element rootElement = doc.getDocumentElement();
         NodeList counters_List = rootElement.getElementsByTagName("counters");
         Element counters_Node = (Element) counters_List.item(0);
@@ -116,17 +121,19 @@ public class XMLVARIABLES {
         NodeList buttonclicked_List = servicecounters_Node.getElementsByTagName("buttonclicked");
         return (Element) buttonclicked_List.item(0);
     }
-    public int getButtonClicked(){
+
+    public int getButtonClicked() {
         Element buttonclicked_Node = getButtonClickedNode();
         return Integer.valueOf(buttonclicked_Node.getTextContent());
     }
-    public void setButtonClicked(int val){
+
+    public void setButtonClicked(int val) {
         Element buttonclicked_Node = getButtonClickedNode();
         buttonclicked_Node.setTextContent(String.valueOf(val));
         saveDocument();
     }
 
-    private Element getTicketsPrintedNode(){
+    private Element getTicketsPrintedNode() {
         Element rootElement = doc.getDocumentElement();
         NodeList counters_List = rootElement.getElementsByTagName("counters");
         Element counters_Node = (Element) counters_List.item(0);
@@ -137,17 +144,19 @@ public class XMLVARIABLES {
         NodeList ticketsprinted_List = servicecounters_Node.getElementsByTagName("ticketsprinted");
         return (Element) ticketsprinted_List.item(0);
     }
-    public int getTicketsPrinted(){
+
+    public int getTicketsPrinted() {
         Element TicketsPrinted_Node = getTicketsPrintedNode();
         return Integer.valueOf(TicketsPrinted_Node.getTextContent());
     }
-    public void setTicketsPrinted(int val){
+
+    public void setTicketsPrinted(int val) {
         Element TicketsPrinted_Node = getTicketsPrintedNode();
         TicketsPrinted_Node.setTextContent(String.valueOf(val));
         saveDocument();
     }
 
-    private Element getTerminalNode(int position){
+    private Element getTerminalNode(int position) {
         Element rootElement = doc.getDocumentElement();
         NodeList terminals_List = rootElement.getElementsByTagName("terminals");
         Element terminals_Node = (Element) terminals_List.item(0);
@@ -156,37 +165,38 @@ public class XMLVARIABLES {
         return (Element) terminal_List.item(position);
     }
 
-    private Element getClientaAsignedNode(Element terminal_Node){
+    private Element getClientaAsignedNode(Element terminal_Node) {
         NodeList clientassigned_List = terminal_Node.getElementsByTagName("clientassigned");
         return (Element) clientassigned_List.item(0);
     }
 
-    public int getClientAsigned(int position){
+    public int getClientAsigned(int position) {
         Element Terminal_Node = getTerminalNode(position - 1);
         Element clientassigned_Node = getClientaAsignedNode(Terminal_Node);
         return Integer.valueOf(clientassigned_Node.getTextContent());
     }
-    public void setClientAsigned(int position, int val){
-        Element Terminal_Node = getTerminalNode(position-1);
+
+    public void setClientAsigned(int position, int val) {
+        Element Terminal_Node = getTerminalNode(position - 1);
         Element clientassigned_Node = getClientaAsignedNode(Terminal_Node);
         clientassigned_Node.setTextContent(String.valueOf(val));
         saveDocument();
     }
 
-    private Element getSettingsNode(){
+    private Element getSettingsNode() {
         Element rootElement = doc.getDocumentElement();
         NodeList settings_List = rootElement.getElementsByTagName("settings");
         return (Element) settings_List.item(0);
     }
 
-    public int getClicksToChangeBattery(){
+    public int getClicksToChangeBattery() {
         Element settings_Node = getSettingsNode();
         NodeList clicksToChangeBattery_List = settings_Node.getElementsByTagName("clicksToChangeBattery");
         Element clicksToChangeBattery_Node = (Element) clicksToChangeBattery_List.item(0);
         return Integer.valueOf(clicksToChangeBattery_Node.getTextContent());
     }
 
-    public void setClicksToChangeBattery(int val){
+    public void setClicksToChangeBattery(int val) {
         Element settings_Node = getSettingsNode();
         NodeList clicksToChangeBattery_List = settings_Node.getElementsByTagName("clicksToChangeBattery");
         Element clicksToChangeBattery_Node = (Element) clicksToChangeBattery_List.item(0);
@@ -194,18 +204,48 @@ public class XMLVARIABLES {
         saveDocument();
     }
 
-    public int getTicketsToInsertPaper(){
+    public int getTicketsToInsertPaper() {
         Element settings_Node = getSettingsNode();
         NodeList ticketsToInsertPaper_List = settings_Node.getElementsByTagName("ticketsToInsertPaper");
         Element ticketsToInsertPaper_Node = (Element) ticketsToInsertPaper_List.item(0);
         return Integer.valueOf(ticketsToInsertPaper_Node.getTextContent());
     }
 
-    public void setTicketsToInsertPaper(int val){
+    public void setTicketsToInsertPaper(int val) {
         Element settings_Node = getSettingsNode();
         NodeList ticketsToInsertPaper_List = settings_Node.getElementsByTagName("ticketsToInsertPaper");
         Element ticketsToInsertPaper_Node = (Element) ticketsToInsertPaper_List.item(0);
         ticketsToInsertPaper_Node.setTextContent(String.valueOf(val));
+        saveDocument();
+    }
+
+    public int getStandardBlinkRate() {
+        Element settings_Node = getSettingsNode();
+        NodeList standardBlinkRate_List = settings_Node.getElementsByTagName("standardBlinkRate");
+        Element standardBlinkRate_Node = (Element) standardBlinkRate_List.item(0);
+        return Integer.valueOf(standardBlinkRate_Node.getTextContent());
+    }
+
+    public void setStandardBlinkRate(int val) {
+        Element settings_Node = getSettingsNode();
+        NodeList standardBlinkRate_List = settings_Node.getElementsByTagName("standardBlinkRate");
+        Element standardBlinkRate_Node = (Element) standardBlinkRate_List.item(0);
+        standardBlinkRate_Node.setTextContent(String.valueOf(val));
+        saveDocument();
+    }
+
+    public int getTakeTicketBlinkRate() {
+        Element settings_Node = getSettingsNode();
+        NodeList takeTicketBlinkRate_List = settings_Node.getElementsByTagName("takeTicketBlinkRate");
+        Element takeTicketBlinkRate_Node = (Element) takeTicketBlinkRate_List.item(0);
+        return Integer.valueOf(takeTicketBlinkRate_Node.getTextContent());
+    }
+
+    public void setTakeTicketBlinkRate(int val) {
+        Element settings_Node = getSettingsNode();
+        NodeList takeTicketBlinkRate_List = settings_Node.getElementsByTagName("takeTicketBlinkRate");
+        Element takeTicketBlinkRate_Node = (Element) takeTicketBlinkRate_List.item(0);
+        takeTicketBlinkRate_Node.setTextContent(String.valueOf(val));
         saveDocument();
     }
 }

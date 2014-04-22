@@ -21,7 +21,7 @@ public class Audio {
         this.path = path;
     }
 
-    public void Play(){
+    public void Play() {
         if (playbackFinished) {
             try {
                 ResourceFile rf = new ResourceFile(this.path);
@@ -33,8 +33,8 @@ public class Audio {
                 audioInputStream = AudioSystem.getAudioInputStream(soundFile);
                 audioFormat = audioInputStream.getFormat();
                 System.out.println(audioFormat);
-                dataLineInfo =new DataLine.Info(SourceDataLine.class,audioFormat);
-                sourceDataLine =(SourceDataLine) AudioSystem.getLine(dataLineInfo);
+                dataLineInfo = new DataLine.Info(SourceDataLine.class, audioFormat);
+                sourceDataLine = (SourceDataLine) AudioSystem.getLine(dataLineInfo);
                 //Create a thread to Play back the variables and
                 // start it running.  It will run until the
                 // end of file, or the Stop button is
@@ -49,6 +49,14 @@ public class Audio {
                 System.exit(0);
             }//end catch
         }
+    }
+
+    public void Stop() {
+        stopPlayback = true;
+    }
+
+    public void Reset() {
+        stopPlayback = false;
     }
 
     //Inner class to Play back the variables from the
@@ -98,12 +106,4 @@ public class Audio {
             stopPlayback = false;
         }//end run
     }//end inner class PlayThread
-
-    public void Stop(){
-        stopPlayback = true;
-    }
-
-    public void Reset(){
-        stopPlayback = false;
-    }
 }
