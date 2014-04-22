@@ -17,7 +17,7 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 
 /**
- * Created by forando on 10.04.14.
+ * This Class gets connected to external xml file with all project META DATA
  */
 public class XMLVARIABLES {
     String path = null;
@@ -170,6 +170,42 @@ public class XMLVARIABLES {
         Element Terminal_Node = getTerminalNode(position-1);
         Element clientassigned_Node = getClientaAsignedNode(Terminal_Node);
         clientassigned_Node.setTextContent(String.valueOf(val));
+        saveDocument();
+    }
+
+    private Element getSettingsNode(){
+        Element rootElement = doc.getDocumentElement();
+        NodeList settings_List = rootElement.getElementsByTagName("settings");
+        return (Element) settings_List.item(0);
+    }
+
+    public int getClicksToChangeBattery(){
+        Element settings_Node = getSettingsNode();
+        NodeList clicksToChangeBattery_List = settings_Node.getElementsByTagName("clicksToChangeBattery");
+        Element clicksToChangeBattery_Node = (Element) clicksToChangeBattery_List.item(0);
+        return Integer.valueOf(clicksToChangeBattery_Node.getTextContent());
+    }
+
+    public void setClicksToChangeBattery(int val){
+        Element settings_Node = getSettingsNode();
+        NodeList clicksToChangeBattery_List = settings_Node.getElementsByTagName("clicksToChangeBattery");
+        Element clicksToChangeBattery_Node = (Element) clicksToChangeBattery_List.item(0);
+        clicksToChangeBattery_Node.setTextContent(String.valueOf(val));
+        saveDocument();
+    }
+
+    public int getTicketsToInsertPaper(){
+        Element settings_Node = getSettingsNode();
+        NodeList ticketsToInsertPaper_List = settings_Node.getElementsByTagName("ticketsToInsertPaper");
+        Element ticketsToInsertPaper_Node = (Element) ticketsToInsertPaper_List.item(0);
+        return Integer.valueOf(ticketsToInsertPaper_Node.getTextContent());
+    }
+
+    public void setTicketsToInsertPaper(int val){
+        Element settings_Node = getSettingsNode();
+        NodeList ticketsToInsertPaper_List = settings_Node.getElementsByTagName("ticketsToInsertPaper");
+        Element ticketsToInsertPaper_Node = (Element) ticketsToInsertPaper_List.item(0);
+        ticketsToInsertPaper_Node.setTextContent(String.valueOf(val));
         saveDocument();
     }
 }

@@ -6,7 +6,7 @@ import javax.sound.sampled.*;
 import java.io.File;
 
 /**
- * Created by forando on 08.04.14.
+ * This Class operates audio stream (Play, Stop etc.)
  */
 public class Audio {
     AudioFormat audioFormat;
@@ -104,6 +104,6 @@ public class Audio {
     }
 
     public void Reset(){
-        stopPlayback = true;
+        stopPlayback = false;
     }
 }

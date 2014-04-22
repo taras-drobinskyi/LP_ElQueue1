@@ -21,6 +21,8 @@ public class MainForm extends  JFrame {
     int client4 = 0;
     int buttonClicked = 0;
     int ticketsPrinted = 0;
+    static int clicksToChangeBattery;
+    static int ticketsToInsertPaper;
     Timer timerClient1;
     Timer timerClient2;
     Timer timerBottomLine;
@@ -274,6 +276,9 @@ public class MainForm extends  JFrame {
         buttonClicked = variables.getButtonClicked();
         ticketsPrinted = variables.getTicketsPrinted();
         nextClient = variables.getNextClient();
+
+        clicksToChangeBattery = variables.getClicksToChangeBattery();
+        ticketsToInsertPaper = variables.getTicketsToInsertPaper();
 
         client3 = nextClient;
         if (nextClient == 0) {
