@@ -49,7 +49,6 @@ public class MainForm extends JFrame {
     private JLabel l_client2_arrow;
     private JLabel l_takeTicket;
     private JPanel mainUIPanel;
-    private JPanel messagePanel;
     private int formWidth;
     private int formHeight;
     private int w_percent;
@@ -236,6 +235,12 @@ public class MainForm extends JFrame {
         rootPanel.requestFocusInWindow();
         setVisible(true);
 
+    }
+
+    public void batteryCheck() {
+        if (buttonClicked>clicksToChangeBattery){
+            MessageForm f = new MessageForm();
+        }
     }
 
     public void paint(Graphics g) {

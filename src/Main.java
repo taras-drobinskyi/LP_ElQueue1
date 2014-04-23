@@ -11,5 +11,6 @@ public class Main {
                 .getLocalGraphicsEnvironment();
         GraphicsDevice vc = env.getDefaultScreenDevice();
         vc.setFullScreenWindow(form);
+        form.batteryCheck();
     }
 }
