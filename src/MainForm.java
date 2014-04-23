@@ -79,7 +79,7 @@ public class MainForm extends JFrame {
         initVariables();
         initObjects();
 
-       // messagePanel.setSize(formWidth, 0);
+        // messagePanel.setSize(formWidth, 0);
 
         //Print first ticket
         total = lastClient + 1;
@@ -169,9 +169,6 @@ public class MainForm extends JFrame {
                         variables.setClientAsigned(1, client1);
                         variables.setClientAsigned(2, client2);
                         break;
-                    case 115: //terminal2 Button Pressed
-                        //reserve
-                        break;
                     case 116: //Printer ERROR ON
                         PRINTER_ERROR = true;
                         ticketsPrinted = 0;
@@ -228,6 +225,15 @@ public class MainForm extends JFrame {
             }
         });
 
+        //subscribing to Window(or JFrame) Opened Event
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                super.windowOpened(e);
+                batteryCheck();
+            }
+        });
+
         //start blinking bottom line
         timerBottomLine.start();
 
@@ -237,9 +243,16 @@ public class MainForm extends JFrame {
 
     }
 
-    public void batteryCheck() {
-        if (buttonClicked>clicksToChangeBattery){
+    private void batteryCheck() {
+        if (buttonClicked > clicksToChangeBattery) {
             MessageForm f = new MessageForm();
+            f.addResetListener(new MessageFormListener() {
+                @Override
+                public void onReset() {
+                    buttonClicked = 0;
+                    variables.setButtonClicked(buttonClicked);
+                }
+            });
         }
     }
 
