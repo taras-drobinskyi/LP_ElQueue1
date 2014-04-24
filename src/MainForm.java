@@ -52,6 +52,7 @@ public class MainForm extends JFrame {
     private JLabel l_client2_arrow;
     private JLabel l_takeTicket;
     private JPanel mainUIPanel;
+    private JLabel l_serviceStopped;
     private int formWidth;
     private int formHeight;
     private int w_percent;
@@ -358,7 +359,7 @@ public class MainForm extends JFrame {
         timerClient2.setInitialDelay(0);
         timerError = new Timer(standardBlinkRate, new TimerListener(3));
         timerError.setInitialDelay(0);
-        timerServiceStopped = new Timer(standardBlinkRate, new TimerListener(4));
+        timerServiceStopped = new Timer(takeTicketBlinkRate, new TimerListener(4));
         timerServiceStopped.setInitialDelay(0);
         printer = new POS_PRINTER();
         errorSound = new Audio("/resources/notify.wav");
@@ -549,24 +550,25 @@ public class MainForm extends JFrame {
         labelText = l_total.getText();
         stringWidth = l_total.getFontMetrics(l_total.getFont()).stringWidth(labelText);
         //w_loc = l_totalTitle.getLocation().x + totalTitle_stringWidth + w_percent;
-        w_loc = (w_percent * 101) - stringWidth - (w_percent * 2);
+        //w_loc = (w_percent * 101) - stringWidth - (w_percent * 2);
+        w_loc = formWidth - stringWidth - (h_percent*4);
         h_loc = h_percent * 85;
         l_total.setLocation(w_loc, h_loc);
-        l_total.setSize(stringWidth, totalDataHeight - h_percent * 2);
+        l_total.setSize(stringWidth, totalDataHeight + h_percent * 3);
 
 
         l_totalTitle.setText("ВСЕГО  В  ОЧЕРЕДИ:");
         l_totalTitle.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
         labelText = l_totalTitle.getText();
         int totalTitle_stringWidth = l_totalTitle.getFontMetrics(l_totalTitle.getFont()).stringWidth(labelText);
-        w_loc = l_total.getLocation().x - (totalTitle_stringWidth) - (w_percent * 2);
+        w_loc = l_total.getLocation().x - (totalTitle_stringWidth) - (w_percent * 4);
         h_loc = h_percent * 85;
         l_totalTitle.setLocation(w_loc, h_loc);
-        l_totalTitle.setSize(totalTitle_stringWidth, totalDataHeight - h_percent * 2);
+        l_totalTitle.setSize(totalTitle_stringWidth, totalDataHeight + h_percent * 3);
 
         //===========================================================================
         if(SERVICE_STOPPED){
-            l_takeTicket.setText("ПРИЁМА  НЕТ");
+            l_takeTicket.setText("ТАЛОНОВ  НЕТ");
         }else if (PRINTER_ERROR) {
             l_takeTicket.setText("ВСТАВЬТЕ  БУМАГУ!");
         } else {
@@ -579,9 +581,21 @@ public class MainForm extends JFrame {
         //h_loc = h_percent * 85;
         h_loc = l_totalTitle.getLocation().y;
         l_takeTicket.setLocation(w_loc, h_loc);
-        l_takeTicket.setSize(stringWidth, totalDataHeight - h_percent * 2);
+        l_takeTicket.setSize(stringWidth, totalDataHeight + h_percent * 3);
         //the very first second they should not appear on screen:
         l_takeTicket.setText("");
+
+        l_serviceStopped.setText("ТЕХНИЧЕСКИЙ  ПЕРЕРЫВ");
+        l_serviceStopped.setFont(new Font(fontName, Font.PLAIN, totalDataHeight - h_percent * 2));
+        labelText = l_serviceStopped.getText();
+        stringWidth = l_serviceStopped.getFontMetrics(l_serviceStopped.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        //h_loc = h_percent * 85;
+        h_loc = l_totalTitle.getLocation().y;
+        l_serviceStopped.setLocation(w_loc, h_loc);
+        l_serviceStopped.setSize(stringWidth, totalDataHeight + h_percent * 3);
+        //the very first second they should not appear on screen:
+        l_serviceStopped.setText("");
 
         if (PRINTER_ERROR || SERVICE_STOPPED) {
             l_total.setText("");
@@ -658,6 +672,7 @@ public class MainForm extends JFrame {
                     break;
                 case 4: //Service Stopped
                     this.label1 = l_takeTicket;
+                    this.label2 = l_serviceStopped;
                     break;
                 default:
                     break;
@@ -693,8 +708,10 @@ public class MainForm extends JFrame {
                 case 4:
                     if (option1) {
                         label1.setText("");
+                        label2.setText("ТЕХНИЧЕСКИЙ  ПЕРЕРЫВ");
                     } else {
-                        label1.setText("ПРИЁМА  НЕТ");
+                        label2.setText("");
+                        label1.setText("ТАЛОНОВ  НЕТ");
                     }
                     option1 = !option1;
                     break;

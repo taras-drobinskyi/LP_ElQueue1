@@ -103,7 +103,7 @@
             </constraints>
             <properties>
               <background color="-13434829"/>
-              <foreground color="-1"/>
+              <foreground color="-16711936"/>
               <text value="100"/>
             </properties>
           </component>
@@ -145,6 +145,17 @@
             <properties>
               <foreground color="-1"/>
               <text value="003"/>
+            </properties>
+          </component>
+          <component id="49394" class="javax.swing.JLabel" binding="l_serviceStopped">
+            <constraints>
+              <grid row="2" column="3" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <background color="-13434829"/>
+              <enabled value="true"/>
+              <foreground color="-1"/>
+              <text value="ТЕХНИЧЕСКИЙ  ПЕРЕРЫВ"/>
             </properties>
           </component>
         </children>
