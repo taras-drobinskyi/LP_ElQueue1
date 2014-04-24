@@ -27,7 +27,7 @@
             </constraints>
             <properties>
               <foreground color="-1"/>
-              <text value="Клиент"/>
+              <text value="Талон"/>
             </properties>
           </component>
           <component id="32e29" class="javax.swing.JLabel" binding="l_terminalTitle">
@@ -36,7 +36,7 @@
             </constraints>
             <properties>
               <foreground color="-1"/>
-              <text value="№ Кассы"/>
+              <text value="Касса"/>
             </properties>
           </component>
           <component id="213b5" class="javax.swing.JLabel" binding="l_client1">
@@ -65,7 +65,7 @@
             </constraints>
             <properties>
               <foreground color="-1"/>
-              <text value="001"/>
+              <text value="1"/>
             </properties>
           </component>
           <component id="ebea7" class="javax.swing.JLabel" binding="l_client2">
@@ -94,7 +94,7 @@
             </constraints>
             <properties>
               <foreground color="-1"/>
-              <text value="002"/>
+              <text value="2"/>
             </properties>
           </component>
           <component id="a9498" class="javax.swing.JLabel" binding="l_total">
