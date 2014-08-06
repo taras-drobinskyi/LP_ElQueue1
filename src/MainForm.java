@@ -29,6 +29,7 @@ public class MainForm extends JFrame {
     Timer timerBottomLine;
     Timer timerError;
     Timer timerServiceStopped;
+    Timer timerPrinter;
     Audio notificationSound;
     Audio errorSound;
     POS_PRINTER printer;
@@ -36,6 +37,7 @@ public class MainForm extends JFrame {
     private boolean PRINTER_ERROR = false;
     private boolean SERVICE_STOPPED = false;
     private boolean TICKET_TAKEN = false;
+    private boolean TICKET_IS_PRINTING = false;
     private int total = 0;
     private JPanel rootPanel;
     private JLabel l_clientTitle;
@@ -53,6 +55,8 @@ public class MainForm extends JFrame {
     private JLabel l_takeTicket;
     private JPanel mainUIPanel;
     private JLabel l_serviceStopped;
+    private JPanel bottomPanel;
+    private JPanel videoPanel;
     private int formWidth;
     private int formHeight;
     private int w_percent;
@@ -63,6 +67,7 @@ public class MainForm extends JFrame {
     private Point hor_line2_p2 = new Point(200, 200);
     private Point hor_line3_p1 = new Point(100, 100);
     private Point hor_line3_p2 = new Point(200, 200);
+    
     private int restOfClients;
 
     public MainForm() {
@@ -224,18 +229,20 @@ public class MainForm extends JFrame {
                         triggerService(SERVICE_STOPPED);
                         break;
                     case 36://signal to print a ticket
-                        total++;
-                        lastClient = total - 1;
-                        if (client3 == 0) {
-                            nextClient = lastClient;
-                            client3 = nextClient;
-                        } else if (client3 > 0 && client4 == 0) {
-                            client4 = lastClient;
+                        if(!TICKET_IS_PRINTING) {
+                            total++;
+                            lastClient = total - 1;
+                            if (client3 == 0) {
+                                nextClient = lastClient;
+                                client3 = nextClient;
+                            } else if (client3 > 0 && client4 == 0) {
+                                client4 = lastClient;
+                            }
+                            relocateMyComponents();
+                            variables.setLastClient(lastClient);
+                            variables.setNextClient(nextClient);
+                            printTicket();
                         }
-                        relocateMyComponents();
-                        variables.setLastClient(lastClient);
-                        variables.setNextClient(nextClient);
-                        printTicket();
                         break;
                     default:
                         break;
@@ -317,12 +324,20 @@ public class MainForm extends JFrame {
     private void printTicket(){
         if (!PRINTER_ERROR) {
             if (TICKET_TAKEN){
+                TICKET_IS_PRINTING = true;
+                //1 sec deley that prevents to print something new
+                timerPrinter.start();
                 printer.Print(total);
+
                 ticketsPrinted++;
                 variables.setTicketsPrinted(ticketsPrinted);
                 TICKET_TAKEN = false;
             }else {
                 if (!SERVICE_STOPPED) {
+
+                    TICKET_IS_PRINTING = true;
+                    timerPrinter.start();
+                    //1 sec deley that prevents to print something new
                     printer.Print(total);
                     ticketsPrinted++;
                     variables.setTicketsPrinted(ticketsPrinted);
@@ -361,6 +376,8 @@ public class MainForm extends JFrame {
         timerError.setInitialDelay(0);
         timerServiceStopped = new Timer(takeTicketBlinkRate, new TimerListener(4));
         timerServiceStopped.setInitialDelay(0);
+        timerPrinter = new Timer(1000, new TimerListener(5));
+        timerPrinter.setInitialDelay(1000);
         printer = new POS_PRINTER();
         errorSound = new Audio("/resources/notify.wav");
         notificationSound = new Audio("/resources/chimes.wav");
@@ -674,6 +691,11 @@ public class MainForm extends JFrame {
                     this.label1 = l_takeTicket;
                     this.label2 = l_serviceStopped;
                     break;
+                case 5: //ticket is printing
+                    //no neccessity to init something (we do it just to escape an error):
+                    this.label1 = l_takeTicket;
+                    this.label2 = l_serviceStopped;
+                    break;
                 default:
                     break;
             }
@@ -714,6 +736,10 @@ public class MainForm extends JFrame {
                         label1.setText("ТАЛОНОВ  НЕТ");
                     }
                     option1 = !option1;
+                    break;
+                case 5://ticket has been printed
+                    TICKET_IS_PRINTING = false;
+                    timerPrinter.stop();
                     break;
                 default:
                     if (alreadyBlinked <= maxBlinking * 2) {
