@@ -10,6 +10,6 @@ public class Main {
         GraphicsEnvironment env = GraphicsEnvironment
                 .getLocalGraphicsEnvironment();
         GraphicsDevice vc = env.getDefaultScreenDevice();
-        vc.setFullScreenWindow(form);
+        //vc.setFullScreenWindow(form);
     }
 }

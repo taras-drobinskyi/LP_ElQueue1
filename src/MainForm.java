@@ -2,6 +2,10 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import uk.co.caprica.vlcj.player.MediaPlayerFactory;
+import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
+import uk.co.caprica.vlcj.player.embedded.videosurface.CanvasVideoSurface;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -22,6 +26,7 @@ public class MainForm extends JFrame {
     int client2 = 0;
     int client3 = 0;
     int client4 = 0;
+    int client5 = 0;
     int buttonClicked = 0;
     int ticketsPrinted = 0;
     Timer timerClient1;
@@ -57,8 +62,20 @@ public class MainForm extends JFrame {
     private JLabel l_serviceStopped;
     private JPanel bottomPanel;
     private JPanel videoPanel;
+    private JLabel l_client3_arrow;
+    private JLabel l_client4_arrow;
+    private JLabel l_client5;
+    private JLabel l_client5_arrow;
+    private JLabel l_terminal3;
+    private JLabel l_terminal4;
+    private JLabel l_terminal5;
+
+    private Canvas canvas;
+
     private int formWidth;
     private int formHeight;
+    private int uiPanelWidth;
+    private int uiPanelHeight;
     private int w_percent;
     private int h_percent;
     private Point hor_line1_p1 = new Point(100, 100);
@@ -75,7 +92,7 @@ public class MainForm extends JFrame {
         super("Продукт Компании \"ВЕРСИЯ\"");
 
         setContentPane(rootPanel);
-        setUndecorated(true);
+        //setUndecorated(true);
 
         pack();
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -83,42 +100,52 @@ public class MainForm extends JFrame {
 
         setExtendedState(JFrame.MAXIMIZED_BOTH);
 
+        //MyLayoutManager mgr = new MyLayoutManager();
+
         mainUIPanel.setLayout(null);
+        videoPanel.setLayout(null);
+        bottomPanel.setLayout(null);
 
         initVariables();
         initObjects();
 
-        // messagePanel.setSize(formWidth, 0);
+        // messagePanel.setSize(uiPanelWidth, 0);
 
         //Print first ticket
         total = lastClient + 1;
         printer.Print(total);
 
-        mainUIPanel.addComponentListener(new ComponentListener() {
+        mainUIPanel.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 Rectangle r = e.getComponent().getBounds();
-                formWidth = (int) r.getWidth();
-                formHeight = (int) r.getHeight();
-                w_percent = formWidth / 100;
-                h_percent = formHeight / 100;
+                uiPanelWidth = (int) r.getWidth();
+                uiPanelHeight = (int) r.getHeight();
+                w_percent = uiPanelWidth / 100;
+                h_percent = uiPanelHeight / 100;
 
                 relocateMyComponents();
             }
+        });
 
+        videoPanel.addComponentListener(new ComponentAdapter() {
             @Override
-            public void componentMoved(ComponentEvent e) {
-
+            public void componentResized(ComponentEvent e) {
+                Rectangle r = e.getComponent().getBounds();
+                Component cmp = videoPanel.getComponent(0);
+                int width = (int)r.getWidth();
+                int height = (int)r.getHeight();
+                cmp.setBounds(0, 0, width, height);
             }
+        });
 
+        bottomPanel.addComponentListener(new ComponentAdapter() {
             @Override
-            public void componentShown(ComponentEvent e) {
-
-            }
-
-            @Override
-            public void componentHidden(ComponentEvent e) {
-
+            public void componentResized(ComponentEvent e) {
+                Rectangle r = e.getComponent().getBounds();
+                int width = (int)r.getWidth();
+                int height = (int)r.getHeight();
+                relocateBottomComponents(width, height);
             }
         });
 
@@ -198,12 +225,12 @@ public class MainForm extends JFrame {
                             lastClient++;
                             total = lastClient + 1;
                             variables.setLastClient(lastClient);
-                            if (client3 == 0) {
+                            if (nextClient == 0) {
                                 nextClient = lastClient;
-                                client3 = nextClient;
-                            } else if (client3 > 0 && client4 == 0) {
+                                //client3 = nextClient;
+                            }/* else if (client3 > 0 && client4 == 0) {
                                 client4 = lastClient;
-                            }
+                            }*/
                             variables.setNextClient(nextClient);
                         }
                         break;
@@ -232,12 +259,12 @@ public class MainForm extends JFrame {
                         if(!TICKET_IS_PRINTING) {
                             total++;
                             lastClient = total - 1;
-                            if (client3 == 0) {
+                            if (nextClient == 0) {
                                 nextClient = lastClient;
-                                client3 = nextClient;
-                            } else if (client3 > 0 && client4 == 0) {
+                                //client3 = nextClient;
+                            } /*else if (client3 > 0 && client4 == 0) {
                                 client4 = lastClient;
-                            }
+                            }*/
                             relocateMyComponents();
                             variables.setLastClient(lastClient);
                             variables.setNextClient(nextClient);
@@ -264,6 +291,21 @@ public class MainForm extends JFrame {
 
         rootPanel.setFocusable(true);
         rootPanel.requestFocusInWindow();
+
+        canvas = new Canvas();
+        canvas.setBackground(Color.BLACK);
+        /*MyLayoutManager.MouseDragger mouseDragger = mgr.new MouseDragger();
+        mouseDragger.makeDraggable(canvas);*/
+
+        //videoPanel.add(canvas, new Rectangle(0, 0, 500, 500));
+        videoPanel.add(canvas, BorderLayout.CENTER);
+
+        MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory();
+        CanvasVideoSurface videoSurface = mediaPlayerFactory.newVideoSurface(canvas);
+        EmbeddedMediaPlayer mediaPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer();
+        mediaPlayer.setVideoSurface(videoSurface);
+        mediaPlayer.playMedia("/media/forando/DATA/Фильмы/mamont.2009.xvid.111dvdrip.(hdrip).avi");
+
         setVisible(true);
 
     }
@@ -391,6 +433,9 @@ public class MainForm extends JFrame {
         lastClient = variables.getLastClient();
         client1 = variables.getClientAsigned(1);
         client2 = variables.getClientAsigned(2);
+        client3 = variables.getClientAsigned(3);
+        client4 = variables.getClientAsigned(4);
+        client5 = variables.getClientAsigned(5);
         buttonClicked = variables.getButtonClicked();
         ticketsPrinted = variables.getTicketsPrinted();
         nextClient = variables.getNextClient();
@@ -400,15 +445,15 @@ public class MainForm extends JFrame {
         standardBlinkRate = variables.getStandardBlinkRate();
         takeTicketBlinkRate = variables.getTakeTicketBlinkRate();
 
-        client3 = nextClient;
+        //client3 = nextClient;
         if (nextClient == 0) {
             nextClient = lastClient;
-            client3 = nextClient;
-        } else if (nextClient > 0 && nextClient < lastClient) {
+            //client3 = nextClient;
+        } /*else if (nextClient > 0 && nextClient < lastClient) {
             client4 = nextClient + 1;
         } else {
             client4 = 0;
-        }
+        }*/
 
         variables.setNextClient(nextClient);
 
@@ -423,12 +468,14 @@ public class MainForm extends JFrame {
         }
     }
 
-    private void relocateMyComponents() {
+    private void relocateBottomComponents(int width, int height) {
 
+        int h_percent = height / 100;
+        int w_percent = width / 100;
         int titleHeight = h_percent * 12;
         int tableDataHeight = h_percent * 26;
         int dataHeight = h_percent * 16;
-        int totalDataHeight = h_percent * 14;
+        int totalDataHeight = h_percent * 90;
 
         int w_loc;
         int h_loc;
@@ -437,151 +484,30 @@ public class MainForm extends JFrame {
         int stringWidth;
         String fontName = l_clientTitle.getFont().getName();
 
-
-        l_clientTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
-        labelText = l_clientTitle.getText();
-        stringWidth = l_clientTitle.getFontMetrics(l_clientTitle.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 25) - (stringWidth / 2);
-        h_loc = h_percent;
-        l_clientTitle.setLocation(w_loc, h_loc);
-        l_clientTitle.setSize(stringWidth, titleHeight - h_percent * 3);
-
-        l_terminalTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
-        labelText = l_terminalTitle.getText();
-        stringWidth = l_terminalTitle.getFontMetrics(l_terminalTitle.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 75) - (stringWidth / 2);
-        h_loc = h_percent;
-        l_terminalTitle.setLocation(w_loc, h_loc);
-        l_terminalTitle.setSize(stringWidth, titleHeight - h_percent * 3);
-
-
-        //=====================TABLE DATA ========================================
-
-
-        l_client1.setText(String.valueOf(client1));
-        l_client1.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_client1.getText();
-        stringWidth = l_client1.getFontMetrics(l_client1.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 25) - (stringWidth / 2);
-        h_loc = h_percent * 18;
-        l_client1.setLocation(w_loc, h_loc);
-        l_client1.setSize(stringWidth, tableDataHeight - h_percent * 5);
-
-        l_client1_arrow.setText(">");
-        l_client1_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_client1_arrow.getText();
-        stringWidth = l_client1_arrow.getFontMetrics(l_client1_arrow.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 50) - (stringWidth / 2);
-        h_loc = h_percent * 18;
-        l_client1_arrow.setLocation(w_loc, h_loc);
-        l_client1_arrow.setSize(stringWidth, tableDataHeight - h_percent * 5);
-
-        if (client1 == 0) {
-            l_client1.setText("");
-            l_client1_arrow.setText("");
-        }
-
-        l_client2.setText(String.valueOf(client2));
-        l_client2.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_client2.getText();
-        stringWidth = l_client2.getFontMetrics(l_client2.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 25) - (stringWidth / 2);
-        h_loc = h_percent * 48;
-        l_client2.setLocation(w_loc, h_loc);
-        l_client2.setSize(stringWidth, tableDataHeight - h_percent * 5);
-
-        l_client2_arrow.setText(">");
-        l_client2_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_client2_arrow.getText();
-        stringWidth = l_client2_arrow.getFontMetrics(l_client2_arrow.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 50) - (stringWidth / 2);
-        h_loc = h_percent * 48;
-        l_client2_arrow.setLocation(w_loc, h_loc);
-        l_client2_arrow.setSize(stringWidth, tableDataHeight - h_percent * 5);
-
-        if (client2 == 0) {
-            l_client2.setText("");
-            l_client2_arrow.setText("");
-        }
-
-
-        l_terminal1.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_terminal1.getText();
-        stringWidth = l_terminal1.getFontMetrics(l_terminal1.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 75) - (stringWidth / 2);
-        h_loc = h_percent * 18;
-        l_terminal1.setLocation(w_loc, h_loc);
-        l_terminal1.setSize(stringWidth, tableDataHeight - h_percent * 5);
-
-        l_terminal2.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_terminal2.getText();
-        stringWidth = l_terminal2.getFontMetrics(l_terminal2.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 75) - (stringWidth / 2);
-        h_loc = h_percent * 48;
-        l_terminal2.setLocation(w_loc, h_loc);
-        l_terminal2.setSize(stringWidth, tableDataHeight - h_percent * 5);
-
-
-        //=====================DATA ========================================
-
-        l_client3.setText(String.valueOf(client3));
-        l_client3.setFont(new Font(fontName, Font.PLAIN, dataHeight));
-        labelText = l_client3.getText();
-        stringWidth = l_client3.getFontMetrics(l_client3.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 25) - (stringWidth / 2);
-        //h_loc = l_client2.getLocation().y + l_client2.getHeight() + h_percent * 6;
-        h_loc = l_client4.getLocation().y - l_client3.getHeight();
-        l_client3.setLocation(w_loc, h_loc);
-        l_client3.setSize(stringWidth, dataHeight - h_percent * 3);
-
-        //hiding this label:
-        l_client3.setText("");
-
-/*        if (client3 == 0) {
-            l_client3.setText("");
-        }*/
-
-        l_client4.setText(String.valueOf(client4));
-        l_client4.setFont(new Font(fontName, Font.PLAIN, dataHeight));
-        labelText = l_client4.getText();
-        stringWidth = l_client4.getFontMetrics(l_client4.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 25) - (stringWidth / 2);
-        //h_loc = l_client3.getLocation().y + l_client3.getHeight() + h_percent * 2;
-        h_loc = formHeight - l_client4.getHeight() - h_percent;
-        l_client4.setLocation(w_loc, h_loc);
-        l_client4.setSize(stringWidth, dataHeight - h_percent * 3);
-
-        //hiding this label:
-        l_client4.setText("");
-
-/*        if (client4 == 0) {
-            l_client4.setText("");
-        }*/
-
-
         //=====================TOTAL DATA ========================================
-
-        setRestOfClients();
-        l_total.setText(String.valueOf(restOfClients));
-        l_total.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
-        labelText = l_total.getText();
-        stringWidth = l_total.getFontMetrics(l_total.getFont()).stringWidth(labelText);
-        //w_loc = l_totalTitle.getLocation().x + totalTitle_stringWidth + w_percent;
-        //w_loc = (w_percent * 101) - stringWidth - (w_percent * 2);
-        w_loc = formWidth - stringWidth - (h_percent*4);
-        h_loc = h_percent * 85;
-        l_total.setLocation(w_loc, h_loc);
-        l_total.setSize(stringWidth, totalDataHeight + h_percent * 3);
 
 
         l_totalTitle.setText("ВСЕГО  В  ОЧЕРЕДИ:");
         l_totalTitle.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
         labelText = l_totalTitle.getText();
         int totalTitle_stringWidth = l_totalTitle.getFontMetrics(l_totalTitle.getFont()).stringWidth(labelText);
-        w_loc = l_total.getLocation().x - (totalTitle_stringWidth) - (w_percent * 4);
-        h_loc = h_percent * 85;
+        w_loc = (w_percent * 50) - (totalTitle_stringWidth / 2);
+        //w_loc = l_total.getLocation().x - (totalTitle_stringWidth) - (w_percent * 4);
+        h_loc = h_percent * 30;
         l_totalTitle.setLocation(w_loc, h_loc);
         l_totalTitle.setSize(totalTitle_stringWidth, totalDataHeight + h_percent * 3);
+
+        setRestOfClients();
+        l_total.setText(String.valueOf(restOfClients));
+        l_total.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
+        labelText = l_total.getText();
+        stringWidth = l_total.getFontMetrics(l_total.getFont()).stringWidth(labelText);
+        w_loc = l_totalTitle.getLocation().x + totalTitle_stringWidth + w_percent;
+        //w_loc = (w_percent * 101) - stringWidth - (w_percent * 2);
+        //w_loc = width - stringWidth - (h_percent*4);
+        h_loc = h_percent * 30;
+        l_total.setLocation(w_loc, h_loc);
+        l_total.setSize(stringWidth, totalDataHeight + h_percent * 3);
 
         //===========================================================================
         if(SERVICE_STOPPED){
@@ -617,16 +543,231 @@ public class MainForm extends JFrame {
         if (PRINTER_ERROR || SERVICE_STOPPED) {
             l_total.setText("");
             l_totalTitle.setText("");
+        }
+    }
+
+    private void relocateMyComponents() {
+
+        int titleHeight = h_percent * 8;
+        int tableDataHeight = h_percent * 16;
+        int dataHeight = h_percent * 16;
+
+        int w_loc;
+        int h_loc;
+
+        String labelText;
+        int stringWidth;
+        String fontName = l_clientTitle.getFont().getName();
+
+
+        l_clientTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
+        labelText = l_clientTitle.getText();
+        stringWidth = l_clientTitle.getFontMetrics(l_clientTitle.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 25) - (stringWidth / 2);
+        h_loc = h_percent;
+        l_clientTitle.setLocation(w_loc, h_loc);
+        l_clientTitle.setSize(stringWidth, titleHeight - h_percent * 2);
+
+        l_terminalTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
+        labelText = l_terminalTitle.getText();
+        stringWidth = l_terminalTitle.getFontMetrics(l_terminalTitle.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 75) - (stringWidth / 2);
+        h_loc = h_percent;
+        l_terminalTitle.setLocation(w_loc, h_loc);
+        l_terminalTitle.setSize(stringWidth, titleHeight - h_percent * 2);
+
+
+        //=====================TABLE DATA ========================================
+
+
+        l_client1.setText(String.valueOf(client1));
+        l_client1.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client1.getText();
+        stringWidth = l_client1.getFontMetrics(l_client1.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 25) - (stringWidth / 2);
+        h_loc = h_percent * 13;
+        l_client1.setLocation(w_loc, h_loc);
+        l_client1.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_client1_arrow.setText(">");
+        l_client1_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client1_arrow.getText();
+        stringWidth = l_client1_arrow.getFontMetrics(l_client1_arrow.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        h_loc = h_percent * 13;
+        l_client1_arrow.setLocation(w_loc, h_loc);
+        l_client1_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        if (client1 == 0) {
+            l_client1.setText("");
+            l_client1_arrow.setText("");
+        }
+
+        l_client2.setText(String.valueOf(client2));
+        l_client2.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client2.getText();
+        stringWidth = l_client2.getFontMetrics(l_client2.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 25) - (stringWidth / 2);
+        h_loc = h_percent * 30;
+        l_client2.setLocation(w_loc, h_loc);
+        l_client2.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_client2_arrow.setText(">");
+        l_client2_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client2_arrow.getText();
+        stringWidth = l_client2_arrow.getFontMetrics(l_client2_arrow.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        h_loc = h_percent * 30;
+        l_client2_arrow.setLocation(w_loc, h_loc);
+        l_client2_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        if (client2 == 0) {
+            l_client2.setText("");
+            l_client2_arrow.setText("");
+        }
+
+
+        //=====================DATA ========================================
+
+        l_client3.setText(String.valueOf(client3));
+        l_client3.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client3.getText();
+        stringWidth = l_client3.getFontMetrics(l_client3.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 25) - (stringWidth / 2);
+        h_loc = h_percent * 47;
+        //h_loc = l_client2.getLocation().y + l_client2.getHeight() + h_percent * 6;
+        //h_loc = l_client4.getLocation().y - l_client3.getHeight();
+        l_client3.setLocation(w_loc, h_loc);
+        l_client3.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_client3_arrow.setText(">");
+        l_client3_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client3_arrow.getText();
+        stringWidth = l_client3_arrow.getFontMetrics(l_client3_arrow.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        h_loc = h_percent * 47;
+        l_client3_arrow.setLocation(w_loc, h_loc);
+        l_client3_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        if (client3 == 0) {
+            l_client3.setText("");
+            l_client3_arrow.setText("");
+        }
+
+        //hiding this label:
+        //l_client3.setText("");
+
+/*        if (client3 == 0) {
+            l_client3.setText("");
+        }*/
+
+        l_client4.setText(String.valueOf(client4));
+        l_client4.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client4.getText();
+        stringWidth = l_client4.getFontMetrics(l_client4.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 25) - (stringWidth / 2);
+        h_loc = h_percent * 64;
+        //h_loc = l_client3.getLocation().y + l_client3.getHeight() + h_percent * 2;
+        //h_loc = uiPanelHeight - l_client4.getHeight() - h_percent;
+        l_client4.setLocation(w_loc, h_loc);
+        l_client4.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_client4_arrow.setText(">");
+        l_client4_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client4_arrow.getText();
+        stringWidth = l_client4_arrow.getFontMetrics(l_client4_arrow.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        h_loc = h_percent * 64;
+        l_client4_arrow.setLocation(w_loc, h_loc);
+        l_client4_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        if (client4 == 0) {
+            l_client4.setText("");
+            l_client4_arrow.setText("");
+        }
+
+        l_client5.setText(String.valueOf(client5));
+        l_client5.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client5.getText();
+        stringWidth = l_client5.getFontMetrics(l_client5.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 25) - (stringWidth / 2);
+        h_loc = h_percent * 81;
+        //h_loc = l_client3.getLocation().y + l_client3.getHeight() + h_percent * 2;
+        //h_loc = uiPanelHeight - l_client4.getHeight() - h_percent;
+        l_client5.setLocation(w_loc, h_loc);
+        l_client5.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_client5_arrow.setText(">");
+        l_client5_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client5_arrow.getText();
+        stringWidth = l_client5_arrow.getFontMetrics(l_client5_arrow.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        h_loc = h_percent * 81;
+        l_client5_arrow.setLocation(w_loc, h_loc);
+        l_client5_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        if (client5 == 0) {
+            l_client5.setText("");
+            l_client5_arrow.setText("");
+        }
+
+        l_terminal1.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_terminal1.getText();
+        stringWidth = l_terminal1.getFontMetrics(l_terminal1.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 75) - (stringWidth / 2);
+        h_loc = h_percent * 13;
+        l_terminal1.setLocation(w_loc, h_loc);
+        l_terminal1.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_terminal2.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_terminal2.getText();
+        stringWidth = l_terminal2.getFontMetrics(l_terminal2.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 75) - (stringWidth / 2);
+        h_loc = h_percent * 30;
+        l_terminal2.setLocation(w_loc, h_loc);
+        l_terminal2.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_terminal3.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_terminal3.getText();
+        stringWidth = l_terminal3.getFontMetrics(l_terminal3.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 75) - (stringWidth / 2);
+        h_loc = h_percent * 47;
+        l_terminal3.setLocation(w_loc, h_loc);
+        l_terminal3.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_terminal4.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_terminal4.getText();
+        stringWidth = l_terminal4.getFontMetrics(l_terminal4.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 75) - (stringWidth / 2);
+        h_loc = h_percent * 64;
+        l_terminal4.setLocation(w_loc, h_loc);
+        l_terminal4.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_terminal5.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_terminal5.getText();
+        stringWidth = l_terminal5.getFontMetrics(l_terminal5.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 75) - (stringWidth / 2);
+        h_loc = h_percent * 81;
+        l_terminal5.setLocation(w_loc, h_loc);
+        l_terminal5.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        //hiding this label:
+        //l_client4.setText("");
+
+/*        if (client4 == 0) {
+            l_client4.setText("");
+        }*/
+        /*if (PRINTER_ERROR || SERVICE_STOPPED) {
             l_client3.setText("");
             l_client4.setText("");
-        }
+        }*/
 
         redrawLines();
     }
 
     private void redrawLines() {
         int left = 0;
-        int right = formWidth;
+        int right = uiPanelWidth;
 
         int correction = 40;
 
@@ -643,17 +784,17 @@ public class MainForm extends JFrame {
     }
 
     private void reasignClients34() {
-        if (client4 > 0) {
-            nextClient = client4;
-            client3 = nextClient;
+        if (nextClient < lastClient) {
+            nextClient ++;
+            /*client3 = nextClient;
             if (client3 < lastClient) {
                 client4++;
             } else {
                 client4 = 0;
-            }
-        } else {
+            }*/
+        } else{
             nextClient = 0;
-            client3 = nextClient;
+            //client3 = nextClient;
         }
     }
 

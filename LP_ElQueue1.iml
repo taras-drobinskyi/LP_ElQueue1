@@ -7,6 +7,23 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/jna-3.5.2.jar!/" />
+          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/platform-3.5.2.jar!/" />
+          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1.jar!/" />
+          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1-tests.jar!/" />
+        </CLASSES>
+        <JAVADOC>
+          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1-javadoc.jar!/" />
+        </JAVADOC>
+        <SOURCES>
+          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1-sources.jar!/" />
+          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1-test-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
 </module>
 
