@@ -72,8 +72,8 @@ public class MainForm extends JFrame {
 
     private Canvas canvas;
 
-    private int formWidth;
-    private int formHeight;
+    private int bottomPanelWidth;
+    private int bottomPanelHeight;
     private int uiPanelWidth;
     private int uiPanelHeight;
     private int w_percent;
@@ -143,9 +143,9 @@ public class MainForm extends JFrame {
             @Override
             public void componentResized(ComponentEvent e) {
                 Rectangle r = e.getComponent().getBounds();
-                int width = (int)r.getWidth();
-                int height = (int)r.getHeight();
-                relocateBottomComponents(width, height);
+                bottomPanelWidth = (int)r.getWidth();
+                bottomPanelHeight = (int)r.getHeight();
+                relocateBottomComponents();
             }
         });
 
@@ -214,7 +214,8 @@ public class MainForm extends JFrame {
                             PRINTER_ERROR = true;
                             ticketsPrinted = 0;
                             variables.setTicketsPrinted(ticketsPrinted);
-                            relocateMyComponents();
+                            //relocateMyComponents();
+                            relocateBottomComponents();
                             timerBottomLine.stop();
                             timerError.start();
                             notificationSound.Stop();
@@ -240,7 +241,8 @@ public class MainForm extends JFrame {
                             timerBottomLine.start();
                             PRINTER_ERROR = false;
                             printer.Print(total);
-                            relocateMyComponents();
+                            //relocateMyComponents();
+                            relocateBottomComponents();
                         }
                         break;
                     case 118: //F7 - Service Stopped
@@ -265,7 +267,8 @@ public class MainForm extends JFrame {
                             } /*else if (client3 > 0 && client4 == 0) {
                                 client4 = lastClient;
                             }*/
-                            relocateMyComponents();
+                            //relocateMyComponents();
+                            relocateBottomComponents();
                             variables.setLastClient(lastClient);
                             variables.setNextClient(nextClient);
                             printTicket();
@@ -468,10 +471,10 @@ public class MainForm extends JFrame {
         }
     }
 
-    private void relocateBottomComponents(int width, int height) {
+    private void relocateBottomComponents() {
 
-        int h_percent = height / 100;
-        int w_percent = width / 100;
+        int h_percent = bottomPanelHeight / 100;
+        int w_percent = bottomPanelWidth / 100;
         int titleHeight = h_percent * 12;
         int tableDataHeight = h_percent * 26;
         int dataHeight = h_percent * 16;
@@ -509,6 +512,11 @@ public class MainForm extends JFrame {
         l_total.setLocation(w_loc, h_loc);
         l_total.setSize(stringWidth, totalDataHeight + h_percent * 3);
 
+        if (PRINTER_ERROR || SERVICE_STOPPED) {
+            l_total.setText("");
+            l_totalTitle.setText("");
+        }
+
         //===========================================================================
         if(SERVICE_STOPPED){
             l_takeTicket.setText("ТАЛОНОВ  НЕТ");
@@ -539,11 +547,6 @@ public class MainForm extends JFrame {
         l_serviceStopped.setSize(stringWidth, totalDataHeight + h_percent * 3);
         //the very first second they should not appear on screen:
         l_serviceStopped.setText("");
-
-        if (PRINTER_ERROR || SERVICE_STOPPED) {
-            l_total.setText("");
-            l_totalTitle.setText("");
-        }
     }
 
     private void relocateMyComponents() {
