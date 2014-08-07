@@ -10,23 +10,43 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Line2D;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by forando on 06.04.14.
  * This is Main Form that indicates info for clients
  */
 public class MainForm extends JFrame {
+
+    final static int TERMINAL_QUANTITY = 5;
+    final static int[] clientHeightOffsets = {13, 30, 47, 64, 81};
+
+    //System Commands:
+    final static int RESET_SYSTEM = 112;
+    final static int PRINTER_ERROR_ON = 113;
+    final static int PRINTER_ERROR_OFF = 114;
+    final static int STOP_SERVICE = 115;
+    final static int RESET_SERVICE = 116;
+    final static int TRIGGER_SERVICE = 117;
+    final static int PRINT_TICKET = 36;
+
+    //Terminal Commands:
+    final static int TERMINAL_BASE = 49;
+
+
     static int standardBlinkRate;
     static int clicksToChangeBattery;
     static int ticketsToInsertPaper;
     static int takeTicketBlinkRate;
     int lastClient = 0;
     int nextClient = 0;
-    int client1 = 0;
+    /*int client1 = 0;
     int client2 = 0;
     int client3 = 0;
     int client4 = 0;
-    int client5 = 0;
+    int client5 = 0;*/
     int buttonClicked = 0;
     int ticketsPrinted = 0;
     Timer timerClient1;
@@ -71,6 +91,13 @@ public class MainForm extends JFrame {
     private JLabel l_terminal5;
 
     private Canvas canvas;
+
+    List<JLabel> clients;
+    List<JLabel> arrows;
+    List<JLabel> terminals;
+    List<Timer> clientTimers;
+
+    int[] clientValues;
 
     private int bottomPanelWidth;
     private int bottomPanelHeight;
@@ -125,6 +152,9 @@ public class MainForm extends JFrame {
                 h_percent = uiPanelHeight / 100;
 
                 relocateMyComponents();
+               for (int i=0; i<clients.size(); i++){
+                   relocateClientComponent(i);
+               }
             }
         });
 
@@ -149,134 +179,11 @@ public class MainForm extends JFrame {
             }
         });
 
-        rootPanel.addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-
-            }
-
+        rootPanel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
-                //System.out.println("Pressed " + e.getKeyCode());
-                switch (e.getKeyCode()) {
-                    case 112: //F1 - terminal1 Button Pressed
-                        if (nextClient > 0) {
-                            client1 = nextClient;
-                            reasignClients34();
-                            relocateMyComponents();
-                            timerClient1.start();
-                            notificationSound.Play();
-                            variables.setClientAsigned(1, client1);
-                            variables.setNextClient(nextClient);
-                        }
-                        buttonClicked++;
-                        variables.setButtonClicked(buttonClicked);
-                        break;
-                    case 113: //F2 - terminal2 Button Pressed
-                        if (nextClient > 0) {
-                            client2 = nextClient;
-                            reasignClients34();
-                            relocateMyComponents();
-                            timerClient2.start();
-                            notificationSound.Play();
-                            variables.setClientAsigned(2, client2);
-                            variables.setNextClient(nextClient);
-                        }
-                        buttonClicked++;
-                        variables.setButtonClicked(buttonClicked);
-                        break;
-                    case 114: //F3 - Reset System
-                        total = 1;
-                        lastClient = 0;
-                        nextClient = 0;
-                        client1 = 0;
-                        client2 = 0;
-                        client3 = 0;
-                        client4 = 0;
-                        relocateMyComponents();
-
-                        SERVICE_STOPPED = false;
-                        triggerService(SERVICE_STOPPED, true);
-
-                        batteryCheck();
-                        variables.setLastClient(lastClient);
-                        variables.setNextClient(nextClient);
-                        variables.setClientAsigned(1, client1);
-                        variables.setClientAsigned(2, client2);
-                        break;
-                    case 116: //F5 - Printer ERROR ON
-                        if (!SERVICE_STOPPED) {
-                            PRINTER_ERROR = true;
-                            ticketsPrinted = 0;
-                            variables.setTicketsPrinted(ticketsPrinted);
-                            //relocateMyComponents();
-                            relocateBottomComponents();
-                            timerBottomLine.stop();
-                            timerError.start();
-                            notificationSound.Stop();
-                            errorSound.Play();
-                            notificationSound.Reset();
-                            //errorSound.Play();
-                            //incrementing lastClient by 1
-                            lastClient++;
-                            total = lastClient + 1;
-                            variables.setLastClient(lastClient);
-                            if (nextClient == 0) {
-                                nextClient = lastClient;
-                                //client3 = nextClient;
-                            }/* else if (client3 > 0 && client4 == 0) {
-                                client4 = lastClient;
-                            }*/
-                            variables.setNextClient(nextClient);
-                        }
-                        break;
-                    case 117: //F6 - Printer ERROR OFF
-                        if (!SERVICE_STOPPED) {
-                            timerError.stop();
-                            timerBottomLine.start();
-                            PRINTER_ERROR = false;
-                            printer.Print(total);
-                            //relocateMyComponents();
-                            relocateBottomComponents();
-                        }
-                        break;
-                    case 118: //F7 - Service Stopped
-                        SERVICE_STOPPED = true;
-                        triggerService(SERVICE_STOPPED);
-                        break;
-                    case 119: //F8 - Service Renewed
-                        SERVICE_STOPPED = false;
-                        triggerService(SERVICE_STOPPED);
-                        break;
-                    case 120: //F9 - Trigger Service
-                        SERVICE_STOPPED = !SERVICE_STOPPED;
-                        triggerService(SERVICE_STOPPED);
-                        break;
-                    case 36://signal to print a ticket
-                        if(!TICKET_IS_PRINTING) {
-                            total++;
-                            lastClient = total - 1;
-                            if (nextClient == 0) {
-                                nextClient = lastClient;
-                                //client3 = nextClient;
-                            } /*else if (client3 > 0 && client4 == 0) {
-                                client4 = lastClient;
-                            }*/
-                            //relocateMyComponents();
-                            relocateBottomComponents();
-                            variables.setLastClient(lastClient);
-                            variables.setNextClient(nextClient);
-                            printTicket();
-                        }
-                        break;
-                    default:
-                        break;
-                }
+                System.out.println(e.getKeyCode());
+                submitEvent(e.getKeyCode());
             }
         });
 
@@ -313,6 +220,163 @@ public class MainForm extends JFrame {
 
     }
 
+    private void submitEvent(int keyCode) {
+        if(keyCode>=49 && keyCode<=57){
+            int terminalNumber = keyCode - TERMINAL_BASE + 1;
+            if (terminalNumber <= TERMINAL_QUANTITY) {
+                assignTerminal(keyCode);
+            }
+        }else if(keyCode>=112 && keyCode<=123){
+            executeSystemCommand(keyCode);
+        }
+    }
+
+    private void executeSystemCommand(int keyCode) {
+        switch (keyCode) {
+            case RESET_SYSTEM: //F3 - Reset System
+                total = 1;
+                lastClient = 0;
+                nextClient = 0;
+                /*client1 = 0;
+                client2 = 0;
+                client3 = 0;
+                client4 = 0;*/
+                relocateMyComponents();
+                for (int i=0; i<clients.size(); i++){
+                    clientValues[i] = 0;
+                    relocateClientComponent(i);
+                }
+
+                SERVICE_STOPPED = false;
+                triggerService(SERVICE_STOPPED, true);
+
+                batteryCheck();
+                variables.setLastClient(lastClient);
+                variables.setNextClient(nextClient);
+                for (int i=0; i<clients.size(); i++){
+                    variables.setClientAsigned(i+1, 0);
+                }
+                break;
+            case PRINTER_ERROR_ON: //F5 - Printer ERROR ON
+                if (!SERVICE_STOPPED) {
+                    PRINTER_ERROR = true;
+                    ticketsPrinted = 0;
+                    variables.setTicketsPrinted(ticketsPrinted);
+                    //relocateMyComponents();
+                    relocateBottomComponents();
+                    timerBottomLine.stop();
+                    timerError.start();
+                    notificationSound.Stop();
+                    errorSound.Play();
+                    notificationSound.Reset();
+                    //errorSound.Play();
+                    //incrementing lastClient by 1
+                    lastClient++;
+                    total = lastClient + 1;
+                    variables.setLastClient(lastClient);
+                    if (nextClient == 0) {
+                        nextClient = lastClient;
+                        //client3 = nextClient;
+                    }/* else if (client3 > 0 && client4 == 0) {
+                                client4 = lastClient;
+                            }*/
+                    variables.setNextClient(nextClient);
+                }
+                break;
+            case PRINTER_ERROR_OFF: //F6 - Printer ERROR OFF
+                if (!SERVICE_STOPPED) {
+                    timerError.stop();
+                    timerBottomLine.start();
+                    PRINTER_ERROR = false;
+                    printer.Print(total);
+                    //relocateMyComponents();
+                    relocateBottomComponents();
+                }
+                break;
+            case STOP_SERVICE:
+                SERVICE_STOPPED = true;
+                triggerService(SERVICE_STOPPED);
+                break;
+            case RESET_SERVICE:
+                SERVICE_STOPPED = false;
+                triggerService(SERVICE_STOPPED);
+                break;
+            case TRIGGER_SERVICE:
+                SERVICE_STOPPED = !SERVICE_STOPPED;
+                triggerService(SERVICE_STOPPED);
+                break;
+            case PRINT_TICKET:
+                if(!TICKET_IS_PRINTING) {
+                    total++;
+                    lastClient = total - 1;
+                    if (nextClient == 0) {
+                        nextClient = lastClient;
+                        //client3 = nextClient;
+                    } /*else if (client3 > 0 && client4 == 0) {
+                                client4 = lastClient;
+                            }*/
+                    //relocateMyComponents();
+                    relocateBottomComponents();
+                    variables.setLastClient(lastClient);
+                    variables.setNextClient(nextClient);
+                    printTicket();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void assignTerminal(int keyCode) {
+
+        int terminalIndex = keyCode - TERMINAL_BASE;
+        if (nextClient > 0) {
+            clientValues[terminalIndex] = nextClient;
+            if (nextClient < lastClient) {
+                nextClient ++;
+            } else{
+                nextClient = 0;
+            }
+            relocateClientComponent(terminalIndex);
+            clientTimers.get(terminalIndex).start();
+            notificationSound.Play();
+            variables.setClientAsigned(terminalIndex + 1, clientValues[terminalIndex]);
+            variables.setNextClient(nextClient);
+        }
+        buttonClicked++;
+        variables.setButtonClicked(buttonClicked);
+        /*switch (keyCode) {
+            case 112: //F1 - terminal1 Button Pressed
+                if (nextClient > 0) {
+                    client1 = nextClient;
+                    reasignClients34();
+                    relocateMyComponents();
+                    timerClient1.start();
+                    notificationSound.Play();
+                    variables.setClientAsigned(1, client1);
+                    variables.setNextClient(nextClient);
+                }
+                buttonClicked++;
+                variables.setButtonClicked(buttonClicked);
+                break;
+            case 113: //F2 - terminal2 Button Pressed
+                if (nextClient > 0) {
+                    client2 = nextClient;
+                    reasignClients34();
+                    relocateMyComponents();
+                    timerClient2.start();
+                    notificationSound.Play();
+                    variables.setClientAsigned(2, client2);
+                    variables.setNextClient(nextClient);
+                }
+                buttonClicked++;
+                variables.setButtonClicked(buttonClicked);
+                break;
+            default:
+                break;
+        }*/
+    }
+
     //By Service means possibility to accept new clients
     private void triggerService (boolean turnOn, boolean... flags){
         boolean reset = false;
@@ -325,11 +389,13 @@ public class MainForm extends JFrame {
             }else {
                 timerBottomLine.stop();
             }
-            relocateMyComponents();
+            //relocateMyComponents();
+            relocateBottomComponents();
             timerServiceStopped.start();
         }else{
             timerServiceStopped.stop();
-            relocateMyComponents();
+            //relocateMyComponents();
+            relocateBottomComponents();
             if (PRINTER_ERROR){
                 timerError.start();
             }else {
@@ -411,17 +477,31 @@ public class MainForm extends JFrame {
     }
 
     private void initObjects() {
-        timerBottomLine = new Timer(takeTicketBlinkRate, new TimerListener(0));
-        timerBottomLine.setInitialDelay(0);
-        timerClient1 = new Timer(standardBlinkRate, new TimerListener(1));
+
+        clients = Arrays.asList(l_client1, l_client2, l_client3, l_client4, l_client5);
+        arrows = Arrays.asList(l_client1_arrow, l_client2_arrow, l_client3_arrow, l_client4_arrow, l_client5_arrow);
+        terminals = Arrays.asList(l_terminal1, l_terminal2, l_terminal3, l_terminal4, l_terminal5);
+        clientTimers = new ArrayList<Timer>();
+
+        for(int i=0; i< clients.size(); i++){
+            clients.get(i).setText(String.valueOf(i+1));
+            Timer timer = new Timer(standardBlinkRate, new ClientTimerListener(i, clients.get(i), arrows.get(i)));
+            timer.setInitialDelay(0);
+            clientTimers.add(timer);
+        }
+
+        /*timerClient1 = new Timer(standardBlinkRate, new SystemTimerListener(1));
         timerClient1.setInitialDelay(0);
-        timerClient2 = new Timer(standardBlinkRate, new TimerListener(2));
-        timerClient2.setInitialDelay(0);
-        timerError = new Timer(standardBlinkRate, new TimerListener(3));
+        timerClient2 = new Timer(standardBlinkRate, new SystemTimerListener(2));
+        timerClient2.setInitialDelay(0);*/
+
+        timerBottomLine = new Timer(takeTicketBlinkRate, new SystemTimerListener(0));
+        timerBottomLine.setInitialDelay(0);
+        timerError = new Timer(standardBlinkRate, new SystemTimerListener(3));
         timerError.setInitialDelay(0);
-        timerServiceStopped = new Timer(takeTicketBlinkRate, new TimerListener(4));
+        timerServiceStopped = new Timer(takeTicketBlinkRate, new SystemTimerListener(4));
         timerServiceStopped.setInitialDelay(0);
-        timerPrinter = new Timer(1000, new TimerListener(5));
+        timerPrinter = new Timer(1000, new SystemTimerListener(5));
         timerPrinter.setInitialDelay(1000);
         printer = new POS_PRINTER();
         errorSound = new Audio("/resources/notify.wav");
@@ -434,11 +514,17 @@ public class MainForm extends JFrame {
 
         variables.setLastClient(variables.getLastClient() + 1);
         lastClient = variables.getLastClient();
-        client1 = variables.getClientAsigned(1);
+
+        clientValues = new int[TERMINAL_QUANTITY];
+
+        for (int i=0; i<TERMINAL_QUANTITY; i++){
+            clientValues[i] = variables.getClientAsigned(i+1);
+        }
+        /*client1 = variables.getClientAsigned(1);
         client2 = variables.getClientAsigned(2);
         client3 = variables.getClientAsigned(3);
         client4 = variables.getClientAsigned(4);
-        client5 = variables.getClientAsigned(5);
+        client5 = variables.getClientAsigned(5);*/
         buttonClicked = variables.getButtonClicked();
         ticketsPrinted = variables.getTicketsPrinted();
         nextClient = variables.getNextClient();
@@ -469,6 +555,275 @@ public class MainForm extends JFrame {
         } else {
             restOfClients = 0;
         }
+    }
+
+    private void relocateMyComponents() {
+
+        int titleHeight = h_percent * 8;
+        int tableDataHeight = h_percent * 16;
+        int dataHeight = h_percent * 16;
+
+        int w_loc;
+        int h_loc;
+
+        String labelText;
+        int stringWidth;
+        String fontName = l_clientTitle.getFont().getName();
+
+
+        l_clientTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
+        labelText = l_clientTitle.getText();
+        stringWidth = l_clientTitle.getFontMetrics(l_clientTitle.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 25) - (stringWidth / 2);
+        h_loc = h_percent;
+        l_clientTitle.setLocation(w_loc, h_loc);
+        l_clientTitle.setSize(stringWidth, titleHeight - h_percent * 2);
+
+        l_terminalTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
+        labelText = l_terminalTitle.getText();
+        stringWidth = l_terminalTitle.getFontMetrics(l_terminalTitle.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 75) - (stringWidth / 2);
+        h_loc = h_percent;
+        l_terminalTitle.setLocation(w_loc, h_loc);
+        l_terminalTitle.setSize(stringWidth, titleHeight - h_percent * 2);
+
+
+        //=====================TABLE DATA ========================================
+
+
+        /*//l_client1.setText(String.valueOf(client1));
+        l_client1.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client1.getText();
+        stringWidth = l_client1.getFontMetrics(l_client1.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 25) - (stringWidth / 2);
+        h_loc = h_percent * 13;
+        l_client1.setLocation(w_loc, h_loc);
+        l_client1.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_client1_arrow.setText(">");
+        l_client1_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client1_arrow.getText();
+        stringWidth = l_client1_arrow.getFontMetrics(l_client1_arrow.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        h_loc = h_percent * 13;
+        l_client1_arrow.setLocation(w_loc, h_loc);
+        l_client1_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        if (client1 == 0) {
+            l_client1.setText("");
+            l_client1_arrow.setText("");
+        }
+
+        //l_client2.setText(String.valueOf(client2));
+        l_client2.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client2.getText();
+        stringWidth = l_client2.getFontMetrics(l_client2.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 25) - (stringWidth / 2);
+        h_loc = h_percent * 30;
+        l_client2.setLocation(w_loc, h_loc);
+        l_client2.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_client2_arrow.setText(">");
+        l_client2_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client2_arrow.getText();
+        stringWidth = l_client2_arrow.getFontMetrics(l_client2_arrow.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        h_loc = h_percent * 30;
+        l_client2_arrow.setLocation(w_loc, h_loc);
+        l_client2_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        if (client2 == 0) {
+            l_client2.setText("");
+            l_client2_arrow.setText("");
+        }
+
+
+        //=====================DATA ========================================
+
+        //l_client3.setText(String.valueOf(client3));
+        l_client3.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client3.getText();
+        stringWidth = l_client3.getFontMetrics(l_client3.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 25) - (stringWidth / 2);
+        h_loc = h_percent * 47;
+        //h_loc = l_client2.getLocation().y + l_client2.getHeight() + h_percent * 6;
+        //h_loc = l_client4.getLocation().y - l_client3.getHeight();
+        l_client3.setLocation(w_loc, h_loc);
+        l_client3.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_client3_arrow.setText(">");
+        l_client3_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client3_arrow.getText();
+        stringWidth = l_client3_arrow.getFontMetrics(l_client3_arrow.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        h_loc = h_percent * 47;
+        l_client3_arrow.setLocation(w_loc, h_loc);
+        l_client3_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        if (client3 == 0) {
+            l_client3.setText("");
+            l_client3_arrow.setText("");
+        }
+
+        //hiding this label:
+        //l_client3.setText("");
+
+*//*        if (client3 == 0) {
+            l_client3.setText("");
+        }*//*
+
+        //l_client4.setText(String.valueOf(client4));
+        l_client4.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client4.getText();
+        stringWidth = l_client4.getFontMetrics(l_client4.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 25) - (stringWidth / 2);
+        h_loc = h_percent * 64;
+        //h_loc = l_client3.getLocation().y + l_client3.getHeight() + h_percent * 2;
+        //h_loc = uiPanelHeight - l_client4.getHeight() - h_percent;
+        l_client4.setLocation(w_loc, h_loc);
+        l_client4.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_client4_arrow.setText(">");
+        l_client4_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client4_arrow.getText();
+        stringWidth = l_client4_arrow.getFontMetrics(l_client4_arrow.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        h_loc = h_percent * 64;
+        l_client4_arrow.setLocation(w_loc, h_loc);
+        l_client4_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        if (client4 == 0) {
+            l_client4.setText("");
+            l_client4_arrow.setText("");
+        }
+
+        //l_client5.setText(String.valueOf(client5));
+        l_client5.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client5.getText();
+        stringWidth = l_client5.getFontMetrics(l_client5.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 25) - (stringWidth / 2);
+        h_loc = h_percent * 81;
+        //h_loc = l_client3.getLocation().y + l_client3.getHeight() + h_percent * 2;
+        //h_loc = uiPanelHeight - l_client4.getHeight() - h_percent;
+        l_client5.setLocation(w_loc, h_loc);
+        l_client5.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_client5_arrow.setText(">");
+        l_client5_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_client5_arrow.getText();
+        stringWidth = l_client5_arrow.getFontMetrics(l_client5_arrow.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        h_loc = h_percent * 81;
+        l_client5_arrow.setLocation(w_loc, h_loc);
+        l_client5_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        if (client5 == 0) {
+            l_client5.setText("");
+            l_client5_arrow.setText("");
+        }
+
+        l_terminal1.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_terminal1.getText();
+        stringWidth = l_terminal1.getFontMetrics(l_terminal1.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 75) - (stringWidth / 2);
+        h_loc = h_percent * 13;
+        l_terminal1.setLocation(w_loc, h_loc);
+        l_terminal1.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_terminal2.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_terminal2.getText();
+        stringWidth = l_terminal2.getFontMetrics(l_terminal2.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 75) - (stringWidth / 2);
+        h_loc = h_percent * 30;
+        l_terminal2.setLocation(w_loc, h_loc);
+        l_terminal2.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_terminal3.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_terminal3.getText();
+        stringWidth = l_terminal3.getFontMetrics(l_terminal3.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 75) - (stringWidth / 2);
+        h_loc = h_percent * 47;
+        l_terminal3.setLocation(w_loc, h_loc);
+        l_terminal3.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_terminal4.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_terminal4.getText();
+        stringWidth = l_terminal4.getFontMetrics(l_terminal4.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 75) - (stringWidth / 2);
+        h_loc = h_percent * 64;
+        l_terminal4.setLocation(w_loc, h_loc);
+        l_terminal4.setSize(stringWidth, tableDataHeight - h_percent * 3);
+
+        l_terminal5.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
+        labelText = l_terminal5.getText();
+        stringWidth = l_terminal5.getFontMetrics(l_terminal5.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 75) - (stringWidth / 2);
+        h_loc = h_percent * 81;
+        l_terminal5.setLocation(w_loc, h_loc);
+        l_terminal5.setSize(stringWidth, tableDataHeight - h_percent * 3);*/
+
+        //hiding this label:
+        //l_client4.setText("");
+
+/*        if (client4 == 0) {
+            l_client4.setText("");
+        }*/
+        /*if (PRINTER_ERROR || SERVICE_STOPPED) {
+            l_client3.setText("");
+            l_client4.setText("");
+        }*/
+
+        redrawLines();
+    }
+
+    private void relocateClientComponent(int clientIndex){
+        JLabel client = clients.get(clientIndex);
+        JLabel arrow = arrows.get(clientIndex);
+        JLabel terminal = terminals.get(clientIndex);
+
+        int val = clientValues[clientIndex];
+
+
+        int fontHeight = h_percent * 16;
+        int h_offset = clientHeightOffsets[clientIndex];
+
+        int w_loc;
+        int h_loc;
+
+        String labelText;
+        int stringWidth;
+        String fontName = client.getFont().getName();
+
+        client.setText(String.valueOf(val));
+        client.setFont(new Font(fontName, Font.PLAIN, fontHeight));
+        labelText = client.getText();
+        stringWidth = client.getFontMetrics(client.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 25) - (stringWidth / 2);
+        h_loc = h_percent * h_offset;
+        client.setLocation(w_loc, h_loc);
+        client.setSize(stringWidth, fontHeight - h_percent * 3);
+
+        arrow.setText(">");
+        arrow.setFont(new Font(fontName, Font.PLAIN, fontHeight));
+        labelText = arrow.getText();
+        stringWidth = arrow.getFontMetrics(arrow.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 50) - (stringWidth / 2);
+        h_loc = h_percent * h_offset;
+        arrow.setLocation(w_loc, h_loc);
+        arrow.setSize(stringWidth, fontHeight - h_percent * 3);
+
+        if (val == 0) {
+            l_client1.setText("");
+            l_client1_arrow.setText("");
+        }
+
+        terminal.setFont(new Font(fontName, Font.PLAIN, fontHeight));
+        labelText = terminal.getText();
+        stringWidth = terminal.getFontMetrics(terminal.getFont()).stringWidth(labelText);
+        w_loc = (w_percent * 75) - (stringWidth / 2);
+        h_loc = h_percent * h_offset;
+        terminal.setLocation(w_loc, h_loc);
+        terminal.setSize(stringWidth, fontHeight - h_percent * 3);
     }
 
     private void relocateBottomComponents() {
@@ -549,225 +904,6 @@ public class MainForm extends JFrame {
         l_serviceStopped.setText("");
     }
 
-    private void relocateMyComponents() {
-
-        int titleHeight = h_percent * 8;
-        int tableDataHeight = h_percent * 16;
-        int dataHeight = h_percent * 16;
-
-        int w_loc;
-        int h_loc;
-
-        String labelText;
-        int stringWidth;
-        String fontName = l_clientTitle.getFont().getName();
-
-
-        l_clientTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
-        labelText = l_clientTitle.getText();
-        stringWidth = l_clientTitle.getFontMetrics(l_clientTitle.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 25) - (stringWidth / 2);
-        h_loc = h_percent;
-        l_clientTitle.setLocation(w_loc, h_loc);
-        l_clientTitle.setSize(stringWidth, titleHeight - h_percent * 2);
-
-        l_terminalTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
-        labelText = l_terminalTitle.getText();
-        stringWidth = l_terminalTitle.getFontMetrics(l_terminalTitle.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 75) - (stringWidth / 2);
-        h_loc = h_percent;
-        l_terminalTitle.setLocation(w_loc, h_loc);
-        l_terminalTitle.setSize(stringWidth, titleHeight - h_percent * 2);
-
-
-        //=====================TABLE DATA ========================================
-
-
-        l_client1.setText(String.valueOf(client1));
-        l_client1.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_client1.getText();
-        stringWidth = l_client1.getFontMetrics(l_client1.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 25) - (stringWidth / 2);
-        h_loc = h_percent * 13;
-        l_client1.setLocation(w_loc, h_loc);
-        l_client1.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        l_client1_arrow.setText(">");
-        l_client1_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_client1_arrow.getText();
-        stringWidth = l_client1_arrow.getFontMetrics(l_client1_arrow.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 50) - (stringWidth / 2);
-        h_loc = h_percent * 13;
-        l_client1_arrow.setLocation(w_loc, h_loc);
-        l_client1_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        if (client1 == 0) {
-            l_client1.setText("");
-            l_client1_arrow.setText("");
-        }
-
-        l_client2.setText(String.valueOf(client2));
-        l_client2.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_client2.getText();
-        stringWidth = l_client2.getFontMetrics(l_client2.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 25) - (stringWidth / 2);
-        h_loc = h_percent * 30;
-        l_client2.setLocation(w_loc, h_loc);
-        l_client2.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        l_client2_arrow.setText(">");
-        l_client2_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_client2_arrow.getText();
-        stringWidth = l_client2_arrow.getFontMetrics(l_client2_arrow.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 50) - (stringWidth / 2);
-        h_loc = h_percent * 30;
-        l_client2_arrow.setLocation(w_loc, h_loc);
-        l_client2_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        if (client2 == 0) {
-            l_client2.setText("");
-            l_client2_arrow.setText("");
-        }
-
-
-        //=====================DATA ========================================
-
-        l_client3.setText(String.valueOf(client3));
-        l_client3.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_client3.getText();
-        stringWidth = l_client3.getFontMetrics(l_client3.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 25) - (stringWidth / 2);
-        h_loc = h_percent * 47;
-        //h_loc = l_client2.getLocation().y + l_client2.getHeight() + h_percent * 6;
-        //h_loc = l_client4.getLocation().y - l_client3.getHeight();
-        l_client3.setLocation(w_loc, h_loc);
-        l_client3.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        l_client3_arrow.setText(">");
-        l_client3_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_client3_arrow.getText();
-        stringWidth = l_client3_arrow.getFontMetrics(l_client3_arrow.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 50) - (stringWidth / 2);
-        h_loc = h_percent * 47;
-        l_client3_arrow.setLocation(w_loc, h_loc);
-        l_client3_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        if (client3 == 0) {
-            l_client3.setText("");
-            l_client3_arrow.setText("");
-        }
-
-        //hiding this label:
-        //l_client3.setText("");
-
-/*        if (client3 == 0) {
-            l_client3.setText("");
-        }*/
-
-        l_client4.setText(String.valueOf(client4));
-        l_client4.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_client4.getText();
-        stringWidth = l_client4.getFontMetrics(l_client4.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 25) - (stringWidth / 2);
-        h_loc = h_percent * 64;
-        //h_loc = l_client3.getLocation().y + l_client3.getHeight() + h_percent * 2;
-        //h_loc = uiPanelHeight - l_client4.getHeight() - h_percent;
-        l_client4.setLocation(w_loc, h_loc);
-        l_client4.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        l_client4_arrow.setText(">");
-        l_client4_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_client4_arrow.getText();
-        stringWidth = l_client4_arrow.getFontMetrics(l_client4_arrow.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 50) - (stringWidth / 2);
-        h_loc = h_percent * 64;
-        l_client4_arrow.setLocation(w_loc, h_loc);
-        l_client4_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        if (client4 == 0) {
-            l_client4.setText("");
-            l_client4_arrow.setText("");
-        }
-
-        l_client5.setText(String.valueOf(client5));
-        l_client5.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_client5.getText();
-        stringWidth = l_client5.getFontMetrics(l_client5.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 25) - (stringWidth / 2);
-        h_loc = h_percent * 81;
-        //h_loc = l_client3.getLocation().y + l_client3.getHeight() + h_percent * 2;
-        //h_loc = uiPanelHeight - l_client4.getHeight() - h_percent;
-        l_client5.setLocation(w_loc, h_loc);
-        l_client5.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        l_client5_arrow.setText(">");
-        l_client5_arrow.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_client5_arrow.getText();
-        stringWidth = l_client5_arrow.getFontMetrics(l_client5_arrow.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 50) - (stringWidth / 2);
-        h_loc = h_percent * 81;
-        l_client5_arrow.setLocation(w_loc, h_loc);
-        l_client5_arrow.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        if (client5 == 0) {
-            l_client5.setText("");
-            l_client5_arrow.setText("");
-        }
-
-        l_terminal1.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_terminal1.getText();
-        stringWidth = l_terminal1.getFontMetrics(l_terminal1.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 75) - (stringWidth / 2);
-        h_loc = h_percent * 13;
-        l_terminal1.setLocation(w_loc, h_loc);
-        l_terminal1.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        l_terminal2.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_terminal2.getText();
-        stringWidth = l_terminal2.getFontMetrics(l_terminal2.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 75) - (stringWidth / 2);
-        h_loc = h_percent * 30;
-        l_terminal2.setLocation(w_loc, h_loc);
-        l_terminal2.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        l_terminal3.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_terminal3.getText();
-        stringWidth = l_terminal3.getFontMetrics(l_terminal3.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 75) - (stringWidth / 2);
-        h_loc = h_percent * 47;
-        l_terminal3.setLocation(w_loc, h_loc);
-        l_terminal3.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        l_terminal4.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_terminal4.getText();
-        stringWidth = l_terminal4.getFontMetrics(l_terminal4.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 75) - (stringWidth / 2);
-        h_loc = h_percent * 64;
-        l_terminal4.setLocation(w_loc, h_loc);
-        l_terminal4.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        l_terminal5.setFont(new Font(fontName, Font.PLAIN, tableDataHeight));
-        labelText = l_terminal5.getText();
-        stringWidth = l_terminal5.getFontMetrics(l_terminal5.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 75) - (stringWidth / 2);
-        h_loc = h_percent * 81;
-        l_terminal5.setLocation(w_loc, h_loc);
-        l_terminal5.setSize(stringWidth, tableDataHeight - h_percent * 3);
-
-        //hiding this label:
-        //l_client4.setText("");
-
-/*        if (client4 == 0) {
-            l_client4.setText("");
-        }*/
-        /*if (PRINTER_ERROR || SERVICE_STOPPED) {
-            l_client3.setText("");
-            l_client4.setText("");
-        }*/
-
-        redrawLines();
-    }
-
     private void redrawLines() {
         int left = 0;
         int right = uiPanelWidth;
@@ -786,22 +922,62 @@ public class MainForm extends JFrame {
         repaint();
     }
 
-    private void reasignClients34() {
+    /*private void reasignClients34() {
         if (nextClient < lastClient) {
             nextClient ++;
-            /*client3 = nextClient;
+            *//*client3 = nextClient;
             if (client3 < lastClient) {
                 client4++;
             } else {
                 client4 = 0;
-            }*/
+            }*//*
         } else{
             nextClient = 0;
             //client3 = nextClient;
         }
+    }*/
+
+    private class ClientTimerListener implements ActionListener{
+
+        private int client;
+        private JLabel label_client;
+        private JLabel label_arrow;
+        private Color bg;
+        private Color fg;
+        private boolean isForeground = true;
+        private final static int maxBlinking = 4;
+        private int alreadyBlinked = 0;
+
+        private ClientTimerListener(int client, JLabel label1, JLabel label2) {
+            this.client = client;
+            this.label_client = label1;
+            this.label_arrow = label2;
+            this.fg = label1.getForeground();
+            this.bg = label1.getBackground();
+        }
+
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (alreadyBlinked <= maxBlinking * 2) {
+                alreadyBlinked++;
+                if (isForeground) {
+                    label_client.setForeground(fg);
+                    label_arrow.setForeground(fg);
+                } else {
+                    label_client.setForeground(bg);
+                    label_arrow.setForeground(bg);
+                }
+                isForeground = !isForeground;
+            } else {
+                alreadyBlinked = 0;
+                isForeground = true;
+                clientTimers.get(client).stop();
+            }
+        }
     }
 
-    private class TimerListener implements ActionListener {
+    private class SystemTimerListener implements ActionListener {
         private final static int maxBlinking = 4;
         private JLabel label1;
         private JLabel label2;
@@ -813,7 +989,7 @@ public class MainForm extends JFrame {
         private int alreadyBlinked = 0;
         private int _optionNumber;
 
-        public TimerListener(int optionNumber) {
+        public SystemTimerListener(int optionNumber) {
             switch (optionNumber) {
                 case 0: //initialize bottom line blinking
                     this.label1 = l_total;
