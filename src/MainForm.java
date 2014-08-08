@@ -2,7 +2,6 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
-import customUIComponents.JPanelTable;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import uk.co.caprica.vlcj.player.embedded.videosurface.CanvasVideoSurface;
@@ -23,16 +22,16 @@ public class MainForm extends JFrame {
 
     final static int TERMINAL_QUANTITY = 5;
     final static int[] clientHeightOffsets = {13, 30, 47, 64, 81};
-    final static int[] widthOffsets = {25, 55, 80};
+    final static int[] widthOffsets = {30, 60, 85};
 
     //System Commands:
-    final static int RESET_SYSTEM = 112;
-    final static int PRINTER_ERROR_ON = 113;
-    final static int PRINTER_ERROR_OFF = 114;
-    final static int STOP_SERVICE = 115;
-    final static int RESET_SERVICE = 116;
-    final static int TRIGGER_SERVICE = 117;
-    final static int PRINT_TICKET = 36;
+    final static int RESET_SYSTEM = 112;//F1
+    final static int PRINTER_ERROR_ON = 113;//F2
+    final static int PRINTER_ERROR_OFF = 114;//F3
+    final static int STOP_SERVICE = 115;//F4
+    final static int RESET_SERVICE = 116;//F5
+    final static int TRIGGER_SERVICE = 117;//F6
+    final static int PRINT_TICKET = 36;//HOME
 
     //Terminal Commands:
     final static int TERMINAL_BASE = 49;
@@ -83,7 +82,7 @@ public class MainForm extends JFrame {
     private JPanel mainUIPanel;
     private JLabel l_serviceStopped;
     private JPanel bottomPanel;
-    private JPanel videoPanel;
+    private JPanel mediaContentPanel;
     private JLabel l_client3_arrow;
     private JLabel l_client4_arrow;
     private JLabel l_client5;
@@ -91,6 +90,9 @@ public class MainForm extends JFrame {
     private JLabel l_terminal3;
     private JLabel l_terminal4;
     private JLabel l_terminal5;
+    private JPanel videoPanel;
+    private JPanel tickerPanel;
+    private JLabel l_ticker;
 
     private Canvas canvas;
 
@@ -129,9 +131,10 @@ public class MainForm extends JFrame {
 
         //MyLayoutManager mgr = new MyLayoutManager();
 
+        //on these panels we locating components programmaticaly
         mainUIPanel.setLayout(null);
-        videoPanel.setLayout(null);
         bottomPanel.setLayout(null);
+        //tickerPanel.setLayout(null);
 
         initVariables();
         initObjects();
@@ -158,12 +161,12 @@ public class MainForm extends JFrame {
             }
         });
 
-        videoPanel.addComponentListener(new ComponentAdapter() {
+        mediaContentPanel.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 Rectangle r = e.getComponent().getBounds();
                 System.out.println("Video Screen Size = " + r.getWidth() + "x" + r.getHeight());
-                Component cmp = videoPanel.getComponent(0);
+                Component cmp = mediaContentPanel.getComponent(0);
                 int width = (int)r.getWidth();
                 int height = (int)r.getHeight();
                 cmp.setBounds(0, 0, width, height);
@@ -208,7 +211,6 @@ public class MainForm extends JFrame {
         /*MyLayoutManager.MouseDragger mouseDragger = mgr.new MouseDragger();
         mouseDragger.makeDraggable(canvas);*/
 
-        //videoPanel.add(canvas, new Rectangle(0, 0, 500, 500));
         videoPanel.add(canvas, BorderLayout.CENTER);
 
         MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory();
@@ -234,7 +236,7 @@ public class MainForm extends JFrame {
 
     private void executeSystemCommand(int keyCode) {
         switch (keyCode) {
-            case RESET_SYSTEM: //F3 - Reset System
+            case RESET_SYSTEM:
                 total = 1;
                 lastClient = 0;
                 nextClient = 0;
@@ -258,7 +260,7 @@ public class MainForm extends JFrame {
                     variables.setClientAsigned(i+1, 0);
                 }
                 break;
-            case PRINTER_ERROR_ON: //F5 - Printer ERROR ON
+            case PRINTER_ERROR_ON:
                 if (!SERVICE_STOPPED) {
                     PRINTER_ERROR = true;
                     ticketsPrinted = 0;
@@ -284,7 +286,7 @@ public class MainForm extends JFrame {
                     variables.setNextClient(nextClient);
                 }
                 break;
-            case PRINTER_ERROR_OFF: //F6 - Printer ERROR OFF
+            case PRINTER_ERROR_OFF:
                 if (!SERVICE_STOPPED) {
                     timerError.stop();
                     timerBottomLine.start();
