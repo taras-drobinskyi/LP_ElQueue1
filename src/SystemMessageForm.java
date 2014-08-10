@@ -1,28 +1,12 @@
-/*
- * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
- */
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by forando on 23.04.14.
- * This class operates with ServiceMessageForm
- */
-
-//a declaration of the events that can caught by a catcher
-interface MessageFormListener {
-    public void onReset();
-    public void onClose();
-    public void onPrintTicket();
-}
-
-public class MessageForm extends JFrame {
+public class SystemMessageForm extends JFrame {
     //a list of catchers
-    List<MessageFormListener> listeners = new ArrayList<MessageFormListener>();
+    List<SystemMessageFormListener> listeners = new ArrayList<SystemMessageFormListener>();
     private JPanel rootPanel;
     private JPanel messagePanel;
     private JLabel l_message1;
@@ -32,7 +16,7 @@ public class MessageForm extends JFrame {
     static int standardBlinkRate;
     XMLVARIABLES variables;
 
-    public MessageForm() {
+    public SystemMessageForm(int width, int height) {
         //Form Title
         super("Сообщение");
 
@@ -41,36 +25,25 @@ public class MessageForm extends JFrame {
 
         pack();
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);// locate Form in the center of the screen
+        //setLocationRelativeTo(null);// locate Form in the center of the screen
 
         initVariables();
         initObjects();
 
-        rootPanel.addKeyListener(new KeyListener() {
-
-            @Override
-            public void keyTyped(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-
-            }
-
+        rootPanel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
                 switch (e.getKeyCode()) {
                     case 36://signal to print a ticket
                         //1 or more times, a Notification that an event happened is fired.
-                        for (MessageFormListener listener : listeners) listener.onPrintTicket();
+                        for (SystemMessageFormListener listener : listeners) listener.onPrintTicket();
                         timer.stop();
                         setVisible(false);
                         dispose();
                         break;
                     case 115://Reset buttonClicked
                         //1 or more times, a Notification that an event happened is fired.
-                        for (MessageFormListener listener : listeners) listener.onReset();
+                        for (SystemMessageFormListener listener : listeners) listener.onReset();
                         timer.stop();
                         setVisible(false);
                         dispose();
@@ -79,7 +52,7 @@ public class MessageForm extends JFrame {
                         //ignoring this signal
                         break;
                     default:
-                        for (MessageFormListener listener : listeners) listener.onClose();
+                        for (SystemMessageFormListener listener : listeners) listener.onClose();
                         timer.stop();
                         setVisible(false);
                         dispose();
@@ -94,6 +67,7 @@ public class MessageForm extends JFrame {
         rootPanel.setFocusable(true);
         rootPanel.requestFocusInWindow();
 
+        setSize(width, height);
         setVisible(true);
     }
 
@@ -154,7 +128,7 @@ public class MessageForm extends JFrame {
     }
 
     //a way to add someone to the list of catchers
-    public void addMessageFormListener(MessageFormListener listener) {
+    public void addMessageFormListener(SystemMessageFormListener listener) {
         listeners.add(listener);
     }
 }

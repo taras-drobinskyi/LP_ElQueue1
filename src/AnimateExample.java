@@ -12,8 +12,6 @@ import javax.swing.*;
 
 @SuppressWarnings("serial")
 public class AnimateExample extends JPanel {
-    public static final String DUKE_IMG_PATH =
-            "http://duke.kenai.com/iconSized/duke.gif";
     public static final String IMG_PATH = "/resources/ic_launcher.png";
     private static final int PREF_W = 800;
     private static final int PREF_H = 800;
@@ -27,7 +25,6 @@ public class AnimateExample extends JPanel {
     private EnumMap<Direction, Boolean> dirMap =
             new EnumMap<AnimateExample.Direction, Boolean>(Direction.class);
     private BufferedImage image = null;
-    private Image img;
     private int imgX = 0;
     private int imgY = 0;
     private int bgStringX;
@@ -38,7 +35,6 @@ public class AnimateExample extends JPanel {
             dirMap.put(dir, Boolean.FALSE);
         }
         try {
-            URL imgUrl = new URL(DUKE_IMG_PATH);
             ResourceFile rf = new ResourceFile(IMG_PATH);
             File imageFile = rf.getFile();
             image = ImageIO.read(imageFile);
@@ -61,6 +57,7 @@ public class AnimateExample extends JPanel {
             KeyStroke keyStroke = KeyStroke.getKeyStroke(dir.getKeyCode(), 0,
                     false);
             inputMap.put(keyStroke, dir.name() + KEY_DOWN);
+            //inputMap.put(keyStroke, KEY_DOWN1);
             actionMap.put(dir.name() + KEY_DOWN, new AbstractAction() {
 
                 @Override
@@ -72,6 +69,7 @@ public class AnimateExample extends JPanel {
             // for the key release key stroke
             keyStroke = KeyStroke.getKeyStroke(dir.getKeyCode(), 0, true);
             inputMap.put(keyStroke, dir.name() + KEY_RELEASE);
+            //inputMap.put(keyStroke, KEY_RELEASE1);
             actionMap.put(dir.name() + KEY_RELEASE, new AbstractAction() {
 
                 @Override

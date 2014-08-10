@@ -2,6 +2,7 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import innerforms.ClientMessageForm;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import uk.co.caprica.vlcj.player.embedded.videosurface.CanvasVideoSurface;
@@ -16,7 +17,7 @@ import java.util.List;
 
 /**
  * Created by forando on 06.04.14.
- * This is Main Form that indicates info for clients
+ * This is Main Form for Application
  */
 public class MainForm extends JFrame {
 
@@ -43,11 +44,6 @@ public class MainForm extends JFrame {
     static int takeTicketBlinkRate;
     int lastClient = 0;
     int nextClient = 0;
-    /*int client1 = 0;
-    int client2 = 0;
-    int client3 = 0;
-    int client4 = 0;
-    int client5 = 0;*/
     int buttonClicked = 0;
     int ticketsPrinted = 0;
     Timer timerClient1;
@@ -96,8 +92,6 @@ public class MainForm extends JFrame {
 
     private Canvas canvas;
 
-    Graphics graphics;
-
     List<JLabel> clients;
     List<JLabel> arrows;
     List<JLabel> terminals;
@@ -131,7 +125,7 @@ public class MainForm extends JFrame {
 
         //MyLayoutManager mgr = new MyLayoutManager();
 
-        //on these panels we locating components programmaticaly
+        //on these panels we locating components pragmatically
         mainUIPanel.setLayout(null);
         bottomPanel.setLayout(null);
         //tickerPanel.setLayout(null);
@@ -217,7 +211,7 @@ public class MainForm extends JFrame {
         CanvasVideoSurface videoSurface = mediaPlayerFactory.newVideoSurface(canvas);
         EmbeddedMediaPlayer mediaPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer();
         mediaPlayer.setVideoSurface(videoSurface);
-        mediaPlayer.playMedia("/media/forando/DATA/Фильмы/mamont.2009.xvid.111dvdrip.(hdrip).avi");
+        mediaPlayer.playMedia(APP.VIDEO_PATH);
 
         setVisible(true);
 
@@ -229,7 +223,7 @@ public class MainForm extends JFrame {
             if (terminalNumber <= TERMINAL_QUANTITY) {
                 assignTerminal(keyCode);
             }
-        }else if(keyCode>=112 && keyCode<=123){
+        }else if((keyCode>=112 && keyCode<=123) || keyCode == 36){
             executeSystemCommand(keyCode);
         }
     }
@@ -240,10 +234,6 @@ public class MainForm extends JFrame {
                 total = 1;
                 lastClient = 0;
                 nextClient = 0;
-                /*client1 = 0;
-                client2 = 0;
-                client3 = 0;
-                client4 = 0;*/
                 relocateTitles();
                 for (int i=0; i<clients.size(); i++){
                     clientValues[i] = 0;
@@ -265,24 +255,18 @@ public class MainForm extends JFrame {
                     PRINTER_ERROR = true;
                     ticketsPrinted = 0;
                     variables.setTicketsPrinted(ticketsPrinted);
-                    //relocateTitles();
                     relocateBottomComponents();
                     timerBottomLine.stop();
                     timerError.start();
                     notificationSound.Stop();
                     errorSound.Play();
                     notificationSound.Reset();
-                    //errorSound.Play();
-                    //incrementing lastClient by 1
                     lastClient++;
                     total = lastClient + 1;
                     variables.setLastClient(lastClient);
                     if (nextClient == 0) {
                         nextClient = lastClient;
-                        //client3 = nextClient;
-                    }/* else if (client3 > 0 && client4 == 0) {
-                                client4 = lastClient;
-                            }*/
+                    }
                     variables.setNextClient(nextClient);
                 }
                 break;
@@ -292,7 +276,6 @@ public class MainForm extends JFrame {
                     timerBottomLine.start();
                     PRINTER_ERROR = false;
                     printer.Print(total);
-                    //relocateTitles();
                     relocateBottomComponents();
                 }
                 break;
@@ -314,11 +297,7 @@ public class MainForm extends JFrame {
                     lastClient = total - 1;
                     if (nextClient == 0) {
                         nextClient = lastClient;
-                        //client3 = nextClient;
-                    } /*else if (client3 > 0 && client4 == 0) {
-                                client4 = lastClient;
-                            }*/
-                    //relocateTitles();
+                    }
                     relocateBottomComponents();
                     variables.setLastClient(lastClient);
                     variables.setNextClient(nextClient);
@@ -341,6 +320,7 @@ public class MainForm extends JFrame {
                 nextClient = 0;
             }
             relocateClientComponent(terminalIndex);
+            relocateBottomComponents();
             clientTimers.get(terminalIndex).start();
             notificationSound.Play();
             variables.setClientAsigned(terminalIndex + 1, clientValues[terminalIndex]);
@@ -348,43 +328,18 @@ public class MainForm extends JFrame {
         }
         buttonClicked++;
         variables.setButtonClicked(buttonClicked);
-        /*switch (keyCode) {
-            case 112: //F1 - terminal1 Button Pressed
-                if (nextClient > 0) {
-                    client1 = nextClient;
-                    reasignClients34();
-                    relocateTitles();
-                    timerClient1.start();
-                    notificationSound.Play();
-                    variables.setClientAsigned(1, client1);
-                    variables.setNextClient(nextClient);
-                }
-                buttonClicked++;
-                variables.setButtonClicked(buttonClicked);
-                break;
-            case 113: //F2 - terminal2 Button Pressed
-                if (nextClient > 0) {
-                    client2 = nextClient;
-                    reasignClients34();
-                    relocateTitles();
-                    timerClient2.start();
-                    notificationSound.Play();
-                    variables.setClientAsigned(2, client2);
-                    variables.setNextClient(nextClient);
-                }
-                buttonClicked++;
-                variables.setButtonClicked(buttonClicked);
-                break;
-            default:
-                break;
-        }*/
     }
 
-    //By Service means possibility to accept new clients
+    /**
+     * By Service means possibility to accept new clients
+     * @param turnOn Flag that indicates whether Service must be stopped
+     * @param flags [Optional] Flags array, now consists only of one item that
+     * indicates whether System is resetting to 0 values
+     */
     private void triggerService (boolean turnOn, boolean... flags){
-        boolean reset = false;
+        boolean resettingSystem = false;
         if (flags.length>0){
-            reset = flags[0];
+            resettingSystem = flags[0];
         }
         if (turnOn){
             if (PRINTER_ERROR){
@@ -392,18 +347,16 @@ public class MainForm extends JFrame {
             }else {
                 timerBottomLine.stop();
             }
-            //relocateTitles();
             relocateBottomComponents();
             timerServiceStopped.start();
         }else{
             timerServiceStopped.stop();
-            //relocateTitles();
             relocateBottomComponents();
             if (PRINTER_ERROR){
                 timerError.start();
             }else {
                 timerBottomLine.start();
-                if (TICKET_TAKEN || reset) {
+                if (TICKET_TAKEN || resettingSystem) {
                     printTicket();
                 }
             }
@@ -413,23 +366,31 @@ public class MainForm extends JFrame {
     private void batteryCheck() {
         if (buttonClicked > clicksToChangeBattery) {
             errorSound.Play();
-            MessageForm f = new MessageForm();
-            f.addMessageFormListener(new MessageFormListener() {
+            //The next code will be invoked after main form is finally resized.
+            SwingUtilities.invokeLater(new Runnable() {
                 @Override
-                public void onReset() {
-                    buttonClicked = 0;
-                    variables.setButtonClicked(buttonClicked);
-                    redrawLines();
-                }
+                public void run() {
+                    int width = mediaContentPanel.getSize().width;
+                    int height = mediaContentPanel.getSize().height;
+                    SystemMessageForm f = new SystemMessageForm(width, height);
+                    f.addMessageFormListener(new SystemMessageFormListener() {
+                        @Override
+                        public void onReset() {
+                            buttonClicked = 0;
+                            variables.setButtonClicked(buttonClicked);
+                            redrawLines();
+                        }
 
-                @Override
-                public void onClose() {
-                    redrawLines();
-                }
+                        @Override
+                        public void onClose() {
+                            redrawLines();
+                        }
 
-                @Override
-                public void onPrintTicket() {
-                    printTicket();
+                        @Override
+                        public void onPrintTicket() {
+                            printTicket();
+                        }
+                    });
                 }
             });
         }
@@ -461,24 +422,6 @@ public class MainForm extends JFrame {
             }
         }
     }
-/*
-    public void paint(Graphics g) {
-        super.paint(g);  // fixes the immediate problem.
-
-        *//*Graphics2D g2 = (Graphics2D) g;
-        g2.setColor(Color.white);
-        g2.setRenderingHint(
-                RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setStroke(new BasicStroke(8,
-                BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
-        Line2D h_lin1 = new Line2D.Float(hor_line1_p1.x, hor_line1_p1.y, hor_line1_p2.x, hor_line1_p2.y);
-        g2.draw(h_lin1);
-        Line2D h_lin2 = new Line2D.Float(hor_line2_p1.x, hor_line2_p1.y, hor_line2_p2.x, hor_line2_p2.y);
-        g2.draw(h_lin2);
-        Line2D h_lin3 = new Line2D.Float(hor_line3_p1.x, hor_line3_p1.y, hor_line3_p2.x, hor_line3_p2.y);
-        g2.draw(h_lin3);*//*
-    }*/
 
     private void initObjects() {
 
@@ -488,16 +431,11 @@ public class MainForm extends JFrame {
         clientTimers = new ArrayList<Timer>();
 
         for(int i=0; i< clients.size(); i++){
-            clients.get(i).setText(String.valueOf(i+1));
-            Timer timer = new Timer(standardBlinkRate, new ClientTimerListener(i, clients.get(i), arrows.get(i)));
+            //clients.get(i).setText(String.valueOf(i+1));
+            Timer timer = new Timer(standardBlinkRate, new ClientTimerListener(i, i, clients.get(i), arrows.get(i)));
             timer.setInitialDelay(0);
             clientTimers.add(timer);
         }
-
-        /*timerClient1 = new Timer(standardBlinkRate, new SystemTimerListener(1));
-        timerClient1.setInitialDelay(0);
-        timerClient2 = new Timer(standardBlinkRate, new SystemTimerListener(2));
-        timerClient2.setInitialDelay(0);*/
 
         timerBottomLine = new Timer(takeTicketBlinkRate, new SystemTimerListener(0));
         timerBottomLine.setInitialDelay(0);
@@ -524,11 +462,7 @@ public class MainForm extends JFrame {
         for (int i=0; i<TERMINAL_QUANTITY; i++){
             clientValues[i] = variables.getClientAsigned(i+1);
         }
-        /*client1 = variables.getClientAsigned(1);
-        client2 = variables.getClientAsigned(2);
-        client3 = variables.getClientAsigned(3);
-        client4 = variables.getClientAsigned(4);
-        client5 = variables.getClientAsigned(5);*/
+
         buttonClicked = variables.getButtonClicked();
         ticketsPrinted = variables.getTicketsPrinted();
         nextClient = variables.getNextClient();
@@ -538,15 +472,9 @@ public class MainForm extends JFrame {
         standardBlinkRate = variables.getStandardBlinkRate();
         takeTicketBlinkRate = variables.getTakeTicketBlinkRate();
 
-        //client3 = nextClient;
         if (nextClient == 0) {
             nextClient = lastClient;
-            //client3 = nextClient;
-        } /*else if (nextClient > 0 && nextClient < lastClient) {
-            client4 = nextClient + 1;
-        } else {
-            client4 = 0;
-        }*/
+        }
 
         variables.setNextClient(nextClient);
 
@@ -627,11 +555,7 @@ public class MainForm extends JFrame {
         arrow.setLocation(w_loc, h_loc);
         arrow.setSize(stringWidth, fontHeight - h_percent * 3);
 
-        if (val == 0) {
-            l_client1.setText("");
-            l_client1_arrow.setText("");
-        }
-
+        terminal.setText( String.valueOf(clientIndex +1));
         terminal.setFont(new Font(fontName, Font.PLAIN, fontHeight));
         labelText = terminal.getText();
         stringWidth = terminal.getFontMetrics(terminal.getFont()).stringWidth(labelText);
@@ -639,15 +563,18 @@ public class MainForm extends JFrame {
         h_loc = h_percent * h_offset;
         terminal.setLocation(w_loc, h_loc);
         terminal.setSize(stringWidth, fontHeight - h_percent * 3);
+
+        if (val == 0) {
+            client.setText("");
+            arrow.setText("");
+            terminal.setText("");
+        }
     }
 
     private void relocateBottomComponents() {
 
         int h_percent = bottomPanelHeight / 100;
         int w_percent = bottomPanelWidth / 100;
-        int titleHeight = h_percent * 12;
-        int tableDataHeight = h_percent * 26;
-        int dataHeight = h_percent * 16;
         int totalDataHeight = h_percent * 90;
 
         int w_loc;
@@ -732,7 +659,7 @@ public class MainForm extends JFrame {
     }
 
     /**
-     * Overriden method-placeholder for components instantiation
+     * Overridden method-placeholder for components instantiation
      * <br>
      * (If you want to override component instantiation, than do it here)
      */
@@ -754,24 +681,10 @@ public class MainForm extends JFrame {
         };
     }
 
-    /*private void reasignClients34() {
-        if (nextClient < lastClient) {
-            nextClient ++;
-            *//*client3 = nextClient;
-            if (client3 < lastClient) {
-                client4++;
-            } else {
-                client4 = 0;
-            }*//*
-        } else{
-            nextClient = 0;
-            //client3 = nextClient;
-        }
-    }*/
-
     private class ClientTimerListener implements ActionListener{
 
         private int client;
+        private int terminal;
         private JLabel label_client;
         private JLabel label_arrow;
         private Color bg;
@@ -779,9 +692,12 @@ public class MainForm extends JFrame {
         private boolean isForeground = true;
         private final static int maxBlinking = 4;
         private int alreadyBlinked = 0;
+        private boolean clientMessageFormIsShown = false;
+        ClientMessageForm form;
 
-        private ClientTimerListener(int client, JLabel label1, JLabel label2) {
+        private ClientTimerListener(int client, int terminal, JLabel label1, JLabel label2) {
             this.client = client;
+            this.terminal = terminal;
             this.label_client = label1;
             this.label_arrow = label2;
             this.fg = label1.getForeground();
@@ -801,24 +717,28 @@ public class MainForm extends JFrame {
                     label_arrow.setForeground(bg);
                 }
                 isForeground = !isForeground;
+                if (!clientMessageFormIsShown){
+                    clientMessageFormIsShown = true;
+                    int width = mediaContentPanel.getSize().width;
+                    int height = mediaContentPanel.getSize().height;
+                    System.out.println("ClientMessageForm dimensions are " + width + "x" + height);
+                    form = new ClientMessageForm(width, height, label_client.getText(), String.valueOf(terminal+1));
+                }
             } else {
                 alreadyBlinked = 0;
                 isForeground = true;
                 clientTimers.get(client).stop();
+                clientMessageFormIsShown = false;
+                form.dispose();
             }
         }
     }
 
     private class SystemTimerListener implements ActionListener {
-        private final static int maxBlinking = 4;
         private JLabel label1;
         private JLabel label2;
         private JLabel label3;
-        private Color bg;
-        private Color fg;
-        private boolean isForeground = true;
         private boolean option1 = true;
-        private int alreadyBlinked = 0;
         private int _optionNumber;
 
         public SystemTimerListener(int optionNumber) {
@@ -827,14 +747,6 @@ public class MainForm extends JFrame {
                     this.label1 = l_total;
                     this.label2 = l_totalTitle;
                     this.label3 = l_takeTicket;
-                    break;
-                case 1: //termina1 pushbutton
-                    this.label1 = l_client1;
-                    this.label2 = l_client1_arrow;
-                    break;
-                case 2: //termina2 pushbutton
-                    this.label1 = l_client2;
-                    this.label2 = l_client2_arrow;
                     break;
                 case 3: //Printer Error ON
                     this.label1 = l_takeTicket;
@@ -851,8 +763,6 @@ public class MainForm extends JFrame {
                 default:
                     break;
             }
-            fg = label1.getForeground();
-            bg = label1.getBackground();
             this._optionNumber = optionNumber;
         }
 
@@ -894,30 +804,6 @@ public class MainForm extends JFrame {
                     timerPrinter.stop();
                     break;
                 default:
-                    if (alreadyBlinked <= maxBlinking * 2) {
-                        alreadyBlinked++;
-                        if (isForeground) {
-                            label1.setForeground(fg);
-                            label2.setForeground(fg);
-                        } else {
-                            label1.setForeground(bg);
-                            label2.setForeground(bg);
-                        }
-                        isForeground = !isForeground;
-                    } else {
-                        alreadyBlinked = 0;
-                        isForeground = true;
-                        switch (_optionNumber) {
-                            case 1:
-                                timerClient1.stop();
-                                break;
-                            case 2:
-                                timerClient2.stop();
-                                break;
-                            default:
-                                break;
-                        }
-                    }
                     break;
             }
         }
