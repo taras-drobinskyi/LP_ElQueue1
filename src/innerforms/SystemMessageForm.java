@@ -1,3 +1,10 @@
+package innerforms;
+
+import helpers.APP;
+import helpers.XMLVARIABLES;
+import innerforms.interfaces.SystemMessageFormListener;
+
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;

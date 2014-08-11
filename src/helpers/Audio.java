@@ -1,6 +1,8 @@
-/*
+package helpers;/*
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
+
+import helpers.ResourceFile;
 
 import javax.sound.sampled.*;
 import java.io.File;

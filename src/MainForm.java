@@ -2,7 +2,12 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import helpers.APP;
+import helpers.Audio;
+import helpers.XMLVARIABLES;
 import innerforms.ClientMessageForm;
+import innerforms.SystemMessageForm;
+import innerforms.interfaces.SystemMessageFormListener;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import uk.co.caprica.vlcj.player.embedded.videosurface.CanvasVideoSurface;
@@ -123,7 +128,7 @@ public class MainForm extends JFrame {
 
         setExtendedState(JFrame.MAXIMIZED_BOTH);
 
-        //MyLayoutManager mgr = new MyLayoutManager();
+        //examples.MyLayoutManager mgr = new examples.MyLayoutManager();
 
         //on these panels we locating components pragmatically
         mainUIPanel.setLayout(null);
@@ -202,7 +207,7 @@ public class MainForm extends JFrame {
 
         canvas = new Canvas();
         canvas.setBackground(Color.BLACK);
-        /*MyLayoutManager.MouseDragger mouseDragger = mgr.new MouseDragger();
+        /*examples.MyLayoutManager.MouseDragger mouseDragger = mgr.new MouseDragger();
         mouseDragger.makeDraggable(canvas);*/
 
         videoPanel.add(canvas, BorderLayout.CENTER);

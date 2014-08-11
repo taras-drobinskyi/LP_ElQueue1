@@ -1,4 +1,4 @@
-// TickerExample.java
+package examples;// examples.TickerExample.java
 /*
  Demonstrates using client and server sockets with a GUI.
  One server ticker can support any number of client tickers --
