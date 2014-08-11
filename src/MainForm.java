@@ -42,6 +42,12 @@ public class MainForm extends JFrame {
     //Terminal Commands:
     final static int TERMINAL_BASE = 49;
 
+    private static final Font BG_STRING_FONT = new Font(Font.SANS_SERIF,
+            Font.BOLD, 72);
+    private int bgStringX;
+    private int bgStringY;
+    String BACKGROUND_STRING = "Это демонстрационный образец электронной системы управления очередью";
+
 
     static int standardBlinkRate;
     static int clicksToChangeBattery;
@@ -51,8 +57,7 @@ public class MainForm extends JFrame {
     int nextClient = 0;
     int buttonClicked = 0;
     int ticketsPrinted = 0;
-    Timer timerClient1;
-    Timer timerClient2;
+    Timer timerTicker;
     Timer timerBottomLine;
     Timer timerError;
     Timer timerServiceStopped;
@@ -108,6 +113,8 @@ public class MainForm extends JFrame {
     private int bottomPanelHeight;
     private int uiPanelWidth;
     private int uiPanelHeight;
+    private int tickerPanelWidth;
+    private int tickerPanelHeight;
     private int w_percent;
     private int h_percent;
     private Point hor_line1_p1 = new Point(100, 100);
@@ -172,6 +179,26 @@ public class MainForm extends JFrame {
             }
         });
 
+        tickerPanel.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                Rectangle r = e.getComponent().getBounds();
+                tickerPanelWidth = (int)r.getWidth();
+                tickerPanelHeight = (int)r.getHeight();
+
+                FontMetrics fontMetrics = getFontMetrics(BG_STRING_FONT);
+                int w = fontMetrics.stringWidth(BACKGROUND_STRING);
+                int h = fontMetrics.getHeight();
+
+                bgStringX = tickerPanelWidth + 10;
+                bgStringY = (tickerPanelHeight + h/2)/ 2;
+                tickerPanel.repaint();
+                timerTicker.stop();
+                timerTicker.start();
+                System.out.println("Another Ticker Panel Size " + tickerPanelWidth + "x" + tickerPanelHeight);
+            }
+        });
+
         bottomPanel.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -199,8 +226,13 @@ public class MainForm extends JFrame {
             }
         });
 
-        //start blinking bottom line
-        timerBottomLine.start();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                //start blinking bottom line
+                timerBottomLine.start();
+            }
+        });
 
         rootPanel.setFocusable(true);
         rootPanel.requestFocusInWindow();
@@ -450,6 +482,18 @@ public class MainForm extends JFrame {
         timerServiceStopped.setInitialDelay(0);
         timerPrinter = new Timer(1000, new SystemTimerListener(5));
         timerPrinter.setInitialDelay(1000);
+
+        timerTicker = new Timer(20, new TimerTicker(l_ticker));
+        timerTicker.setInitialDelay(0);
+
+        /*SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("TickerPanel Size " + bgStringX + "x" + bgStringY);
+                new Timer(20, new TimerTicker(l_ticker)).start();
+            }
+        });*/
+
         printer = new POS_PRINTER();
         errorSound = new Audio("/resources/notify.wav");
         notificationSound = new Audio("/resources/chimes.wav");
@@ -684,6 +728,19 @@ public class MainForm extends JFrame {
                 g2.draw(h_lin1);
             }
         };
+
+        tickerPanel = new JPanel(){
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g.setFont(BG_STRING_FONT);
+                g.setColor(Color.WHITE);
+                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                        RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                g.drawString(BACKGROUND_STRING, bgStringX, bgStringY);
+            }
+        };
     }
 
     private class ClientTimerListener implements ActionListener{
@@ -810,6 +867,43 @@ public class MainForm extends JFrame {
                     break;
                 default:
                     break;
+            }
+        }
+    }
+
+    private class TimerTicker implements ActionListener{
+
+        JLabel label;
+        String labelText;
+        int stringWidth;
+        int x;
+        int y;
+        int screenWidth;
+
+        public TimerTicker(JLabel _label){
+            this.label = _label;
+            //this.labelText = "This Label Will Be Used For Ticker Messages";
+            //label.setText(labelText);
+            //this.stringWidth = label.getFontMetrics(label.getFont()).stringWidth(labelText);
+            this.screenWidth = tickerPanelWidth;
+            this.x = screenWidth + 10;
+            this.y = tickerPanelHeight/2;
+
+            FontMetrics fontMetrics = getFontMetrics(BG_STRING_FONT);
+            stringWidth = fontMetrics.stringWidth(BACKGROUND_STRING);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            x-= 5;
+            if((stringWidth + x) >= -1) {
+                //label.setLocation(x, y);
+                bgStringX = x;
+                tickerPanel.repaint();
+            }else{
+                x = tickerPanelWidth + 10;
+                //label.setLocation(x, y);
+                tickerPanel.repaint();
             }
         }
     }
