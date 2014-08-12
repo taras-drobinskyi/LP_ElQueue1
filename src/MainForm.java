@@ -46,7 +46,6 @@ public class MainForm extends JFrame {
             Font.BOLD, 72);
     private int bgStringX;
     private int bgStringY;
-    String BACKGROUND_STRING = "Это демонстрационный образец электронной системы управления очередью";
 
 
     static int standardBlinkRate;
@@ -106,6 +105,9 @@ public class MainForm extends JFrame {
     List<JLabel> arrows;
     List<JLabel> terminals;
     List<Timer> clientTimers;
+
+    List<String> tickerMessages;
+    int tickerMessagesItem = 0;
 
     int[] clientValues;
 
@@ -187,7 +189,6 @@ public class MainForm extends JFrame {
                 tickerPanelHeight = (int)r.getHeight();
 
                 FontMetrics fontMetrics = getFontMetrics(BG_STRING_FONT);
-                int w = fontMetrics.stringWidth(BACKGROUND_STRING);
                 int h = fontMetrics.getHeight();
 
                 bgStringX = tickerPanelWidth + 10;
@@ -515,6 +516,7 @@ public class MainForm extends JFrame {
         buttonClicked = variables.getButtonClicked();
         ticketsPrinted = variables.getTicketsPrinted();
         nextClient = variables.getNextClient();
+        tickerMessages = variables.getMessages();
 
         clicksToChangeBattery = variables.getClicksToChangeBattery();
         ticketsToInsertPaper = variables.getTicketsToInsertPaper();
@@ -738,7 +740,7 @@ public class MainForm extends JFrame {
                 g.setColor(Color.WHITE);
                 g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                         RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                g.drawString(BACKGROUND_STRING, bgStringX, bgStringY);
+                g.drawString(tickerMessages.get(tickerMessagesItem), bgStringX, bgStringY);
             }
         };
     }
@@ -874,35 +876,36 @@ public class MainForm extends JFrame {
     private class TimerTicker implements ActionListener{
 
         JLabel label;
-        String labelText;
         int stringWidth;
-        int x;
-        int y;
-        int screenWidth;
+        int x = 1000; //innitial value
+        int tickerMessQuant;
 
         public TimerTicker(JLabel _label){
             this.label = _label;
-            //this.labelText = "This Label Will Be Used For Ticker Messages";
-            //label.setText(labelText);
-            //this.stringWidth = label.getFontMetrics(label.getFont()).stringWidth(labelText);
-            this.screenWidth = tickerPanelWidth;
-            this.x = screenWidth + 10;
-            this.y = tickerPanelHeight/2;
 
             FontMetrics fontMetrics = getFontMetrics(BG_STRING_FONT);
-            stringWidth = fontMetrics.stringWidth(BACKGROUND_STRING);
+            stringWidth = fontMetrics.stringWidth(tickerMessages.get(tickerMessagesItem));
+
+            this.tickerMessQuant = tickerMessages.size();
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             x-= 5;
             if((stringWidth + x) >= -1) {
-                //label.setLocation(x, y);
                 bgStringX = x;
                 tickerPanel.repaint();
             }else{
                 x = tickerPanelWidth + 10;
-                //label.setLocation(x, y);
+                if (tickerMessagesItem<tickerMessQuant - 1) {
+                    tickerMessagesItem++;
+                    FontMetrics fontMetrics = getFontMetrics(BG_STRING_FONT);
+                    stringWidth = fontMetrics.stringWidth(tickerMessages.get(tickerMessagesItem));
+                }else{
+                    tickerMessagesItem = 0;
+                    FontMetrics fontMetrics = getFontMetrics(BG_STRING_FONT);
+                    stringWidth = fontMetrics.stringWidth(tickerMessages.get(tickerMessagesItem));
+                }
                 tickerPanel.repaint();
             }
         }

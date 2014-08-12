@@ -15,6 +15,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This Class gets connected to external xml file with all project META DATA
@@ -247,5 +249,38 @@ public class XMLVARIABLES {
         Element takeTicketBlinkRate_Node = (Element) takeTicketBlinkRate_List.item(0);
         takeTicketBlinkRate_Node.setTextContent(String.valueOf(val));
         saveDocument();
+    }
+
+    private Element getMediaContentNode() {
+        Element rootElement = doc.getDocumentElement();
+        NodeList mediacontent_List = rootElement.getElementsByTagName("mediacontent");
+        return (Element) mediacontent_List.item(0);
+    }
+
+    private Element getVideosNode() {
+        Element mediacontent_Node = getMediaContentNode();
+        NodeList videos_List = mediacontent_Node.getElementsByTagName("videos");
+        return (Element) videos_List.item(0);
+    }
+
+    private Element getMessagesNode() {
+        Element mediacontent_Node = getMediaContentNode();
+        NodeList messages_List = mediacontent_Node.getElementsByTagName("messages");
+        return (Element) messages_List.item(0);
+    }
+
+    public List<String> getMessages(){
+        List<String> messages = new ArrayList<String>();
+        Element messages_Node = getMessagesNode();
+        NodeList message_List = messages_Node.getElementsByTagName("message");
+        for(int i=0; i< message_List.getLength(); i++){
+            Element message_Node = (Element) message_List.item(i);
+            messages.add(message_Node.getTextContent());
+        }
+        if (messages.size()>0) {
+            return messages;
+        }else{
+            return null;
+        }
     }
 }
