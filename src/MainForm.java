@@ -19,6 +19,7 @@ import java.awt.event.*;
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -30,6 +31,8 @@ public class MainForm extends JFrame {
     final static int TERMINAL_QUANTITY = 5;
     final static int[] clientHeightOffsets = {13, 30, 47, 64, 81};
     final static int[] widthOffsets = {30, 60, 85};
+
+    HashMap<String, String> currentVideo;
 
     //System Commands:
     final static int RESET_SYSTEM = 112;//F1
@@ -250,7 +253,7 @@ public class MainForm extends JFrame {
         CanvasVideoSurface videoSurface = mediaPlayerFactory.newVideoSurface(canvas);
         EmbeddedMediaPlayer mediaPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer();
         mediaPlayer.setVideoSurface(videoSurface);
-        mediaPlayer.playMedia(APP.VIDEO_PATH);
+        mediaPlayer.playMedia(currentVideo.get("path"));
 
         setVisible(true);
 
@@ -523,6 +526,8 @@ public class MainForm extends JFrame {
         ticketsToInsertPaper = variables.getTicketsToInsertPaper();
         standardBlinkRate = variables.getStandardBlinkRate();
         takeTicketBlinkRate = variables.getTakeTicketBlinkRate();
+
+        currentVideo = variables.getCurrentVieoData();
 
         if (nextClient == 0) {
             nextClient = lastClient;

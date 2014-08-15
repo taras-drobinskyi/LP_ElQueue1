@@ -16,6 +16,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -281,6 +282,42 @@ public class XMLVARIABLES {
             return messages;
         }else{
             return null;
+        }
+    }
+
+    public HashMap<String, String> getCurrentVieoData(){
+        HashMap<String, String> video = new HashMap<>();
+        String path = "";
+        String attr = "";
+        Element videocontent_Node = getVideosNode();
+        Element videopath_Node = (Element)videocontent_Node.getElementsByTagName("currentvideopath").item(0);
+        path = videopath_Node.getTextContent();
+        path = path.trim();
+        attr = videopath_Node.getAttribute("play");
+        video.put("path", path);
+        video.put("play", attr);
+        if (path == ""){
+            return null;
+        }else {
+            return video;
+        }
+    }
+
+    public HashMap<String, String> getNewVieoData(){
+        HashMap<String, String> video = new HashMap<>();
+        String path = "";
+        String attr = "";
+        Element videocontent_Node = getVideosNode();
+        Element videopath_Node = (Element)videocontent_Node.getElementsByTagName("newvideopath").item(0);
+        path = videopath_Node.getTextContent();
+        path = path.trim();
+        attr = videopath_Node.getAttribute("change");
+        video.put("path", path);
+        video.put("change", attr);
+        if (path == ""){
+            return null;
+        }else {
+            return video;
         }
     }
 }
