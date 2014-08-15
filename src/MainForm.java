@@ -491,14 +491,6 @@ public class MainForm extends JFrame {
         timerTicker = new Timer(20, new TimerTicker(l_ticker));
         timerTicker.setInitialDelay(0);
 
-        /*SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("TickerPanel Size " + bgStringX + "x" + bgStringY);
-                new Timer(20, new TimerTicker(l_ticker)).start();
-            }
-        });*/
-
         printer = new POS_PRINTER();
         errorSound = new Audio("/resources/notify.wav");
         notificationSound = new Audio("/resources/chimes.wav");
