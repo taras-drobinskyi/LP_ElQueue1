@@ -2,6 +2,7 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import externals.POS_PRINTER;
 import helpers.APP;
 import helpers.Audio;
 import helpers.XMLVARIABLES;
