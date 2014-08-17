@@ -82,7 +82,6 @@ public class MainForm extends JFrame {
     private JLabel l_client1;
     private JLabel l_client2;
     private JLabel l_client3;
-    private JLabel l_client4;
     private JLabel l_totalTitle;
     private JLabel l_total;
     private JLabel l_client1_arrow;
@@ -93,12 +92,7 @@ public class MainForm extends JFrame {
     private JPanel bottomPanel;
     private JPanel mediaContentPanel;
     private JLabel l_client3_arrow;
-    private JLabel l_client4_arrow;
-    private JLabel l_client5;
-    private JLabel l_client5_arrow;
     private JLabel l_terminal3;
-    private JLabel l_terminal4;
-    private JLabel l_terminal5;
     private JPanel videoPanel;
     private JPanel tickerPanel;
     private JLabel l_ticker;
@@ -467,9 +461,9 @@ public class MainForm extends JFrame {
 
     private void initObjects() {
 
-        clients = Arrays.asList(l_client1, l_client2, l_client3, l_client4, l_client5);
-        arrows = Arrays.asList(l_client1_arrow, l_client2_arrow, l_client3_arrow, l_client4_arrow, l_client5_arrow);
-        terminals = Arrays.asList(l_terminal1, l_terminal2, l_terminal3, l_terminal4, l_terminal5);
+        clients = Arrays.asList(l_client1, l_client2, l_client3);
+        arrows = Arrays.asList(l_client1_arrow, l_client2_arrow, l_client3_arrow);
+        terminals = Arrays.asList(l_terminal1, l_terminal2, l_terminal3);
         clientTimers = new ArrayList<Timer>();
 
         for(int i=0; i< clients.size(); i++){
@@ -590,6 +584,7 @@ public class MainForm extends JFrame {
         client.setFont(new Font(fontName, Font.PLAIN, fontHeight));
         labelText = client.getText();
         stringWidth = client.getFontMetrics(client.getFont()).stringWidth(labelText);
+        System.out.println("THE FONT IS: " + client.getFont().getName());
         w_loc = (w_percent * widthOffsets[0]) - (stringWidth / 2);
         h_loc = h_percent * h_offset;
         client.setLocation(w_loc, h_loc);
@@ -726,6 +721,7 @@ public class MainForm extends JFrame {
                         BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
                 Line2D h_lin1 = new Line2D.Float(hor_line1_p1.x, hor_line1_p1.y, hor_line1_p2.x, hor_line1_p2.y);
                 g2.draw(h_lin1);
+
             }
         };
 
