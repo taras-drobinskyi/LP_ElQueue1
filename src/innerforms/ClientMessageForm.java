@@ -26,7 +26,7 @@ public class ClientMessageForm extends JFrame {
     List<ClientMessageFormListener> listeners = new ArrayList<ClientMessageFormListener>();
 
 
-    public ClientMessageForm(int width, int height, String client, String terminal) {
+    public ClientMessageForm(int width, int height, int client, int terminal) {
         //Form Title
         super("Вызов Клиента");
 
@@ -36,8 +36,8 @@ public class ClientMessageForm extends JFrame {
         pack();
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-        l_client.setText(client);
-        l_terminal.setText(terminal);
+        l_client.setText(String.valueOf(client));
+        l_terminal.setText(String.valueOf(terminal));
 
         setSize(width, height);
         setVisible(true);

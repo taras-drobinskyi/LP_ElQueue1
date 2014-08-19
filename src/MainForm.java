@@ -359,11 +359,13 @@ public class MainForm extends JFrame {
             } else{
                 nextClient = 0;
             }
+            MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalIndex);
+            mainUIPanel.setTerminal(row, row.xoffsets, row.ypos, clientValues[terminalIndex]);
             relocateClientComponents();
             relocateBottomComponents();
-            clientTimers.get(terminalIndex).start();
+            (new Timer(standardBlinkRate, new ClientTimerListener(row))).start();
+            //clientTimers.get(terminalIndex).start();
             notificationSound.Play();
-            variables.setClientAsigned(terminalIndex + 1, clientValues[terminalIndex]);
             variables.setNextClient(nextClient);
         }
         buttonClicked++;
@@ -488,7 +490,6 @@ public class MainForm extends JFrame {
     }
 
     private void initVariables() {
-
         variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
         variables.setLastClient(variables.getLastClient() + 1);
@@ -742,25 +743,15 @@ public class MainForm extends JFrame {
 
     private class ClientTimerListener implements ActionListener{
 
-        private int client;
-        private int terminal;
-        private JLabel label_client;
-        private JLabel label_arrow;
-        private Color bg;
-        private Color fg;
+        MainUIPanel.TerminalRow row;
         private boolean isForeground = true;
         private final static int maxBlinking = 4;
         private int alreadyBlinked = 0;
         private boolean clientMessageFormIsShown = false;
         ClientMessageForm form;
 
-        private ClientTimerListener(int client, int terminal, JLabel label1, JLabel label2) {
-            this.client = client;
-            this.terminal = terminal;
-            this.label_client = label1;
-            this.label_arrow = label2;
-            this.fg = label1.getForeground();
-            this.bg = label1.getBackground();
+        private ClientTimerListener(MainUIPanel.TerminalRow row) {
+            this.row = row;
         }
 
 
@@ -769,11 +760,9 @@ public class MainForm extends JFrame {
             if (alreadyBlinked <= maxBlinking * 2) {
                 alreadyBlinked++;
                 if (isForeground) {
-                    label_client.setForeground(fg);
-                    label_arrow.setForeground(fg);
+                    row.partlyVisible = false;
                 } else {
-                    label_client.setForeground(bg);
-                    label_arrow.setForeground(bg);
+                    row.partlyVisible = true;
                 }
                 isForeground = !isForeground;
                 if (!clientMessageFormIsShown){
@@ -781,15 +770,17 @@ public class MainForm extends JFrame {
                     int width = mediaContentPanel.getSize().width;
                     int height = mediaContentPanel.getSize().height;
                     System.out.println("ClientMessageForm dimensions are " + width + "x" + height);
-                    form = new ClientMessageForm(width, height, label_client.getText(), String.valueOf(terminal+1));
+                    form = new ClientMessageForm(width, height, row.clientNumber, row.terminalNumber +1);
                 }
             } else {
                 alreadyBlinked = 0;
                 isForeground = true;
-                clientTimers.get(client).stop();
+                row.partlyVisible = false;
+                ((Timer)e.getSource()).stop();
                 clientMessageFormIsShown = false;
                 form.dispose();
             }
+            mainUIPanel.repaint();
         }
     }
 
@@ -907,8 +898,6 @@ public class MainForm extends JFrame {
     }
 
     private class MainUIPanel extends JPanel{
-
-        private XMLVARIABLES xmlVariables;
         private int[] levels;
         private boolean[] drawTerminalList;
         private List<String[]> terminalsTextList;
@@ -920,7 +909,8 @@ public class MainForm extends JFrame {
         }
 
         void initClients(){
-            xmlVariables = new XMLVARIABLES(APP.VARIABLES_PATH);
+            XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
+
             levels = new int[LEVEL_QUANT];
 
             table = new ArrayList<TerminalRow>();
@@ -930,34 +920,13 @@ public class MainForm extends JFrame {
             terminalsLocationList = new ArrayList<List<HashMap<String, Integer>>>();
 
             for(int i=0; i< TERMINAL_QUANTITY; i++){
-                int client = xmlVariables.getClientAsigned(i);
+                int client = variables.getClientAsigned(i);
                 boolean visible = true;
                 if (client == 0){
                     visible = false;
                 }
-                TerminalRow terminalRow = new TerminalRow(0,client,i,visible,0, widthOffsets);
+                TerminalRow terminalRow = new TerminalRow(0,client,i,false,visible,0, widthOffsets);
                 table.add(terminalRow);
-
-
-                /*List<HashMap<String,Integer>> terminalItemsLocationList = new ArrayList<HashMap<String, Integer>>();
-                String[] terminalItemTextList = new String[3];
-
-                for (int k=0; k<3; k++){
-                    terminalItemTextList[k] = getTerminalInitialItemText(i, k);
-
-                    HashMap<String, Integer> terminalItemLocation = new HashMap<String, Integer>();
-                    terminalItemLocation.put("x", 0);
-                    terminalItemLocation.put("y", 0);
-                    terminalItemsLocationList.add(terminalItemLocation);
-                }
-                terminalsTextList.add(terminalItemTextList);
-                terminalsLocationList.add(terminalItemsLocationList);*/
-
-
-                //clients1.get(i).setText(String.valueOf(i+1));
-            /*Timer timer = new Timer(standardBlinkRate, new ClientTimerListener(i, i, clients1.get(i), arrows.get(i)));
-            timer.setInitialDelay(0);
-            clientTimers.add(timer);*/
             }
             Collections.sort(table);
 
@@ -968,33 +937,32 @@ public class MainForm extends JFrame {
 
         }
 
-        public void setTerminal(int terminal, int[] x, int[] y, int... clientArr){
+        public void setTerminal(TerminalRow row, int[] xoffsets, int ypos, int... clientArr){
             if (clientArr.length>0){
                 int client = clientArr[0];
                 if (client == 0){
-                    drawTerminalList[terminal] = false;
+                    row.visible = false;
                 }else{
-                    drawTerminalList[terminal] = true;
+                    row.visible = true;
                 }
-                xmlVariables.setClientAsigned(terminal, client);
-                String[] terminalItemTextList = terminalsTextList.get(terminal);
-                terminalItemTextList[0] = String.valueOf(xmlVariables.getClientAsigned(terminal));
-                terminalsTextList.set(terminal, terminalItemTextList);
+                variables.setClientAsigned(row.terminalNumber, client);
+                row.clientNumber = variables.getClientAsigned(row.terminalNumber);
             }
 
-            List<HashMap<String,Integer>> terminalItemsLocationList = new ArrayList<HashMap<String, Integer>>();
-            for (int column=0; column<3; column++){
-                HashMap<String, Integer> terminalItemLocation = new HashMap<String, Integer>();
-                terminalItemLocation.put("x", x[column]);
-                terminalItemLocation.put("y", y[column]);
-                terminalItemsLocationList.add(terminalItemLocation);
-            }
-            terminalsLocationList.set(terminal, terminalItemsLocationList);
+            row.xoffsets = xoffsets;
+            row.ypos = ypos;
         }
 
         public List<TerminalRow> getTable(){return table;}
 
-        public String getItemText(int terminal, int column){
+        public TerminalRow getTerminalRow(int terminal){
+            for (TerminalRow row : table){
+                if (row.terminalNumber == terminal) return row;
+            }
+            return null;
+        }
+
+        /*public String getItemText(int terminal, int column){
             String[] terminalItemTextList = terminalsTextList.get(terminal);
             return terminalItemTextList[column];
         }
@@ -1002,7 +970,7 @@ public class MainForm extends JFrame {
         public HashMap<String, Integer> getTerminalItemLocation(int terminal, int column){
             List<HashMap<String,Integer>> terminalItemsLocationList = terminalsLocationList.get(terminal);
             return terminalItemsLocationList.get(column);
-        }
+        }*/
 
         /**
          *
@@ -1010,14 +978,14 @@ public class MainForm extends JFrame {
          * @return A client number assigned to this terminal
          */
         public int getTerminalClient(int terminal){
-            return xmlVariables.getClientAsigned(terminal);
+            return variables.getClientAsigned(terminal);
         }
 
         String getTerminalInitialItemText(int terminal, int column){
             String text = "";
             switch (column){
                 case 0:
-                    int client = xmlVariables.getClientAsigned(terminal);
+                    int client = variables.getClientAsigned(terminal);
                     if (client == 0){
                         drawTerminalList[terminal] = false;
                         text = "";
@@ -1055,12 +1023,13 @@ public class MainForm extends JFrame {
                 if (table.get(level).visible) {
                     TerminalRow row = table.get(level);
                     int[] xoffsets = row.xoffsets;
-                    g.setColor(Color.YELLOW);
-                    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-                            RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                    g.drawString(String.valueOf(row.clientNumber), xoffsets[0], row.ypos);
-                    g.drawString(">", xoffsets[1], row.ypos);
-
+                    if (!row.partlyVisible) {
+                        g.setColor(Color.YELLOW);
+                        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                        g.drawString(String.valueOf(row.clientNumber), xoffsets[0], row.ypos);
+                        g.drawString(">", xoffsets[1], row.ypos);
+                    }
                     g.setColor(Color.WHITE);
                     g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                             RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -1074,15 +1043,16 @@ public class MainForm extends JFrame {
             protected int levelIndex;
             protected int clientNumber;
             protected int terminalNumber;
+            protected boolean partlyVisible;
             protected boolean visible;
             protected int ypos;
             protected int[] xoffsets;
 
-            private TerminalRow(int levelIndex, int clientNumber, int terminalNumber, boolean visible,
-                                int ypos, int[] xoffsets) {
+            private TerminalRow(int levelIndex, int clientNumber, int terminalNumber, boolean partlyVisible, boolean visible, int ypos, int[] xoffsets) {
                 this.levelIndex = levelIndex;
                 this.clientNumber = clientNumber;
                 this.terminalNumber = terminalNumber;
+                this.partlyVisible = partlyVisible;
                 this.visible = visible;
                 this.ypos = ypos;
                 this.xoffsets = xoffsets;
