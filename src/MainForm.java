@@ -14,12 +14,11 @@ import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import uk.co.caprica.vlcj.player.embedded.videosurface.CanvasVideoSurface;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Line2D;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
 
 /**
@@ -28,8 +27,10 @@ import java.util.List;
  */
 public class MainForm extends JFrame {
 
+    final static int LEVEL_QUANT = 5;
     final static int TERMINAL_QUANTITY = 5;
-    final static int[] clientHeightOffsets = {13, 30, 47, 64, 81};
+    //final static int[] clientHeightOffsets = {13, 30, 47, 64, 81};
+    final static int[] clientHeightOffsets = {27, 44, 61, 78, 95};
     final static int[] widthOffsets = {30, 60, 85};
 
     HashMap<String, String> currentVideo;
@@ -50,7 +51,7 @@ public class MainForm extends JFrame {
             Font.BOLD, 72);
 
     private Font TABLE_FONT = new Font(Font.DIALOG,
-            Font.BOLD, 42);
+            Font.PLAIN, 42);
 
     private int bgStringX;
     private int bgStringY;
@@ -496,7 +497,7 @@ public class MainForm extends JFrame {
         clientValues = new int[TERMINAL_QUANTITY];
 
         for (int i=0; i<TERMINAL_QUANTITY; i++){
-            clientValues[i] = variables.getClientAsigned(i+1);
+            clientValues[i] = variables.getClientAsigned(i);
         }
 
         nextClient = variables.getNextClient();
@@ -563,13 +564,24 @@ public class MainForm extends JFrame {
 
         int fontHeight = h_percent * 16;
 
-        TABLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, fontHeight);
+        TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
+        FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
 
-        for (int i=0; i<TERMINAL_QUANTITY; i++){
-            for (int k=0; k<3; k++){
-
-            }
+        List<MainUIPanel.TerminalRow>table = mainUIPanel.getTable();
+        for (int level=0; level<LEVEL_QUANT; level++){
+            int h_offset = clientHeightOffsets[level];
+            MainUIPanel.TerminalRow row = table.get(level);
+            row.ypos = h_percent * h_offset;
+            int[] xpos = new int[3];
+            int stringWidth = fontMetrics.stringWidth(String.valueOf(table.get(level).clientNumber));
+            xpos[0] = (w_percent * widthOffsets[0]) - (stringWidth / 2);
+            stringWidth = fontMetrics.stringWidth(">");
+            xpos[1] = (w_percent * widthOffsets[1]) - (stringWidth / 2);
+            stringWidth = fontMetrics.stringWidth(String.valueOf(table.get(level).terminalNumber));
+            xpos[2] = (w_percent * widthOffsets[2]) - (stringWidth / 2);
+            row.xoffsets = xpos;
         }
+        mainUIPanel.repaint();
 
         /*int val = clientValues[clientIndex];
 
@@ -897,9 +909,11 @@ public class MainForm extends JFrame {
     private class MainUIPanel extends JPanel{
 
         private XMLVARIABLES xmlVariables;
+        private int[] levels;
         private boolean[] drawTerminalList;
         private List<String[]> terminalsTextList;
         private List<List<HashMap<String,Integer>>> terminalsLocationList;
+        private List<TerminalRow> table;
 
         private MainUIPanel() {
             initClients();
@@ -907,13 +921,27 @@ public class MainForm extends JFrame {
 
         void initClients(){
             xmlVariables = new XMLVARIABLES(APP.VARIABLES_PATH);
+            levels = new int[LEVEL_QUANT];
+
+            table = new ArrayList<TerminalRow>();
+
             drawTerminalList = new boolean[TERMINAL_QUANTITY];
             terminalsTextList = new ArrayList<String[]>();
             terminalsLocationList = new ArrayList<List<HashMap<String, Integer>>>();
 
             for(int i=0; i< TERMINAL_QUANTITY; i++){
-                List<HashMap<String,Integer>> terminalItemsLocationList = new ArrayList<HashMap<String, Integer>>();
+                int client = xmlVariables.getClientAsigned(i);
+                boolean visible = true;
+                if (client == 0){
+                    visible = false;
+                }
+                TerminalRow terminalRow = new TerminalRow(0,client,i,visible,0, widthOffsets);
+                table.add(terminalRow);
+
+
+                /*List<HashMap<String,Integer>> terminalItemsLocationList = new ArrayList<HashMap<String, Integer>>();
                 String[] terminalItemTextList = new String[3];
+
                 for (int k=0; k<3; k++){
                     terminalItemTextList[k] = getTerminalInitialItemText(i, k);
 
@@ -923,12 +951,21 @@ public class MainForm extends JFrame {
                     terminalItemsLocationList.add(terminalItemLocation);
                 }
                 terminalsTextList.add(terminalItemTextList);
-                terminalsLocationList.add(terminalItemsLocationList);
+                terminalsLocationList.add(terminalItemsLocationList);*/
+
+
                 //clients1.get(i).setText(String.valueOf(i+1));
             /*Timer timer = new Timer(standardBlinkRate, new ClientTimerListener(i, i, clients1.get(i), arrows.get(i)));
             timer.setInitialDelay(0);
             clientTimers.add(timer);*/
             }
+            Collections.sort(table);
+
+            for (int level=0; level<LEVEL_QUANT; level++){
+                table.get(level).levelIndex = level;
+                System.out.println("Level Index = " + level + " Terminal = " + table.get(level).terminalNumber);
+            }
+
         }
 
         public void setTerminal(int terminal, int[] x, int[] y, int... clientArr){
@@ -954,6 +991,8 @@ public class MainForm extends JFrame {
             }
             terminalsLocationList.set(terminal, terminalItemsLocationList);
         }
+
+        public List<TerminalRow> getTable(){return table;}
 
         public String getItemText(int terminal, int column){
             String[] terminalItemTextList = terminalsTextList.get(terminal);
@@ -1012,23 +1051,53 @@ public class MainForm extends JFrame {
             g2.draw(h_lin1);
 
             g.setFont(TABLE_FONT);
-            for (int terminal=0; terminal<TERMINAL_QUANTITY; terminal++){
-                if (drawTerminalList[terminal]) {
-                    for (int column = 0; column < 3; column++) {
-                        if (column == 2) {
-                            g.setColor(Color.WHITE);
-                        }else{
-                            g.setColor(Color.YELLOW);
-                        }
-                        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-                                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                        String text = getItemText(terminal, column);
-                        HashMap<String, Integer> terminalItemLocation = getTerminalItemLocation(terminal, column);
-                        int x = terminalItemLocation.get("x");
-                        int y = terminalItemLocation.get("y");
-                        g.drawString(text, x, y);
-                    }
+            for (int level=0; level<LEVEL_QUANT; level++){
+                if (table.get(level).visible) {
+                    TerminalRow row = table.get(level);
+                    int[] xoffsets = row.xoffsets;
+                    g.setColor(Color.YELLOW);
+                    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                            RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                    g.drawString(String.valueOf(row.clientNumber), xoffsets[0], row.ypos);
+                    g.drawString(">", xoffsets[1], row.ypos);
+
+                    g.setColor(Color.WHITE);
+                    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                            RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                    g.drawString(String.valueOf(row.terminalNumber + 1), xoffsets[2], row.ypos);
                 }
+            }
+        }
+
+        private class TerminalRow implements Comparable{
+
+            protected int levelIndex;
+            protected int clientNumber;
+            protected int terminalNumber;
+            protected boolean visible;
+            protected int ypos;
+            protected int[] xoffsets;
+
+            private TerminalRow(int levelIndex, int clientNumber, int terminalNumber, boolean visible,
+                                int ypos, int[] xoffsets) {
+                this.levelIndex = levelIndex;
+                this.clientNumber = clientNumber;
+                this.terminalNumber = terminalNumber;
+                this.visible = visible;
+                this.ypos = ypos;
+                this.xoffsets = xoffsets;
+            }
+
+            @Override
+            public int compareTo(Object obj) {
+                TerminalRow rowToCompare = (TerminalRow)obj;
+                int retVal=0;
+                if (clientNumber<rowToCompare.clientNumber){
+                    retVal = -1;
+                }else if (clientNumber>rowToCompare.clientNumber){
+                    retVal = 1;
+                }
+                return retVal;
             }
         }
     }
