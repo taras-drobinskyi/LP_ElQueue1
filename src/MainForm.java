@@ -48,6 +48,10 @@ public class MainForm extends JFrame {
 
     private static final Font BG_STRING_FONT = new Font(Font.SANS_SERIF,
             Font.BOLD, 72);
+
+    private Font TABLE_FONT = new Font(Font.DIALOG,
+            Font.BOLD, 42);
+
     private int bgStringX;
     private int bgStringY;
 
@@ -87,7 +91,7 @@ public class MainForm extends JFrame {
     private JLabel l_client1_arrow;
     private JLabel l_client2_arrow;
     private JLabel l_takeTicket;
-    private JPanel mainUIPanel;
+    private MainUIPanel mainUIPanel;
     private JLabel l_serviceStopped;
     private JPanel bottomPanel;
     private JPanel mediaContentPanel;
@@ -99,7 +103,7 @@ public class MainForm extends JFrame {
 
     private Canvas canvas;
 
-    List<JLabel> clients;
+    List<JLabel> clients1;
     List<JLabel> arrows;
     List<JLabel> terminals;
     List<Timer> clientTimers;
@@ -108,6 +112,7 @@ public class MainForm extends JFrame {
     int tickerMessagesItem = 0;
 
     int[] clientValues;
+
 
     private int bottomPanelWidth;
     private int bottomPanelHeight;
@@ -161,9 +166,7 @@ public class MainForm extends JFrame {
                 h_percent = uiPanelHeight / 100;
 
                 relocateTitles();
-               for (int i=0; i<clients.size(); i++){
-                   relocateClientComponent(i);
-               }
+               relocateClientComponents();
             }
         });
 
@@ -271,9 +274,9 @@ public class MainForm extends JFrame {
                 lastClient = 0;
                 nextClient = 0;
                 relocateTitles();
-                for (int i=0; i<clients.size(); i++){
+                for (int i=0; i< clients1.size(); i++){
                     clientValues[i] = 0;
-                    relocateClientComponent(i);
+                    relocateClientComponents();
                 }
 
                 SERVICE_STOPPED = false;
@@ -282,7 +285,7 @@ public class MainForm extends JFrame {
                 batteryCheck();
                 variables.setLastClient(lastClient);
                 variables.setNextClient(nextClient);
-                for (int i=0; i<clients.size(); i++){
+                for (int i=0; i< clients1.size(); i++){
                     variables.setClientAsigned(i+1, 0);
                 }
                 break;
@@ -355,7 +358,7 @@ public class MainForm extends JFrame {
             } else{
                 nextClient = 0;
             }
-            relocateClientComponent(terminalIndex);
+            relocateClientComponents();
             relocateBottomComponents();
             clientTimers.get(terminalIndex).start();
             notificationSound.Play();
@@ -367,7 +370,7 @@ public class MainForm extends JFrame {
     }
 
     /**
-     * By Service means possibility to accept new clients
+     * By Service means possibility to accept new clients1
      * @param turnOn Flag that indicates whether Service must be stopped
      * @param flags [Optional] Flags array, now consists only of one item that
      * indicates whether System is resetting to 0 values
@@ -461,17 +464,10 @@ public class MainForm extends JFrame {
 
     private void initObjects() {
 
-        clients = Arrays.asList(l_client1, l_client2, l_client3);
+        clients1 = Arrays.asList(l_client1, l_client2, l_client3);
         arrows = Arrays.asList(l_client1_arrow, l_client2_arrow, l_client3_arrow);
         terminals = Arrays.asList(l_terminal1, l_terminal2, l_terminal3);
         clientTimers = new ArrayList<Timer>();
-
-        for(int i=0; i< clients.size(); i++){
-            //clients.get(i).setText(String.valueOf(i+1));
-            Timer timer = new Timer(standardBlinkRate, new ClientTimerListener(i, i, clients.get(i), arrows.get(i)));
-            timer.setInitialDelay(0);
-            clientTimers.add(timer);
-        }
 
         timerBottomLine = new Timer(takeTicketBlinkRate, new SystemTimerListener(0));
         timerBottomLine.setInitialDelay(0);
@@ -503,9 +499,10 @@ public class MainForm extends JFrame {
             clientValues[i] = variables.getClientAsigned(i+1);
         }
 
+        nextClient = variables.getNextClient();
+
         buttonClicked = variables.getButtonClicked();
         ticketsPrinted = variables.getTicketsPrinted();
-        nextClient = variables.getNextClient();
         tickerMessages = variables.getMessages();
 
         clicksToChangeBattery = variables.getClicksToChangeBattery();
@@ -562,12 +559,19 @@ public class MainForm extends JFrame {
         redrawLines();
     }
 
-    private void relocateClientComponent(int clientIndex){
-        JLabel client = clients.get(clientIndex);
-        JLabel arrow = arrows.get(clientIndex);
-        JLabel terminal = terminals.get(clientIndex);
+    private void relocateClientComponents(){
 
-        int val = clientValues[clientIndex];
+        int fontHeight = h_percent * 16;
+
+        TABLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, fontHeight);
+
+        for (int i=0; i<TERMINAL_QUANTITY; i++){
+            for (int k=0; k<3; k++){
+
+            }
+        }
+
+        /*int val = clientValues[clientIndex];
 
 
         int fontHeight = h_percent * 16;
@@ -612,7 +616,7 @@ public class MainForm extends JFrame {
             client.setText("");
             arrow.setText("");
             terminal.setText("");
-        }
+        }*/
     }
 
     private void relocateBottomComponents() {
@@ -708,22 +712,7 @@ public class MainForm extends JFrame {
      * (If you want to override component instantiation, than do it here)
      */
     private void createUIComponents() {
-        mainUIPanel = new JPanel(){
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g;
-                g2.setColor(Color.white);
-                g2.setRenderingHint(
-                        RenderingHints.KEY_ANTIALIASING,
-                        RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setStroke(new BasicStroke(8,
-                        BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
-                Line2D h_lin1 = new Line2D.Float(hor_line1_p1.x, hor_line1_p1.y, hor_line1_p2.x, hor_line1_p2.y);
-                g2.draw(h_lin1);
-
-            }
-        };
+        mainUIPanel = new MainUIPanel();
 
         tickerPanel = new JPanel(){
             @Override
@@ -901,6 +890,145 @@ public class MainForm extends JFrame {
                     stringWidth = fontMetrics.stringWidth(tickerMessages.get(tickerMessagesItem));
                 }
                 tickerPanel.repaint();
+            }
+        }
+    }
+
+    private class MainUIPanel extends JPanel{
+
+        private XMLVARIABLES xmlVariables;
+        private boolean[] drawTerminalList;
+        private List<String[]> terminalsTextList;
+        private List<List<HashMap<String,Integer>>> terminalsLocationList;
+
+        private MainUIPanel() {
+            initClients();
+        }
+
+        void initClients(){
+            xmlVariables = new XMLVARIABLES(APP.VARIABLES_PATH);
+            drawTerminalList = new boolean[TERMINAL_QUANTITY];
+            terminalsTextList = new ArrayList<String[]>();
+            terminalsLocationList = new ArrayList<List<HashMap<String, Integer>>>();
+
+            for(int i=0; i< TERMINAL_QUANTITY; i++){
+                List<HashMap<String,Integer>> terminalItemsLocationList = new ArrayList<HashMap<String, Integer>>();
+                String[] terminalItemTextList = new String[3];
+                for (int k=0; k<3; k++){
+                    terminalItemTextList[k] = getTerminalInitialItemText(i, k);
+
+                    HashMap<String, Integer> terminalItemLocation = new HashMap<String, Integer>();
+                    terminalItemLocation.put("x", 0);
+                    terminalItemLocation.put("y", 0);
+                    terminalItemsLocationList.add(terminalItemLocation);
+                }
+                terminalsTextList.add(terminalItemTextList);
+                terminalsLocationList.add(terminalItemsLocationList);
+                //clients1.get(i).setText(String.valueOf(i+1));
+            /*Timer timer = new Timer(standardBlinkRate, new ClientTimerListener(i, i, clients1.get(i), arrows.get(i)));
+            timer.setInitialDelay(0);
+            clientTimers.add(timer);*/
+            }
+        }
+
+        public void setTerminal(int terminal, int[] x, int[] y, int... clientArr){
+            if (clientArr.length>0){
+                int client = clientArr[0];
+                if (client == 0){
+                    drawTerminalList[terminal] = false;
+                }else{
+                    drawTerminalList[terminal] = true;
+                }
+                xmlVariables.setClientAsigned(terminal, client);
+                String[] terminalItemTextList = terminalsTextList.get(terminal);
+                terminalItemTextList[0] = String.valueOf(xmlVariables.getClientAsigned(terminal));
+                terminalsTextList.set(terminal, terminalItemTextList);
+            }
+
+            List<HashMap<String,Integer>> terminalItemsLocationList = new ArrayList<HashMap<String, Integer>>();
+            for (int column=0; column<3; column++){
+                HashMap<String, Integer> terminalItemLocation = new HashMap<String, Integer>();
+                terminalItemLocation.put("x", x[column]);
+                terminalItemLocation.put("y", y[column]);
+                terminalItemsLocationList.add(terminalItemLocation);
+            }
+            terminalsLocationList.set(terminal, terminalItemsLocationList);
+        }
+
+        public String getItemText(int terminal, int column){
+            String[] terminalItemTextList = terminalsTextList.get(terminal);
+            return terminalItemTextList[column];
+        }
+
+        public HashMap<String, Integer> getTerminalItemLocation(int terminal, int column){
+            List<HashMap<String,Integer>> terminalItemsLocationList = terminalsLocationList.get(terminal);
+            return terminalItemsLocationList.get(column);
+        }
+
+        /**
+         *
+         * @param terminal The terminal number
+         * @return A client number assigned to this terminal
+         */
+        public int getTerminalClient(int terminal){
+            return xmlVariables.getClientAsigned(terminal);
+        }
+
+        String getTerminalInitialItemText(int terminal, int column){
+            String text = "";
+            switch (column){
+                case 0:
+                    int client = xmlVariables.getClientAsigned(terminal);
+                    if (client == 0){
+                        drawTerminalList[terminal] = false;
+                        text = "";
+                    }else{
+                        drawTerminalList[terminal] = true;
+                        text = String.valueOf(client);
+                    }
+                    break;
+                case 1:
+                    text = ">";
+                    break;
+                case 2:
+                    text = String.valueOf(terminal);
+                    break;
+            }
+            return text;
+        }
+
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setColor(Color.white);
+            g2.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setStroke(new BasicStroke(8,
+                    BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
+            Line2D h_lin1 = new Line2D.Float(hor_line1_p1.x, hor_line1_p1.y, hor_line1_p2.x, hor_line1_p2.y);
+            g2.draw(h_lin1);
+
+            g.setFont(TABLE_FONT);
+            for (int terminal=0; terminal<TERMINAL_QUANTITY; terminal++){
+                if (drawTerminalList[terminal]) {
+                    for (int column = 0; column < 3; column++) {
+                        if (column == 2) {
+                            g.setColor(Color.WHITE);
+                        }else{
+                            g.setColor(Color.YELLOW);
+                        }
+                        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                        String text = getItemText(terminal, column);
+                        HashMap<String, Integer> terminalItemLocation = getTerminalItemLocation(terminal, column);
+                        int x = terminalItemLocation.get("x");
+                        int y = terminalItemLocation.get("y");
+                        g.drawString(text, x, y);
+                    }
+                }
             }
         }
     }

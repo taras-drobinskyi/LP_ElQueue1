@@ -174,13 +174,13 @@ public class XMLVARIABLES {
     }
 
     public int getClientAsigned(int position) {
-        Element Terminal_Node = getTerminalNode(position - 1);
+        Element Terminal_Node = getTerminalNode(position);
         Element clientassigned_Node = getClientaAsignedNode(Terminal_Node);
         return Integer.valueOf(clientassigned_Node.getTextContent());
     }
 
     public void setClientAsigned(int position, int val) {
-        Element Terminal_Node = getTerminalNode(position - 1);
+        Element Terminal_Node = getTerminalNode(position);
         Element clientassigned_Node = getClientaAsignedNode(Terminal_Node);
         clientassigned_Node.setTextContent(String.valueOf(val));
         saveDocument();
