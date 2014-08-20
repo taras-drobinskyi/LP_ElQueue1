@@ -29,8 +29,8 @@ public class MainForm extends JFrame {
 
     final static int LEVEL_QUANT = 5;
     final static int TERMINAL_QUANTITY = 5;
-    //final static int[] clientHeightOffsets = {13, 30, 47, 64, 81};
-    final static int[] clientHeightOffsets = {27, 44, 61, 78, 95};
+    //final static int[] terminalHeightOffsets = {13, 30, 47, 64, 81};
+    final static int[] terminalHeightOffsets = {27, 44, 61, 78, 95};
     final static int[] widthOffsets = {30, 60, 85};
 
     HashMap<String, String> currentVideo;
@@ -107,7 +107,6 @@ public class MainForm extends JFrame {
     List<JLabel> clients1;
     List<JLabel> arrows;
     List<JLabel> terminals;
-    List<Timer> clientTimers;
 
     List<String> tickerMessages;
     int tickerMessagesItem = 0;
@@ -121,8 +120,8 @@ public class MainForm extends JFrame {
     private int uiPanelHeight;
     private int tickerPanelWidth;
     private int tickerPanelHeight;
-    private int w_percent;
-    private int h_percent;
+    private int w_percent_uiPanel;
+    private int h_percent_uiPanel;
     private Point hor_line1_p1 = new Point(100, 100);
     private Point hor_line1_p2 = new Point(200, 200);
     
@@ -163,8 +162,8 @@ public class MainForm extends JFrame {
                 Rectangle r = e.getComponent().getBounds();
                 uiPanelWidth = (int) r.getWidth();
                 uiPanelHeight = (int) r.getHeight();
-                w_percent = uiPanelWidth / 100;
-                h_percent = uiPanelHeight / 100;
+                w_percent_uiPanel = uiPanelWidth / 100;
+                h_percent_uiPanel = uiPanelHeight / 100;
 
                 relocateTitles();
                relocateClientComponents();
@@ -352,6 +351,8 @@ public class MainForm extends JFrame {
     private void assignTerminal(int keyCode) {
 
         int terminalIndex = keyCode - TERMINAL_BASE;
+        MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalIndex);
+
         if (nextClient > 0) {
             clientValues[terminalIndex] = nextClient;
             if (nextClient < lastClient) {
@@ -359,11 +360,10 @@ public class MainForm extends JFrame {
             } else{
                 nextClient = 0;
             }
-            MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalIndex);
             mainUIPanel.setTerminal(row, row.xoffsets, row.ypos, clientValues[terminalIndex]);
             relocateClientComponents();
             relocateBottomComponents();
-            (new Timer(standardBlinkRate, new ClientTimerListener(row))).start();
+            row.performAnimation();
             //clientTimers.get(terminalIndex).start();
             notificationSound.Play();
             variables.setNextClient(nextClient);
@@ -470,7 +470,6 @@ public class MainForm extends JFrame {
         clients1 = Arrays.asList(l_client1, l_client2, l_client3);
         arrows = Arrays.asList(l_client1_arrow, l_client2_arrow, l_client3_arrow);
         terminals = Arrays.asList(l_terminal1, l_terminal2, l_terminal3);
-        clientTimers = new ArrayList<Timer>();
 
         timerBottomLine = new Timer(takeTicketBlinkRate, new SystemTimerListener(0));
         timerBottomLine.setInitialDelay(0);
@@ -533,7 +532,7 @@ public class MainForm extends JFrame {
 
     private void relocateTitles() {
 
-        int titleHeight = h_percent * 8;
+        int titleHeight = h_percent_uiPanel * 8;
 
         int w_loc;
         int h_loc;
@@ -546,40 +545,40 @@ public class MainForm extends JFrame {
         l_clientTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
         labelText = l_clientTitle.getText();
         stringWidth = l_clientTitle.getFontMetrics(l_clientTitle.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * widthOffsets[0]) - (stringWidth / 2);
-        h_loc = h_percent;
+        w_loc = (w_percent_uiPanel * widthOffsets[0]) - (stringWidth / 2);
+        h_loc = h_percent_uiPanel;
         l_clientTitle.setLocation(w_loc, h_loc);
-        l_clientTitle.setSize(stringWidth, titleHeight - h_percent * 2);
+        l_clientTitle.setSize(stringWidth, titleHeight - h_percent_uiPanel * 2);
 
         l_terminalTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
         labelText = l_terminalTitle.getText();
         stringWidth = l_terminalTitle.getFontMetrics(l_terminalTitle.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * widthOffsets[2]) - (stringWidth / 2);
-        h_loc = h_percent;
+        w_loc = (w_percent_uiPanel * widthOffsets[2]) - (stringWidth / 2);
+        h_loc = h_percent_uiPanel;
         l_terminalTitle.setLocation(w_loc, h_loc);
-        l_terminalTitle.setSize(stringWidth, titleHeight - h_percent * 2);
+        l_terminalTitle.setSize(stringWidth, titleHeight - h_percent_uiPanel * 2);
         redrawLines();
     }
 
     private void relocateClientComponents(){
 
-        int fontHeight = h_percent * 16;
+        int fontHeight = h_percent_uiPanel * 16;
 
         TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
         FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
 
         List<MainUIPanel.TerminalRow>table = mainUIPanel.getTable();
         for (int level=0; level<LEVEL_QUANT; level++){
-            int h_offset = clientHeightOffsets[level];
+            int h_offset = terminalHeightOffsets[level];
             MainUIPanel.TerminalRow row = table.get(level);
-            row.ypos = h_percent * h_offset;
+            row.ypos = h_percent_uiPanel * h_offset;
             int[] xpos = new int[3];
             int stringWidth = fontMetrics.stringWidth(String.valueOf(table.get(level).clientNumber));
-            xpos[0] = (w_percent * widthOffsets[0]) - (stringWidth / 2);
+            xpos[0] = (w_percent_uiPanel * widthOffsets[0]) - (stringWidth / 2);
             stringWidth = fontMetrics.stringWidth(">");
-            xpos[1] = (w_percent * widthOffsets[1]) - (stringWidth / 2);
+            xpos[1] = (w_percent_uiPanel * widthOffsets[1]) - (stringWidth / 2);
             stringWidth = fontMetrics.stringWidth(String.valueOf(table.get(level).terminalNumber));
-            xpos[2] = (w_percent * widthOffsets[2]) - (stringWidth / 2);
+            xpos[2] = (w_percent_uiPanel * widthOffsets[2]) - (stringWidth / 2);
             row.xoffsets = xpos;
         }
         mainUIPanel.repaint();
@@ -587,8 +586,8 @@ public class MainForm extends JFrame {
         /*int val = clientValues[clientIndex];
 
 
-        int fontHeight = h_percent * 16;
-        int h_offset = clientHeightOffsets[clientIndex];
+        int fontHeight = h_percent_uiPanel * 16;
+        int h_offset = terminalHeightOffsets[clientIndex];
 
         int w_loc;
         int h_loc;
@@ -602,28 +601,28 @@ public class MainForm extends JFrame {
         labelText = client.getText();
         stringWidth = client.getFontMetrics(client.getFont()).stringWidth(labelText);
         System.out.println("THE FONT IS: " + client.getFont().getName());
-        w_loc = (w_percent * widthOffsets[0]) - (stringWidth / 2);
-        h_loc = h_percent * h_offset;
+        w_loc = (w_percent_uiPanel * widthOffsets[0]) - (stringWidth / 2);
+        h_loc = h_percent_uiPanel * h_offset;
         client.setLocation(w_loc, h_loc);
-        client.setSize(stringWidth, fontHeight - h_percent * 3);
+        client.setSize(stringWidth, fontHeight - h_percent_uiPanel * 3);
 
         arrow.setText(">");
         arrow.setFont(new Font(fontName, Font.PLAIN, fontHeight));
         labelText = arrow.getText();
         stringWidth = arrow.getFontMetrics(arrow.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * widthOffsets[1]) - (stringWidth / 2);
-        h_loc = h_percent * h_offset;
+        w_loc = (w_percent_uiPanel * widthOffsets[1]) - (stringWidth / 2);
+        h_loc = h_percent_uiPanel * h_offset;
         arrow.setLocation(w_loc, h_loc);
-        arrow.setSize(stringWidth, fontHeight - h_percent * 3);
+        arrow.setSize(stringWidth, fontHeight - h_percent_uiPanel * 3);
 
         terminal.setText( String.valueOf(clientIndex +1));
         terminal.setFont(new Font(fontName, Font.PLAIN, fontHeight));
         labelText = terminal.getText();
         stringWidth = terminal.getFontMetrics(terminal.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * widthOffsets[2]) - (stringWidth / 2);
-        h_loc = h_percent * h_offset;
+        w_loc = (w_percent_uiPanel * widthOffsets[2]) - (stringWidth / 2);
+        h_loc = h_percent_uiPanel * h_offset;
         terminal.setLocation(w_loc, h_loc);
-        terminal.setSize(stringWidth, fontHeight - h_percent * 3);
+        terminal.setSize(stringWidth, fontHeight - h_percent_uiPanel * 3);
 
         if (val == 0) {
             client.setText("");
@@ -653,7 +652,7 @@ public class MainForm extends JFrame {
         labelText = l_totalTitle.getText();
         int totalTitle_stringWidth = l_totalTitle.getFontMetrics(l_totalTitle.getFont()).stringWidth(labelText);
         w_loc = (w_percent * 50) - (totalTitle_stringWidth / 2);
-        //w_loc = l_total.getLocation().x - (totalTitle_stringWidth) - (w_percent * 4);
+        //w_loc = l_total.getLocation().x - (totalTitle_stringWidth) - (w_percent_uiPanel * 4);
         h_loc = h_percent * 30;
         l_totalTitle.setLocation(w_loc, h_loc);
         l_totalTitle.setSize(totalTitle_stringWidth, totalDataHeight + h_percent * 3);
@@ -664,8 +663,8 @@ public class MainForm extends JFrame {
         labelText = l_total.getText();
         stringWidth = l_total.getFontMetrics(l_total.getFont()).stringWidth(labelText);
         w_loc = l_totalTitle.getLocation().x + totalTitle_stringWidth + w_percent;
-        //w_loc = (w_percent * 101) - stringWidth - (w_percent * 2);
-        //w_loc = width - stringWidth - (h_percent*4);
+        //w_loc = (w_percent_uiPanel * 101) - stringWidth - (w_percent_uiPanel * 2);
+        //w_loc = width - stringWidth - (h_percent_uiPanel*4);
         h_loc = h_percent * 30;
         l_total.setLocation(w_loc, h_loc);
         l_total.setSize(stringWidth, totalDataHeight + h_percent * 3);
@@ -687,7 +686,7 @@ public class MainForm extends JFrame {
         labelText = l_takeTicket.getText();
         stringWidth = l_takeTicket.getFontMetrics(l_takeTicket.getFont()).stringWidth(labelText);
         w_loc = (w_percent * 50) - (stringWidth / 2);
-        //h_loc = h_percent * 85;
+        //h_loc = h_percent_uiPanel * 85;
         h_loc = l_totalTitle.getLocation().y;
         l_takeTicket.setLocation(w_loc, h_loc);
         l_takeTicket.setSize(stringWidth, totalDataHeight + h_percent * 3);
@@ -699,7 +698,7 @@ public class MainForm extends JFrame {
         labelText = l_serviceStopped.getText();
         stringWidth = l_serviceStopped.getFontMetrics(l_serviceStopped.getFont()).stringWidth(labelText);
         w_loc = (w_percent * 50) - (stringWidth / 2);
-        //h_loc = h_percent * 85;
+        //h_loc = h_percent_uiPanel * 85;
         h_loc = l_totalTitle.getLocation().y;
         l_serviceStopped.setLocation(w_loc, h_loc);
         l_serviceStopped.setSize(stringWidth, totalDataHeight + h_percent * 3);
@@ -739,49 +738,6 @@ public class MainForm extends JFrame {
                 g.drawString(tickerMessages.get(tickerMessagesItem), bgStringX, bgStringY);
             }
         };
-    }
-
-    private class ClientTimerListener implements ActionListener{
-
-        MainUIPanel.TerminalRow row;
-        private boolean isForeground = true;
-        private final static int maxBlinking = 4;
-        private int alreadyBlinked = 0;
-        private boolean clientMessageFormIsShown = false;
-        ClientMessageForm form;
-
-        private ClientTimerListener(MainUIPanel.TerminalRow row) {
-            this.row = row;
-        }
-
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (alreadyBlinked <= maxBlinking * 2) {
-                alreadyBlinked++;
-                if (isForeground) {
-                    row.partlyVisible = false;
-                } else {
-                    row.partlyVisible = true;
-                }
-                isForeground = !isForeground;
-                if (!clientMessageFormIsShown){
-                    clientMessageFormIsShown = true;
-                    int width = mediaContentPanel.getSize().width;
-                    int height = mediaContentPanel.getSize().height;
-                    System.out.println("ClientMessageForm dimensions are " + width + "x" + height);
-                    form = new ClientMessageForm(width, height, row.clientNumber, row.terminalNumber +1);
-                }
-            } else {
-                alreadyBlinked = 0;
-                isForeground = true;
-                row.partlyVisible = false;
-                ((Timer)e.getSource()).stop();
-                clientMessageFormIsShown = false;
-                form.dispose();
-            }
-            mainUIPanel.repaint();
-        }
     }
 
     private class SystemTimerListener implements ActionListener {
@@ -903,6 +859,7 @@ public class MainForm extends JFrame {
         private List<String[]> terminalsTextList;
         private List<List<HashMap<String,Integer>>> terminalsLocationList;
         private List<TerminalRow> table;
+        private int totatCALLS = 0;
 
         private MainUIPanel() {
             initClients();
@@ -925,7 +882,13 @@ public class MainForm extends JFrame {
                 if (client == 0){
                     visible = false;
                 }
-                TerminalRow terminalRow = new TerminalRow(0,client,i,false,visible,0, widthOffsets);
+                TerminalRow terminalRow = new TerminalRow(0,client,i,false,visible, TerminalRow.WAITING,0, widthOffsets);
+                terminalRow.addTerminalRowListener(new TerminalRowListener() {
+                    @Override
+                    public void onTransitionCompleted(TerminalRow row) {
+                        slideUPRows(row);
+                    }
+                });
                 table.add(terminalRow);
             }
             Collections.sort(table);
@@ -935,6 +898,18 @@ public class MainForm extends JFrame {
                 System.out.println("Level Index = " + level + " Terminal = " + table.get(level).terminalNumber);
             }
 
+        }
+
+        private synchronized void slideUPRows(TerminalRow row){
+            List<TerminalRow> slideUPRows = new ArrayList<TerminalRow>();
+            for (TerminalRow r : table){
+                if (r.levelIndex > row.levelIndex){
+                    slideUPRows.add(r);
+                }
+            }
+            if (slideUPRows.size()>0){
+                (new Timer(10, new SlingUPTimerListener(slideUPRows, row))).start();
+            }
         }
 
         public void setTerminal(TerminalRow row, int[] xoffsets, int ypos, int... clientArr){
@@ -1008,6 +983,10 @@ public class MainForm extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
+            repaintMyRows(g);
+        }
+
+        private synchronized void repaintMyRows(Graphics g){
             Graphics2D g2 = (Graphics2D) g;
             g2.setColor(Color.white);
             g2.setRenderingHint(
@@ -1040,22 +1019,45 @@ public class MainForm extends JFrame {
 
         private class TerminalRow implements Comparable{
 
+            private static final int ACCEPTED = 0;
+            private static final int CALLING = 1;
+            private static final int WAITING = 2;
+            private static final int ACCEPTING = 3;
+
             protected int levelIndex;
             protected int clientNumber;
             protected int terminalNumber;
             protected boolean partlyVisible;
             protected boolean visible;
+            protected int state;
             protected int ypos;
             protected int[] xoffsets;
+            private Timer timerBlinking;
 
-            private TerminalRow(int levelIndex, int clientNumber, int terminalNumber, boolean partlyVisible, boolean visible, int ypos, int[] xoffsets) {
+            private TerminalRow(int levelIndex, int clientNumber, int terminalNumber,
+                                boolean partlyVisible, boolean visible, int state, int ypos, int[] xoffsets) {
                 this.levelIndex = levelIndex;
                 this.clientNumber = clientNumber;
                 this.terminalNumber = terminalNumber;
                 this.partlyVisible = partlyVisible;
                 this.visible = visible;
+                this.state = state;
                 this.ypos = ypos;
                 this.xoffsets = xoffsets;
+                XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
+                timerBlinking = new Timer(variables.getStandardBlinkRate(), new BlinkingTimerListener());
+            }
+
+            public int getNextState(){
+                switch (state){
+                    case ACCEPTED:
+                        return CALLING;
+                    case CALLING:
+                        return WAITING;
+                    case WAITING:
+                        return ACCEPTED;
+                }
+                return -1;
             }
 
             @Override
@@ -1069,6 +1071,124 @@ public class MainForm extends JFrame {
                 }
                 return retVal;
             }
+
+            List<TerminalRowListener> listeners = new ArrayList<TerminalRowListener>();
+            public void addTerminalRowListener(TerminalRowListener listener){
+                listeners.add(listener);
+            }
+
+            private void transitionCompleted(){
+                for (TerminalRowListener listener : listeners){
+                    listener.onTransitionCompleted(this);
+                }
+            }
+
+            protected synchronized void performAnimation(){
+                if (state == ACCEPTED) {
+                    state = CALLING;
+                    timerBlinking.start();
+                }else if (state == WAITING){
+                    state = ACCEPTING;
+                    (new Timer(10, new SlidingTimerListener(xoffsets))).start();
+                }
+            }
+
+            private class BlinkingTimerListener implements ActionListener{
+
+                private boolean isForeground = true;
+                private final static int maxBlinking = 4;
+                private int alreadyBlinked = 0;
+                private boolean clientMessageFormIsShown = false;
+                ClientMessageForm form;
+
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (alreadyBlinked <= maxBlinking * 2) {
+                        alreadyBlinked++;
+                        if (isForeground) {
+                            partlyVisible = false;
+                        } else {
+                            partlyVisible = true;
+                        }
+                        isForeground = !isForeground;
+                        if (!clientMessageFormIsShown){
+                            clientMessageFormIsShown = true;
+                            int width = mediaContentPanel.getSize().width;
+                            int height = mediaContentPanel.getSize().height;
+                            System.out.println("ClientMessageForm dimensions are " + width + "x" + height);
+                            form = new ClientMessageForm(width, height, clientNumber, terminalNumber +1);
+                        }
+                    } else {
+                        alreadyBlinked = 0;
+                        isForeground = true;
+                        partlyVisible = false;
+                        ((Timer)e.getSource()).stop();
+                        state = WAITING;
+                        clientMessageFormIsShown = false;
+                        form.dispose();
+                    }
+                    //mainUIPanel.repaint();
+                    repaint();
+                }
+            }
+
+            private class SlidingTimerListener implements ActionListener{
+                private int[] initialXoffsets;
+
+                private SlidingTimerListener(int[] initialXoffsets) {
+                    this.initialXoffsets = initialXoffsets;
+                }
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (xoffsets[0]> uiPanelWidth){
+                        xoffsets = initialXoffsets;
+                        visible = false;
+                        state = ACCEPTED;
+                        ((Timer)e.getSource()).stop();
+                        transitionCompleted();
+                    }else{
+                        xoffsets[0] += 10;
+                        xoffsets[1] += 10;
+                        xoffsets[2] += 10;
+                    }
+                    repaint();
+                }
+            }
         }
+
+        private class SlingUPTimerListener implements ActionListener{
+            List<TerminalRow> slideUPRows;
+            TerminalRow rowThatGone;
+
+            private SlingUPTimerListener(List<TerminalRow> slideUPRows, TerminalRow rowThatGone) {
+                this.slideUPRows = slideUPRows;
+                this.rowThatGone = rowThatGone;
+            }
+
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                for (TerminalRow r : slideUPRows){
+                    r.ypos -= 10;
+                }
+                int tableUPpos = slideUPRows.get(0).ypos;
+                int rowThatGonePos = rowThatGone.ypos + 20;
+                if (tableUPpos < rowThatGonePos){
+                    for (TerminalRow r : slideUPRows){
+                        int level = r.levelIndex;
+                        r.ypos = h_percent_uiPanel * terminalHeightOffsets[level - 1];
+                        r.levelIndex = level -1;
+                    }
+                    rowThatGone.levelIndex = -1;
+                    ((Timer) e.getSource()).stop();
+                }
+                repaint();
+            }
+        }
+    }
+    private interface TerminalRowListener{
+        public void onTransitionCompleted(MainUIPanel.TerminalRow row);
     }
 }
