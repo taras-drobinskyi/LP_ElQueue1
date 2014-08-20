@@ -353,20 +353,24 @@ public class MainForm extends JFrame {
         int terminalIndex = keyCode - TERMINAL_BASE;
         MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalIndex);
 
-        if (nextClient > 0) {
-            clientValues[terminalIndex] = nextClient;
-            if (nextClient < lastClient) {
-                nextClient ++;
-            } else{
-                nextClient = 0;
+        if (row.state == MainUIPanel.TerminalRow.ACCEPTED) {
+            if (nextClient > 0) {
+                clientValues[terminalIndex] = nextClient;
+                if (nextClient < lastClient) {
+                    nextClient++;
+                } else {
+                    nextClient = 0;
+                }
+                mainUIPanel.setTerminal(row, row.xoffsets, row.ypos, clientValues[terminalIndex]);
+                relocateClientComponents();
+                relocateBottomComponents();
+                row.performAnimation();
+                //clientTimers.get(terminalIndex).start();
+                notificationSound.Play();
+                variables.setNextClient(nextClient);
             }
-            mainUIPanel.setTerminal(row, row.xoffsets, row.ypos, clientValues[terminalIndex]);
-            relocateClientComponents();
-            relocateBottomComponents();
+        }else if (row.state == MainUIPanel.TerminalRow.WAITING){
             row.performAnimation();
-            //clientTimers.get(terminalIndex).start();
-            notificationSound.Play();
-            variables.setNextClient(nextClient);
         }
         buttonClicked++;
         variables.setButtonClicked(buttonClicked);
@@ -567,8 +571,14 @@ public class MainForm extends JFrame {
         TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
         FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
 
-        List<MainUIPanel.TerminalRow>table = mainUIPanel.getTable();
-        for (int level=0; level<LEVEL_QUANT; level++){
+        List<MainUIPanel.TerminalRow>table = new ArrayList<MainUIPanel.TerminalRow>();
+
+        for (MainUIPanel.TerminalRow r : mainUIPanel.getTable()){
+            if (r.visible) table.add(r);
+        }
+        mainUIPanel.setUSEDLevels(table.size());
+
+        for (int level=0; level<table.size(); level++){
             int h_offset = terminalHeightOffsets[level];
             MainUIPanel.TerminalRow row = table.get(level);
             row.ypos = h_percent_uiPanel * h_offset;
@@ -859,7 +869,8 @@ public class MainForm extends JFrame {
         private List<String[]> terminalsTextList;
         private List<List<HashMap<String,Integer>>> terminalsLocationList;
         private List<TerminalRow> table;
-        private int totatCALLS = 0;
+
+        private int USEDLevels = LEVEL_QUANT;
 
         private MainUIPanel() {
             initClients();
@@ -935,6 +946,14 @@ public class MainForm extends JFrame {
                 if (row.terminalNumber == terminal) return row;
             }
             return null;
+        }
+
+        public void setUSEDLevels(int val){
+            USEDLevels = val;
+        }
+
+        public int getUSEDLevels(){
+            return USEDLevels;
         }
 
         /*public String getItemText(int terminal, int column){
@@ -1086,10 +1105,10 @@ public class MainForm extends JFrame {
             protected synchronized void performAnimation(){
                 if (state == ACCEPTED) {
                     state = CALLING;
-                    timerBlinking.start();
+                    (new Timer(10, new SlidingUPTimerListener(USEDLevels))).start();
                 }else if (state == WAITING){
                     state = ACCEPTING;
-                    (new Timer(10, new SlidingTimerListener(xoffsets))).start();
+                    (new Timer(10, new SlidingAsideTimerListener(xoffsets))).start();
                 }
             }
 
@@ -1133,16 +1152,16 @@ public class MainForm extends JFrame {
                 }
             }
 
-            private class SlidingTimerListener implements ActionListener{
+            private class SlidingAsideTimerListener implements ActionListener{
                 private int[] initialXoffsets;
 
-                private SlidingTimerListener(int[] initialXoffsets) {
+                private SlidingAsideTimerListener(int[] initialXoffsets) {
                     this.initialXoffsets = initialXoffsets;
                 }
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (xoffsets[0]> uiPanelWidth){
+                    if (xoffsets[0]> uiPanelWidth + 40){
                         xoffsets = initialXoffsets;
                         visible = false;
                         state = ACCEPTED;
@@ -1152,6 +1171,31 @@ public class MainForm extends JFrame {
                         xoffsets[0] += 10;
                         xoffsets[1] += 10;
                         xoffsets[2] += 10;
+                    }
+                    repaint();
+                }
+            }
+
+            private class SlidingUPTimerListener implements ActionListener{
+                private int levelDestination;
+                private int Ydestination;
+
+                private SlidingUPTimerListener(int levelDestination) {
+                    this.levelDestination = levelDestination;
+                    ypos = uiPanelHeight + 40;
+                    visible = true;
+                    System.out.println("Destination Level = " + levelDestination);
+                    this.Ydestination = h_percent_uiPanel * terminalHeightOffsets[levelDestination];
+                }
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    ypos -= 10;
+                    if (ypos < Ydestination + 20){
+                        ypos = Ydestination;
+                        levelIndex = levelDestination;
+                        ((Timer) e.getSource()).stop();
+                        timerBlinking.start();
                     }
                     repaint();
                 }
@@ -1176,12 +1220,13 @@ public class MainForm extends JFrame {
                 int tableUPpos = slideUPRows.get(0).ypos;
                 int rowThatGonePos = rowThatGone.ypos + 20;
                 if (tableUPpos < rowThatGonePos){
-                    for (TerminalRow r : slideUPRows){
-                        int level = r.levelIndex;
-                        r.ypos = h_percent_uiPanel * terminalHeightOffsets[level - 1];
-                        r.levelIndex = level -1;
+                    for (int i=0; i<slideUPRows.size(); i++){
+                        int level = slideUPRows.get(i).levelIndex;
+                        slideUPRows.get(i).ypos = h_percent_uiPanel * terminalHeightOffsets[level - 1];
+                        slideUPRows.get(i).levelIndex = level -1;
                     }
                     rowThatGone.levelIndex = -1;
+                    setUSEDLevels(getUSEDLevels() - 1);
                     ((Timer) e.getSource()).stop();
                 }
                 repaint();
