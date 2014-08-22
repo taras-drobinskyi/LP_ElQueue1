@@ -173,16 +173,48 @@ public class XMLVARIABLES {
         return (Element) clientassigned_List.item(0);
     }
 
-    public int getClientAsigned(int position) {
-        Element Terminal_Node = getTerminalNode(position);
-        Element clientassigned_Node = getClientaAsignedNode(Terminal_Node);
-        return Integer.valueOf(clientassigned_Node.getTextContent());
+    public int getUSEDlevels(){
+        Element rootElement = doc.getDocumentElement();
+        NodeList terminals_List = rootElement.getElementsByTagName("terminals");
+        Element terminals_Node = (Element) terminals_List.item(0);
+
+        return Integer.valueOf(terminals_Node.getAttribute("usedlevels"));
     }
 
-    public void setClientAsigned(int position, int val) {
+    public void setUSEDlevels(int val){
+        Element rootElement = doc.getDocumentElement();
+        NodeList terminals_List = rootElement.getElementsByTagName("terminals");
+        Element terminals_Node = (Element) terminals_List.item(0);
+
+        terminals_Node.setAttribute("usedlevels", String.valueOf(val));
+    }
+
+    public HashMap<String, Integer> getTerminalRowData(int position) {
+        HashMap<String, Integer> terminalRowData = new HashMap<String, Integer>();
         Element Terminal_Node = getTerminalNode(position);
+        int levelindex = Integer.valueOf(Terminal_Node.getAttribute("levelindex"));
+        terminalRowData.put("levelindex", levelindex);
+        int terminalnumber = Integer.valueOf(Terminal_Node.getAttribute("terminalnumber"));
+        terminalRowData.put("terminalnumber", terminalnumber);
         Element clientassigned_Node = getClientaAsignedNode(Terminal_Node);
-        clientassigned_Node.setTextContent(String.valueOf(val));
+        int clientnumber = Integer.valueOf(clientassigned_Node.getTextContent());
+        terminalRowData.put("clientnumber", clientnumber);
+        int visible = Integer.valueOf(Terminal_Node.getAttribute("visible"));
+        terminalRowData.put("visible", visible);
+        int state = Integer.valueOf(Terminal_Node.getAttribute("state"));
+        terminalRowData.put("state", state);
+
+        return terminalRowData;
+    }
+
+    public void setTerminalRowData(int position, HashMap<String, Integer> terminalRowData) {
+        Element Terminal_Node = getTerminalNode(position);
+        Terminal_Node.setAttribute("levelindex", String.valueOf(terminalRowData.get("levelindex")));
+        Terminal_Node.setAttribute("terminalnumber", String.valueOf(terminalRowData.get("terminalnumber")));
+        Terminal_Node.setAttribute("visible", String.valueOf(terminalRowData.get("visible")));
+        Terminal_Node.setAttribute("state", String.valueOf(terminalRowData.get("state")));
+        Element clientassigned_Node = getClientaAsignedNode(Terminal_Node);
+        clientassigned_Node.setTextContent(String.valueOf(terminalRowData.get("clientnumber")));
         saveDocument();
     }
 

@@ -104,10 +104,6 @@ public class MainForm extends JFrame {
 
     private Canvas canvas;
 
-    List<JLabel> clients1;
-    List<JLabel> arrows;
-    List<JLabel> terminals;
-
     List<String> tickerMessages;
     int tickerMessagesItem = 0;
 
@@ -128,6 +124,7 @@ public class MainForm extends JFrame {
     private int restOfClients;
 
     public MainForm() {
+
         //Form Title
         super("Продукт Компании \"ВЕРСИЯ\"");
 
@@ -166,7 +163,7 @@ public class MainForm extends JFrame {
                 h_percent_uiPanel = uiPanelHeight / 100;
 
                 relocateTitles();
-               relocateClientComponents();
+                relocateResizedTerminalRorws();
             }
         });
 
@@ -274,7 +271,7 @@ public class MainForm extends JFrame {
                 lastClient = 0;
                 nextClient = 0;
                 relocateTitles();
-                for (int i=0; i< clients1.size(); i++){
+                for (int i=0; i< TERMINAL_QUANTITY; i++){
                     clientValues[i] = 0;
                     relocateClientComponents();
                 }
@@ -285,8 +282,11 @@ public class MainForm extends JFrame {
                 batteryCheck();
                 variables.setLastClient(lastClient);
                 variables.setNextClient(nextClient);
-                for (int i=0; i< clients1.size(); i++){
-                    variables.setClientAsigned(i+1, 0);
+                for (int i=0; i< TERMINAL_QUANTITY; i++){
+                    MainUIPanel.TerminalRow row = mainUIPanel.getTable().get(i);
+                    row.clientNumber = 0;
+                    row.saveToXML();
+
                 }
                 break;
             case PRINTER_ERROR_ON:
@@ -361,10 +361,13 @@ public class MainForm extends JFrame {
                 } else {
                     nextClient = 0;
                 }
-                mainUIPanel.setTerminal(row, row.xoffsets, row.ypos, clientValues[terminalIndex]);
+                //mainUIPanel.setTerminal(row, row.xpos, row.ypos, clientValues[terminalIndex]);
+                row.clientNumber = clientValues[terminalIndex];
+                row.saveToXML();
+                row.resetFromXML();
                 relocateClientComponents();
-                relocateBottomComponents();
                 row.performAnimation();
+                relocateBottomComponents();
                 //clientTimers.get(terminalIndex).start();
                 notificationSound.Play();
                 variables.setNextClient(nextClient);
@@ -471,10 +474,6 @@ public class MainForm extends JFrame {
 
     private void initObjects() {
 
-        clients1 = Arrays.asList(l_client1, l_client2, l_client3);
-        arrows = Arrays.asList(l_client1_arrow, l_client2_arrow, l_client3_arrow);
-        terminals = Arrays.asList(l_terminal1, l_terminal2, l_terminal3);
-
         timerBottomLine = new Timer(takeTicketBlinkRate, new SystemTimerListener(0));
         timerBottomLine.setInitialDelay(0);
         timerError = new Timer(standardBlinkRate, new SystemTimerListener(3));
@@ -494,14 +493,15 @@ public class MainForm extends JFrame {
 
     private void initVariables() {
         variables = new XMLVARIABLES(APP.VARIABLES_PATH);
-
         variables.setLastClient(variables.getLastClient() + 1);
         lastClient = variables.getLastClient();
 
         clientValues = new int[TERMINAL_QUANTITY];
 
+        List<MainUIPanel.TerminalRow>table = mainUIPanel.getTable();
+
         for (int i=0; i<TERMINAL_QUANTITY; i++){
-            clientValues[i] = variables.getClientAsigned(i);
+            clientValues[i] = table.get(i).clientNumber;
         }
 
         nextClient = variables.getNextClient();
@@ -571,74 +571,49 @@ public class MainForm extends JFrame {
         TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
         FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
 
-        List<MainUIPanel.TerminalRow>table = new ArrayList<MainUIPanel.TerminalRow>();
+        /*List<MainUIPanel.TerminalRow>table = new ArrayList<MainUIPanel.TerminalRow>();
 
         for (MainUIPanel.TerminalRow r : mainUIPanel.getTable()){
+            int index = r.levelIndex;
             if (r.visible) table.add(r);
         }
-        mainUIPanel.setUSEDLevels(table.size());
+        System.out.println("USED LEVELS = " + table.size());
+        //mainUIPanel.setUSEDLevels(table.size());*/
 
-        for (int level=0; level<table.size(); level++){
-            int h_offset = terminalHeightOffsets[level];
-            MainUIPanel.TerminalRow row = table.get(level);
-            row.ypos = h_percent_uiPanel * h_offset;
+        for (MainUIPanel.TerminalRow r : mainUIPanel.getTable()){
             int[] xpos = new int[3];
-            int stringWidth = fontMetrics.stringWidth(String.valueOf(table.get(level).clientNumber));
+            int stringWidth = fontMetrics.stringWidth(String.valueOf(r.clientNumber));
             xpos[0] = (w_percent_uiPanel * widthOffsets[0]) - (stringWidth / 2);
             stringWidth = fontMetrics.stringWidth(">");
             xpos[1] = (w_percent_uiPanel * widthOffsets[1]) - (stringWidth / 2);
-            stringWidth = fontMetrics.stringWidth(String.valueOf(table.get(level).terminalNumber));
+            stringWidth = fontMetrics.stringWidth(String.valueOf(r.terminalNumber));
             xpos[2] = (w_percent_uiPanel * widthOffsets[2]) - (stringWidth / 2);
-            row.xoffsets = xpos;
+            r.xpos = xpos;
         }
         mainUIPanel.repaint();
+    }
 
-        /*int val = clientValues[clientIndex];
-
-
+    private void relocateResizedTerminalRorws(){
         int fontHeight = h_percent_uiPanel * 16;
-        int h_offset = terminalHeightOffsets[clientIndex];
 
-        int w_loc;
-        int h_loc;
+        TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
+        FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
 
-        String labelText;
-        int stringWidth;
-        String fontName = client.getFont().getName();
-
-        client.setText(String.valueOf(val));
-        client.setFont(new Font(fontName, Font.PLAIN, fontHeight));
-        labelText = client.getText();
-        stringWidth = client.getFontMetrics(client.getFont()).stringWidth(labelText);
-        System.out.println("THE FONT IS: " + client.getFont().getName());
-        w_loc = (w_percent_uiPanel * widthOffsets[0]) - (stringWidth / 2);
-        h_loc = h_percent_uiPanel * h_offset;
-        client.setLocation(w_loc, h_loc);
-        client.setSize(stringWidth, fontHeight - h_percent_uiPanel * 3);
-
-        arrow.setText(">");
-        arrow.setFont(new Font(fontName, Font.PLAIN, fontHeight));
-        labelText = arrow.getText();
-        stringWidth = arrow.getFontMetrics(arrow.getFont()).stringWidth(labelText);
-        w_loc = (w_percent_uiPanel * widthOffsets[1]) - (stringWidth / 2);
-        h_loc = h_percent_uiPanel * h_offset;
-        arrow.setLocation(w_loc, h_loc);
-        arrow.setSize(stringWidth, fontHeight - h_percent_uiPanel * 3);
-
-        terminal.setText( String.valueOf(clientIndex +1));
-        terminal.setFont(new Font(fontName, Font.PLAIN, fontHeight));
-        labelText = terminal.getText();
-        stringWidth = terminal.getFontMetrics(terminal.getFont()).stringWidth(labelText);
-        w_loc = (w_percent_uiPanel * widthOffsets[2]) - (stringWidth / 2);
-        h_loc = h_percent_uiPanel * h_offset;
-        terminal.setLocation(w_loc, h_loc);
-        terminal.setSize(stringWidth, fontHeight - h_percent_uiPanel * 3);
-
-        if (val == 0) {
-            client.setText("");
-            arrow.setText("");
-            terminal.setText("");
-        }*/
+        for (MainUIPanel.TerminalRow r : mainUIPanel.getTable()){
+            if (r.visible) {
+                int h_offset = terminalHeightOffsets[r.levelIndex];
+                r.ypos = h_percent_uiPanel * h_offset;
+            }
+            int[] xpos = new int[3];
+            int stringWidth = fontMetrics.stringWidth(String.valueOf(r.clientNumber));
+            xpos[0] = (w_percent_uiPanel * widthOffsets[0]) - (stringWidth / 2);
+            stringWidth = fontMetrics.stringWidth(">");
+            xpos[1] = (w_percent_uiPanel * widthOffsets[1]) - (stringWidth / 2);
+            stringWidth = fontMetrics.stringWidth(String.valueOf(r.terminalNumber));
+            xpos[2] = (w_percent_uiPanel * widthOffsets[2]) - (stringWidth / 2);
+            r.xpos = xpos;
+        }
+        mainUIPanel.repaint();
     }
 
     private void relocateBottomComponents() {
@@ -870,7 +845,7 @@ public class MainForm extends JFrame {
         private List<List<HashMap<String,Integer>>> terminalsLocationList;
         private List<TerminalRow> table;
 
-        private int USEDLevels = LEVEL_QUANT;
+        private int USEDLevels;
 
         private MainUIPanel() {
             initClients();
@@ -880,6 +855,7 @@ public class MainForm extends JFrame {
             XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
             levels = new int[LEVEL_QUANT];
+            USEDLevels = variables.getUSEDlevels();
 
             table = new ArrayList<TerminalRow>();
 
@@ -888,12 +864,7 @@ public class MainForm extends JFrame {
             terminalsLocationList = new ArrayList<List<HashMap<String, Integer>>>();
 
             for(int i=0; i< TERMINAL_QUANTITY; i++){
-                int client = variables.getClientAsigned(i);
-                boolean visible = true;
-                if (client == 0){
-                    visible = false;
-                }
-                TerminalRow terminalRow = new TerminalRow(0,client,i,false,visible, TerminalRow.WAITING,0, widthOffsets);
+                TerminalRow terminalRow = new TerminalRow(i,widthOffsets);
                 terminalRow.addTerminalRowListener(new TerminalRowListener() {
                     @Override
                     public void onTransitionCompleted(TerminalRow row) {
@@ -902,12 +873,11 @@ public class MainForm extends JFrame {
                 });
                 table.add(terminalRow);
             }
-            Collections.sort(table);
+            //Collections.sort(table);
 
-            for (int level=0; level<LEVEL_QUANT; level++){
-                table.get(level).levelIndex = level;
-                System.out.println("Level Index = " + level + " Terminal = " + table.get(level).terminalNumber);
-            }
+        }
+
+        public void saveUSEDlevelsToXML(int val){
 
         }
 
@@ -920,6 +890,11 @@ public class MainForm extends JFrame {
             }
             if (slideUPRows.size()>0){
                 (new Timer(10, new SlingUPTimerListener(slideUPRows, row))).start();
+            }else{
+                row.levelIndex = -1;
+                setUSEDLevels(getUSEDLevels() - 1);
+                //Collections.sort(table);
+                row.saveToXML();
             }
         }
 
@@ -931,11 +906,11 @@ public class MainForm extends JFrame {
                 }else{
                     row.visible = true;
                 }
-                variables.setClientAsigned(row.terminalNumber, client);
-                row.clientNumber = variables.getClientAsigned(row.terminalNumber);
+                row.saveToXML();
+                row.resetFromXML();
             }
 
-            row.xoffsets = xoffsets;
+            row.xpos = xoffsets;
             row.ypos = ypos;
         }
 
@@ -950,59 +925,22 @@ public class MainForm extends JFrame {
 
         public void setUSEDLevels(int val){
             USEDLevels = val;
+            variables.setUSEDlevels(val);
         }
 
         public int getUSEDLevels(){
             return USEDLevels;
         }
 
-        /*public String getItemText(int terminal, int column){
-            String[] terminalItemTextList = terminalsTextList.get(terminal);
-            return terminalItemTextList[column];
-        }
-
-        public HashMap<String, Integer> getTerminalItemLocation(int terminal, int column){
-            List<HashMap<String,Integer>> terminalItemsLocationList = terminalsLocationList.get(terminal);
-            return terminalItemsLocationList.get(column);
-        }*/
-
-        /**
-         *
-         * @param terminal The terminal number
-         * @return A client number assigned to this terminal
-         */
-        public int getTerminalClient(int terminal){
-            return variables.getClientAsigned(terminal);
-        }
-
-        String getTerminalInitialItemText(int terminal, int column){
-            String text = "";
-            switch (column){
-                case 0:
-                    int client = variables.getClientAsigned(terminal);
-                    if (client == 0){
-                        drawTerminalList[terminal] = false;
-                        text = "";
-                    }else{
-                        drawTerminalList[terminal] = true;
-                        text = String.valueOf(client);
-                    }
-                    break;
-                case 1:
-                    text = ">";
-                    break;
-                case 2:
-                    text = String.valueOf(terminal);
-                    break;
-            }
-            return text;
-        }
-
 
         @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            repaintMyRows(g);
+        protected void paintComponent(Graphics graphics) {
+            super.paintComponent(graphics);
+            repaintMyRows(graphics);
+        }
+
+        private void redrawMyComponents(){
+            this.repaint();
         }
 
         private synchronized void repaintMyRows(Graphics g){
@@ -1017,10 +955,9 @@ public class MainForm extends JFrame {
             g2.draw(h_lin1);
 
             g.setFont(TABLE_FONT);
-            for (int level=0; level<LEVEL_QUANT; level++){
-                if (table.get(level).visible) {
-                    TerminalRow row = table.get(level);
-                    int[] xoffsets = row.xoffsets;
+            for (TerminalRow row : table){
+                if (row.visible) {
+                    int[] xoffsets = row.xpos;
                     if (!row.partlyVisible) {
                         g.setColor(Color.YELLOW);
                         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
@@ -1050,21 +987,53 @@ public class MainForm extends JFrame {
             protected boolean visible;
             protected int state;
             protected int ypos;
-            protected int[] xoffsets;
+            protected int[] xpos;
             private Timer timerBlinking;
 
-            private TerminalRow(int levelIndex, int clientNumber, int terminalNumber,
-                                boolean partlyVisible, boolean visible, int state, int ypos, int[] xoffsets) {
-                this.levelIndex = levelIndex;
-                this.clientNumber = clientNumber;
+            private TerminalRow(int terminalNumber, int[] xoffsets) {
                 this.terminalNumber = terminalNumber;
-                this.partlyVisible = partlyVisible;
-                this.visible = visible;
-                this.state = state;
-                this.ypos = ypos;
-                this.xoffsets = xoffsets;
                 XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
+
+                HashMap<String, Integer> terminalRowData = variables.getTerminalRowData(terminalNumber);
+                this.levelIndex = terminalRowData.get("levelindex");
+                this.clientNumber = terminalRowData.get("clientnumber");
+                this.terminalNumber = terminalRowData.get("terminalnumber");
+                int visibility = terminalRowData.get("visible");
+                if (visibility == 1){
+                    this.visible = true;
+                }else {
+                    this.visible = false;
+                }
+                this.state = terminalRowData.get("state");
                 timerBlinking = new Timer(variables.getStandardBlinkRate(), new BlinkingTimerListener());
+            }
+
+            public void saveToXML(){
+                HashMap<String, Integer> terminalRowData = new HashMap<String, Integer>();
+                terminalRowData.put("levelindex", levelIndex);
+                terminalRowData.put("terminalnumber", terminalNumber);
+                terminalRowData.put("clientnumber", clientNumber);
+                if (visible){
+                    terminalRowData.put("visible", 1);
+                }else {
+                    terminalRowData.put("visible", 0);
+                }
+                terminalRowData.put("state", state);
+                variables.setTerminalRowData(terminalNumber, terminalRowData);
+            }
+
+            public void resetFromXML(){
+                HashMap<String, Integer> terminalRowData = variables.getTerminalRowData(terminalNumber);
+                this.levelIndex = terminalRowData.get("levelindex");
+                this.clientNumber = terminalRowData.get("clientnumber");
+                this.terminalNumber = terminalRowData.get("terminalnumber");
+                int visibility = terminalRowData.get("visible");
+                if (visibility == 1){
+                    this.visible = true;
+                }else {
+                    this.visible = false;
+                }
+                this.state = terminalRowData.get("state");
             }
 
             public int getNextState(){
@@ -1083,9 +1052,9 @@ public class MainForm extends JFrame {
             public int compareTo(Object obj) {
                 TerminalRow rowToCompare = (TerminalRow)obj;
                 int retVal=0;
-                if (clientNumber<rowToCompare.clientNumber){
+                if (levelIndex<rowToCompare.levelIndex){
                     retVal = -1;
-                }else if (clientNumber>rowToCompare.clientNumber){
+                }else if (levelIndex>rowToCompare.levelIndex){
                     retVal = 1;
                 }
                 return retVal;
@@ -1105,10 +1074,11 @@ public class MainForm extends JFrame {
             protected synchronized void performAnimation(){
                 if (state == ACCEPTED) {
                     state = CALLING;
+                    visible = true;
                     (new Timer(10, new SlidingUPTimerListener(USEDLevels))).start();
                 }else if (state == WAITING){
                     state = ACCEPTING;
-                    (new Timer(10, new SlidingAsideTimerListener(xoffsets))).start();
+                    (new Timer(10, new SlidingAsideTimerListener(xpos))).start();
                 }
             }
 
@@ -1144,11 +1114,13 @@ public class MainForm extends JFrame {
                         partlyVisible = false;
                         ((Timer)e.getSource()).stop();
                         state = WAITING;
+                        saveToXML();
                         clientMessageFormIsShown = false;
                         form.dispose();
                     }
                     //mainUIPanel.repaint();
-                    repaint();
+                    //repaint();
+                    redrawMyComponents();
                 }
             }
 
@@ -1161,18 +1133,19 @@ public class MainForm extends JFrame {
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (xoffsets[0]> uiPanelWidth + 40){
-                        xoffsets = initialXoffsets;
+                    if (xpos[0]> uiPanelWidth + 40){
+                        xpos = initialXoffsets;
                         visible = false;
                         state = ACCEPTED;
                         ((Timer)e.getSource()).stop();
                         transitionCompleted();
                     }else{
-                        xoffsets[0] += 10;
-                        xoffsets[1] += 10;
-                        xoffsets[2] += 10;
+                        xpos[0] += 10;
+                        xpos[1] += 10;
+                        xpos[2] += 10;
                     }
-                    repaint();
+                    //repaint();
+                    redrawMyComponents();
                 }
             }
 
@@ -1183,7 +1156,8 @@ public class MainForm extends JFrame {
                 private SlidingUPTimerListener(int levelDestination) {
                     this.levelDestination = levelDestination;
                     ypos = uiPanelHeight + 40;
-                    visible = true;
+                    levelIndex = levelDestination;
+                    setUSEDLevels(levelIndex + 1);
                     System.out.println("Destination Level = " + levelDestination);
                     this.Ydestination = h_percent_uiPanel * terminalHeightOffsets[levelDestination];
                 }
@@ -1193,11 +1167,15 @@ public class MainForm extends JFrame {
                     ypos -= 10;
                     if (ypos < Ydestination + 20){
                         ypos = Ydestination;
-                        levelIndex = levelDestination;
+                        //levelIndex = levelDestination;
+                        //setUSEDLevels(levelIndex + 1);
+                        System.out.println("USED levels" + getUSEDLevels());
                         ((Timer) e.getSource()).stop();
                         timerBlinking.start();
                     }
-                    repaint();
+                    //repaint();
+                    int index = terminalNumber;
+                    redrawMyComponents();
                 }
             }
         }
@@ -1220,14 +1198,18 @@ public class MainForm extends JFrame {
                 int tableUPpos = slideUPRows.get(0).ypos;
                 int rowThatGonePos = rowThatGone.ypos + 20;
                 if (tableUPpos < rowThatGonePos){
+                    ((Timer) e.getSource()).stop();
                     for (int i=0; i<slideUPRows.size(); i++){
-                        int level = slideUPRows.get(i).levelIndex;
-                        slideUPRows.get(i).ypos = h_percent_uiPanel * terminalHeightOffsets[level - 1];
-                        slideUPRows.get(i).levelIndex = level -1;
+                        TerminalRow row = slideUPRows.get(i);
+                        int level = row.levelIndex;
+                        row.ypos = h_percent_uiPanel * terminalHeightOffsets[level - 1];
+                        row.levelIndex = level -1;
+                        row.saveToXML();
                     }
                     rowThatGone.levelIndex = -1;
                     setUSEDLevels(getUSEDLevels() - 1);
-                    ((Timer) e.getSource()).stop();
+                    //Collections.sort(table);
+                    rowThatGone.saveToXML();
                 }
                 repaint();
             }
