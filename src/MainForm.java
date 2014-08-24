@@ -864,7 +864,7 @@ public class MainForm extends JFrame {
             terminalsLocationList = new ArrayList<List<HashMap<String, Integer>>>();
 
             for(int i=0; i< TERMINAL_QUANTITY; i++){
-                TerminalRow terminalRow = new TerminalRow(i,widthOffsets);
+                TerminalRow terminalRow = new TerminalRow(i);
                 terminalRow.addTerminalRowListener(new TerminalRowListener() {
                     @Override
                     public void onTransitionCompleted(TerminalRow row) {
@@ -888,8 +888,10 @@ public class MainForm extends JFrame {
                     slideUPRows.add(r);
                 }
             }
+
             if (slideUPRows.size()>0){
-                (new Timer(10, new SlingUPTimerListener(slideUPRows, row))).start();
+                Collections.sort(slideUPRows);//This line is principle for next line correct work
+                (new Timer(10, new SlidingUPRowsTimerListener(slideUPRows, row))).start();
             }else{
                 row.levelIndex = -1;
                 setUSEDLevels(getUSEDLevels() - 1);
@@ -990,7 +992,7 @@ public class MainForm extends JFrame {
             protected int[] xpos;
             private Timer timerBlinking;
 
-            private TerminalRow(int terminalNumber, int[] xoffsets) {
+            private TerminalRow(int terminalNumber) {
                 this.terminalNumber = terminalNumber;
                 XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
@@ -1005,6 +1007,11 @@ public class MainForm extends JFrame {
                     this.visible = false;
                 }
                 this.state = terminalRowData.get("state");
+                this.xpos = new int[3];
+                this.xpos[0] = 0;
+                this.xpos[1] = 0;
+                this.xpos[2] = 0;
+                this.ypos = 0;
                 timerBlinking = new Timer(variables.getStandardBlinkRate(), new BlinkingTimerListener());
             }
 
@@ -1034,18 +1041,6 @@ public class MainForm extends JFrame {
                     this.visible = false;
                 }
                 this.state = terminalRowData.get("state");
-            }
-
-            public int getNextState(){
-                switch (state){
-                    case ACCEPTED:
-                        return CALLING;
-                    case CALLING:
-                        return WAITING;
-                    case WAITING:
-                        return ACCEPTED;
-                }
-                return -1;
             }
 
             @Override
@@ -1180,11 +1175,11 @@ public class MainForm extends JFrame {
             }
         }
 
-        private class SlingUPTimerListener implements ActionListener{
+        private class SlidingUPRowsTimerListener implements ActionListener{
             List<TerminalRow> slideUPRows;
             TerminalRow rowThatGone;
 
-            private SlingUPTimerListener(List<TerminalRow> slideUPRows, TerminalRow rowThatGone) {
+            private SlidingUPRowsTimerListener(List<TerminalRow> slideUPRows, TerminalRow rowThatGone) {
                 this.slideUPRows = slideUPRows;
                 this.rowThatGone = rowThatGone;
             }
@@ -1195,6 +1190,10 @@ public class MainForm extends JFrame {
                 for (TerminalRow r : slideUPRows){
                     r.ypos -= 10;
                 }
+                /*
+                Before instantiate this listener we've sorted slideUPRows List against levelIndex values.
+                That's why at the next line slideUPRows.get(0) returns TerminalRow with the smallest levelIndex
+                 */
                 int tableUPpos = slideUPRows.get(0).ypos;
                 int rowThatGonePos = rowThatGone.ypos + 20;
                 if (tableUPpos < rowThatGonePos){
@@ -1208,7 +1207,6 @@ public class MainForm extends JFrame {
                     }
                     rowThatGone.levelIndex = -1;
                     setUSEDLevels(getUSEDLevels() - 1);
-                    //Collections.sort(table);
                     rowThatGone.saveToXML();
                 }
                 repaint();
