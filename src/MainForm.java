@@ -6,7 +6,6 @@ import externals.POS_PRINTER;
 import helpers.APP;
 import helpers.Audio;
 import helpers.XMLVARIABLES;
-import innerforms.ClientMessageForm;
 import innerforms.SystemMessageForm;
 import innerforms.interfaces.SystemMessageFormListener;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
@@ -832,7 +831,7 @@ public class MainForm extends JFrame {
 
         private int USEDLevels;
 
-        private boolean rowsIsSliding = false;
+        private boolean isRowsSliding = false;
 
         private MainUIPanel() {
             initClients();
@@ -850,9 +849,18 @@ public class MainForm extends JFrame {
                 terminalRow.addTerminalRowListener(new TerminalRowListener() {
                     @Override
                     public void onTransitionCompleted(TerminalRow row) {
-                        System.out.println("onTransitionCompleted STARTING UP LEVEL =" + row.levelIndex);
                         (new RowsSlideUPRunner(row)).start();
-                        System.out.println("onTransitionCompleted FINISHING LEVEL =" + row.levelIndex);
+                    }
+
+                    @Override
+                    public void onShowMessageForm(TerminalRow row) {
+                        int width = mediaContentPanel.getSize().width;
+                        int height = mediaContentPanel.getSize().height;
+                    }
+
+                    @Override
+                    public void onDisposeMessageForm(TerminalRow row) {
+
                     }
                 });
                 table.add(terminalRow);
@@ -877,6 +885,13 @@ public class MainForm extends JFrame {
             return USEDLevels;
         }
 
+        public synchronized boolean getIsRowsSliding(){
+            return isRowsSliding;
+        }
+
+        public synchronized void setIsRowsSliding(boolean val){
+            isRowsSliding = val;
+        }
 
         @Override
         protected void paintComponent(Graphics graphics) {
@@ -930,15 +945,13 @@ public class MainForm extends JFrame {
             @Override
             public void run() {
                 int level = row.levelIndex;
-                while (rowsIsSliding){
+                while (getIsRowsSliding()){
                     try {
-                        System.out.println("RowsSlideUPRunner GOING TO SLEEP =" + level);
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
-                System.out.println("RowsSlideUPRunner STARTED LEVEL =" + level);
 
                 List<TerminalRow> slideUPRows = new ArrayList<>();
                 for (TerminalRow r : table){
@@ -948,18 +961,15 @@ public class MainForm extends JFrame {
                 }
 
                 if (slideUPRows.size()>0){
-                    rowsIsSliding = true;
+                    setIsRowsSliding(true);
                     Collections.sort(slideUPRows);//This line is principle for next line correct work
 
                     (new Timer(10, new SlidingUPRowsTimerListener(slideUPRows, row))).start();
-                    System.out.println("RowsSlideUPRunner THE ROWS ARE SLIDING LEVEL =" + level);
-
                 }else{
                     row.levelIndex = -1;
                     setUSEDLevels(getUSEDLevels() - 1);
                     row.saveToXML();
                 }
-                System.out.println("RowsSlideUPRunner FINISHING LEVEL =" + level);
             }
         }
 
@@ -1046,6 +1056,18 @@ public class MainForm extends JFrame {
                 }
             }
 
+            private void showMessageForm(){
+                for (TerminalRowListener listener : listeners){
+                    listener.onShowMessageForm(this);
+                }
+            }
+
+            private void disposeMessageForm(){
+                for (TerminalRowListener listener : listeners){
+                    listener.onDisposeMessageForm(this);
+                }
+            }
+
             protected synchronized void performAnimation(){
                 if (state == ACCEPTED) {
                     state = CALLING;
@@ -1063,7 +1085,6 @@ public class MainForm extends JFrame {
                 private final static int maxBlinking = 4;
                 private int alreadyBlinked = 0;
                 private boolean clientMessageFormIsShown = false;
-                ClientMessageForm form;
 
 
                 @Override
@@ -1074,10 +1095,7 @@ public class MainForm extends JFrame {
                         isForeground = !isForeground;
                         if (!clientMessageFormIsShown){
                             clientMessageFormIsShown = true;
-                            int width = mediaContentPanel.getSize().width;
-                            int height = mediaContentPanel.getSize().height;
-                            System.out.println("ClientMessageForm dimensions are " + width + "x" + height);
-                            form = new ClientMessageForm(width, height, clientNumber, terminalNumber +1);
+                            showMessageForm();
                         }
                     } else {
                         alreadyBlinked = 0;
@@ -1087,7 +1105,7 @@ public class MainForm extends JFrame {
                         state = WAITING;
                         saveToXML();
                         clientMessageFormIsShown = false;
-                        form.dispose();
+                        disposeMessageForm();
                     }
                     redrawMyComponents();
                 }
@@ -1177,7 +1195,7 @@ public class MainForm extends JFrame {
                     rowThatGone.levelIndex = -1;
                     setUSEDLevels(getUSEDLevels() - 1);
                     rowThatGone.saveToXML();
-                    rowsIsSliding = false;
+                    setIsRowsSliding(false);
                 }
                 repaint();
             }
@@ -1185,5 +1203,7 @@ public class MainForm extends JFrame {
     }
     private interface TerminalRowListener{
         public void onTransitionCompleted(MainUIPanel.TerminalRow row);
+        public void onShowMessageForm(MainUIPanel.TerminalRow row);
+        public void onDisposeMessageForm(MainUIPanel.TerminalRow row);
     }
 }
