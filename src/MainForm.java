@@ -81,23 +81,14 @@ public class MainForm extends JFrame {
     private int total = 0;
     private JPanel rootPanel;
     private JLabel l_clientTitle;
-    private JLabel l_terminal1;
-    private JLabel l_terminal2;
     private JLabel l_terminalTitle;
-    private JLabel l_client1;
-    private JLabel l_client2;
-    private JLabel l_client3;
     private JLabel l_totalTitle;
     private JLabel l_total;
-    private JLabel l_client1_arrow;
-    private JLabel l_client2_arrow;
     private JLabel l_takeTicket;
     private MainUIPanel mainUIPanel;
     private JLabel l_serviceStopped;
     private JPanel bottomPanel;
     private JPanel mediaContentPanel;
-    private JLabel l_client3_arrow;
-    private JLabel l_terminal3;
     private JPanel videoPanel;
     private JPanel tickerPanel;
     private JLabel l_ticker;
@@ -361,14 +352,12 @@ public class MainForm extends JFrame {
                 } else {
                     nextClient = 0;
                 }
-                //mainUIPanel.setTerminal(row, row.xpos, row.ypos, clientValues[terminalIndex]);
                 row.clientNumber = clientValues[terminalIndex];
                 row.saveToXML();
                 row.resetFromXML();
                 relocateClientComponents();
                 row.performAnimation();
                 relocateBottomComponents();
-                //clientTimers.get(terminalIndex).start();
                 notificationSound.Play();
                 variables.setNextClient(nextClient);
             }
@@ -839,13 +828,11 @@ public class MainForm extends JFrame {
     }
 
     private class MainUIPanel extends JPanel{
-        private int[] levels;
-        private boolean[] drawTerminalList;
-        private List<String[]> terminalsTextList;
-        private List<List<HashMap<String,Integer>>> terminalsLocationList;
         private List<TerminalRow> table;
 
         private int USEDLevels;
+
+        private boolean rowsIsSliding = false;
 
         private MainUIPanel() {
             initClients();
@@ -854,66 +841,22 @@ public class MainForm extends JFrame {
         void initClients(){
             XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
-            levels = new int[LEVEL_QUANT];
             USEDLevels = variables.getUSEDlevels();
 
-            table = new ArrayList<TerminalRow>();
-
-            drawTerminalList = new boolean[TERMINAL_QUANTITY];
-            terminalsTextList = new ArrayList<String[]>();
-            terminalsLocationList = new ArrayList<List<HashMap<String, Integer>>>();
+            table = new ArrayList<>();
 
             for(int i=0; i< TERMINAL_QUANTITY; i++){
                 TerminalRow terminalRow = new TerminalRow(i);
                 terminalRow.addTerminalRowListener(new TerminalRowListener() {
                     @Override
                     public void onTransitionCompleted(TerminalRow row) {
-                        slideUPRows(row);
+                        System.out.println("onTransitionCompleted STARTING UP LEVEL =" + row.levelIndex);
+                        (new RowsSlideUPRunner(row)).start();
+                        System.out.println("onTransitionCompleted FINISHING LEVEL =" + row.levelIndex);
                     }
                 });
                 table.add(terminalRow);
             }
-            //Collections.sort(table);
-
-        }
-
-        public void saveUSEDlevelsToXML(int val){
-
-        }
-
-        private synchronized void slideUPRows(TerminalRow row){
-            List<TerminalRow> slideUPRows = new ArrayList<TerminalRow>();
-            for (TerminalRow r : table){
-                if (r.levelIndex > row.levelIndex){
-                    slideUPRows.add(r);
-                }
-            }
-
-            if (slideUPRows.size()>0){
-                Collections.sort(slideUPRows);//This line is principle for next line correct work
-                (new Timer(10, new SlidingUPRowsTimerListener(slideUPRows, row))).start();
-            }else{
-                row.levelIndex = -1;
-                setUSEDLevels(getUSEDLevels() - 1);
-                //Collections.sort(table);
-                row.saveToXML();
-            }
-        }
-
-        public void setTerminal(TerminalRow row, int[] xoffsets, int ypos, int... clientArr){
-            if (clientArr.length>0){
-                int client = clientArr[0];
-                if (client == 0){
-                    row.visible = false;
-                }else{
-                    row.visible = true;
-                }
-                row.saveToXML();
-                row.resetFromXML();
-            }
-
-            row.xpos = xoffsets;
-            row.ypos = ypos;
         }
 
         public List<TerminalRow> getTable(){return table;}
@@ -975,6 +918,51 @@ public class MainForm extends JFrame {
             }
         }
 
+        private class RowsSlideUPRunner extends Thread {
+            TerminalRow row;
+            //MainUIPanel uiPanel;
+
+            private RowsSlideUPRunner(TerminalRow row) {
+                this.row = row;
+                //this.uiPanel = uiPanel;
+            }
+
+            @Override
+            public void run() {
+                int level = row.levelIndex;
+                while (rowsIsSliding){
+                    try {
+                        System.out.println("RowsSlideUPRunner GOING TO SLEEP =" + level);
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                System.out.println("RowsSlideUPRunner STARTED LEVEL =" + level);
+
+                List<TerminalRow> slideUPRows = new ArrayList<>();
+                for (TerminalRow r : table){
+                    if (r.levelIndex > row.levelIndex){
+                        slideUPRows.add(r);
+                    }
+                }
+
+                if (slideUPRows.size()>0){
+                    rowsIsSliding = true;
+                    Collections.sort(slideUPRows);//This line is principle for next line correct work
+
+                    (new Timer(10, new SlidingUPRowsTimerListener(slideUPRows, row))).start();
+                    System.out.println("RowsSlideUPRunner THE ROWS ARE SLIDING LEVEL =" + level);
+
+                }else{
+                    row.levelIndex = -1;
+                    setUSEDLevels(getUSEDLevels() - 1);
+                    row.saveToXML();
+                }
+                System.out.println("RowsSlideUPRunner FINISHING LEVEL =" + level);
+            }
+        }
+
         private class TerminalRow implements Comparable{
 
             private static final int ACCEPTED = 0;
@@ -1001,11 +989,7 @@ public class MainForm extends JFrame {
                 this.clientNumber = terminalRowData.get("clientnumber");
                 this.terminalNumber = terminalRowData.get("terminalnumber");
                 int visibility = terminalRowData.get("visible");
-                if (visibility == 1){
-                    this.visible = true;
-                }else {
-                    this.visible = false;
-                }
+                this.visible = visibility == 1;
                 this.state = terminalRowData.get("state");
                 this.xpos = new int[3];
                 this.xpos[0] = 0;
@@ -1016,7 +1000,7 @@ public class MainForm extends JFrame {
             }
 
             public void saveToXML(){
-                HashMap<String, Integer> terminalRowData = new HashMap<String, Integer>();
+                HashMap<String, Integer> terminalRowData = new HashMap<>();
                 terminalRowData.put("levelindex", levelIndex);
                 terminalRowData.put("terminalnumber", terminalNumber);
                 terminalRowData.put("clientnumber", clientNumber);
@@ -1035,11 +1019,7 @@ public class MainForm extends JFrame {
                 this.clientNumber = terminalRowData.get("clientnumber");
                 this.terminalNumber = terminalRowData.get("terminalnumber");
                 int visibility = terminalRowData.get("visible");
-                if (visibility == 1){
-                    this.visible = true;
-                }else {
-                    this.visible = false;
-                }
+                this.visible = visibility == 1;
                 this.state = terminalRowData.get("state");
             }
 
@@ -1055,7 +1035,7 @@ public class MainForm extends JFrame {
                 return retVal;
             }
 
-            List<TerminalRowListener> listeners = new ArrayList<TerminalRowListener>();
+            List<TerminalRowListener> listeners = new ArrayList<>();
             public void addTerminalRowListener(TerminalRowListener listener){
                 listeners.add(listener);
             }
@@ -1090,11 +1070,7 @@ public class MainForm extends JFrame {
                 public void actionPerformed(ActionEvent e) {
                     if (alreadyBlinked <= maxBlinking * 2) {
                         alreadyBlinked++;
-                        if (isForeground) {
-                            partlyVisible = false;
-                        } else {
-                            partlyVisible = true;
-                        }
+                        partlyVisible = !isForeground;
                         isForeground = !isForeground;
                         if (!clientMessageFormIsShown){
                             clientMessageFormIsShown = true;
@@ -1113,8 +1089,6 @@ public class MainForm extends JFrame {
                         clientMessageFormIsShown = false;
                         form.dispose();
                     }
-                    //mainUIPanel.repaint();
-                    //repaint();
                     redrawMyComponents();
                 }
             }
@@ -1139,17 +1113,14 @@ public class MainForm extends JFrame {
                         xpos[1] += 10;
                         xpos[2] += 10;
                     }
-                    //repaint();
                     redrawMyComponents();
                 }
             }
 
             private class SlidingUPTimerListener implements ActionListener{
-                private int levelDestination;
                 private int Ydestination;
 
                 private SlidingUPTimerListener(int levelDestination) {
-                    this.levelDestination = levelDestination;
                     ypos = uiPanelHeight + 40;
                     levelIndex = levelDestination;
                     setUSEDLevels(levelIndex + 1);
@@ -1168,8 +1139,6 @@ public class MainForm extends JFrame {
                         ((Timer) e.getSource()).stop();
                         timerBlinking.start();
                     }
-                    //repaint();
-                    int index = terminalNumber;
                     redrawMyComponents();
                 }
             }
@@ -1198,16 +1167,17 @@ public class MainForm extends JFrame {
                 int rowThatGonePos = rowThatGone.ypos + 20;
                 if (tableUPpos < rowThatGonePos){
                     ((Timer) e.getSource()).stop();
-                    for (int i=0; i<slideUPRows.size(); i++){
-                        TerminalRow row = slideUPRows.get(i);
+                    for (TerminalRow row : slideUPRows) {
                         int level = row.levelIndex;
                         row.ypos = h_percent_uiPanel * terminalHeightOffsets[level - 1];
-                        row.levelIndex = level -1;
+                        row.levelIndex = level - 1;
                         row.saveToXML();
                     }
+                    System.out.println("Sliding UP finished LEVEL = " + rowThatGone.levelIndex);
                     rowThatGone.levelIndex = -1;
                     setUSEDLevels(getUSEDLevels() - 1);
                     rowThatGone.saveToXML();
+                    rowsIsSliding = false;
                 }
                 repaint();
             }
