@@ -6,7 +6,9 @@ import externals.POS_PRINTER;
 import helpers.APP;
 import helpers.Audio;
 import helpers.XMLVARIABLES;
+import innerforms.ClientMessageForm;
 import innerforms.SystemMessageForm;
+import innerforms.interfaces.ClientMessageFormListener;
 import innerforms.interfaces.SystemMessageFormListener;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
@@ -263,7 +265,7 @@ public class MainForm extends JFrame {
                 relocateTitles();
                 for (int i=0; i< TERMINAL_QUANTITY; i++){
                     clientValues[i] = 0;
-                    relocateClientComponents();
+                    relocateTerminalRows();
                 }
 
                 SERVICE_STOPPED = false;
@@ -354,7 +356,7 @@ public class MainForm extends JFrame {
                 row.clientNumber = clientValues[terminalIndex];
                 row.saveToXML();
                 row.resetFromXML();
-                relocateClientComponents();
+                relocateTerminalRows();
                 row.performAnimation();
                 relocateBottomComponents();
                 notificationSound.Play();
@@ -552,21 +554,12 @@ public class MainForm extends JFrame {
         redrawLines();
     }
 
-    private void relocateClientComponents(){
+    private void relocateTerminalRows(){
 
         int fontHeight = h_percent_uiPanel * 16;
 
         TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
         FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
-
-        /*List<MainUIPanel.TerminalRow>table = new ArrayList<MainUIPanel.TerminalRow>();
-
-        for (MainUIPanel.TerminalRow r : mainUIPanel.getTable()){
-            int index = r.levelIndex;
-            if (r.visible) table.add(r);
-        }
-        System.out.println("USED LEVELS = " + table.size());
-        //mainUIPanel.setUSEDLevels(table.size());*/
 
         for (MainUIPanel.TerminalRow r : mainUIPanel.getTable()){
             int[] xpos = new int[3];
@@ -833,6 +826,8 @@ public class MainForm extends JFrame {
 
         private boolean isRowsSliding = false;
 
+        private ClientMessageForm form;
+
         private MainUIPanel() {
             initClients();
         }
@@ -856,11 +851,30 @@ public class MainForm extends JFrame {
                     public void onShowMessageForm(TerminalRow row) {
                         int width = mediaContentPanel.getSize().width;
                         int height = mediaContentPanel.getSize().height;
+                        if (form == null) {
+                            form = new ClientMessageForm(width, height, row.clientNumber, row.terminalNumber + 1);
+                            form.addClientMessageFormListener(new ClientMessageFormListener() {
+                                @Override
+                                public void onClose() {
+                                    form.dispose();
+                                    form = null;
+                                }
+
+                                @Override
+                                public void onKeyPressed(int keyCode) {
+                                    submitEvent(keyCode);
+                                }
+                            });
+                        }else {
+                            form.addMessage(row.clientNumber, row.terminalNumber + 1);
+                        }
                     }
 
                     @Override
                     public void onDisposeMessageForm(TerminalRow row) {
-
+                        if (form != null) {
+                            form.removeMessage(row.terminalNumber + 1);
+                        }
                     }
                 });
                 table.add(terminalRow);
@@ -885,12 +899,24 @@ public class MainForm extends JFrame {
             return USEDLevels;
         }
 
-        public synchronized boolean getIsRowsSliding(){
-            return isRowsSliding;
+        /**
+         * Provides a handler for different RowSets to perform a transition action.
+         * @return Permission value for the specific rowSet to do sliding up transition
+         */
+        public synchronized boolean requestSliding(){
+            if (isRowsSliding){
+                return false;
+            }else{
+                isRowsSliding = true;
+                return true;
+            }
         }
 
-        public synchronized void setIsRowsSliding(boolean val){
-            isRowsSliding = val;
+        /**
+         * Releases a handler to perform a sliding up transition.
+         */
+        public void releaseSlidingRequest(){
+            isRowsSliding = false;
         }
 
         @Override
@@ -944,8 +970,7 @@ public class MainForm extends JFrame {
 
             @Override
             public void run() {
-                int level = row.levelIndex;
-                while (getIsRowsSliding()){
+                while (!requestSliding()){
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -961,7 +986,6 @@ public class MainForm extends JFrame {
                 }
 
                 if (slideUPRows.size()>0){
-                    setIsRowsSliding(true);
                     Collections.sort(slideUPRows);//This line is principle for next line correct work
 
                     (new Timer(10, new SlidingUPRowsTimerListener(slideUPRows, row))).start();
@@ -969,6 +993,7 @@ public class MainForm extends JFrame {
                     row.levelIndex = -1;
                     setUSEDLevels(getUSEDLevels() - 1);
                     row.saveToXML();
+                    releaseSlidingRequest();
                 }
             }
         }
@@ -1191,11 +1216,10 @@ public class MainForm extends JFrame {
                         row.levelIndex = level - 1;
                         row.saveToXML();
                     }
-                    System.out.println("Sliding UP finished LEVEL = " + rowThatGone.levelIndex);
                     rowThatGone.levelIndex = -1;
                     setUSEDLevels(getUSEDLevels() - 1);
                     rowThatGone.saveToXML();
-                    setIsRowsSliding(false);
+                    releaseSlidingRequest();
                 }
                 repaint();
             }

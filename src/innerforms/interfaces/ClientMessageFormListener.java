@@ -9,4 +9,5 @@ package innerforms.interfaces;
  */
 public interface ClientMessageFormListener {
     public void onClose();
+    public void onKeyPressed(int keyCode);
 }
