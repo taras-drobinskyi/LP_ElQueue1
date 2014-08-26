@@ -30,7 +30,7 @@ public class MainForm extends JFrame {
 
     final static int LEVEL_QUANT = 5;
     final static int TERMINAL_QUANTITY = 5;
-    //final static int[] terminalHeightOffsets = {13, 30, 47, 64, 81};
+
     final static int[] terminalHeightOffsets = {27, 44, 61, 78, 95};
     final static int[] widthOffsets = {30, 60, 85};
 
@@ -138,8 +138,6 @@ public class MainForm extends JFrame {
 
         initVariables();
         initObjects();
-
-        // messagePanel.setSize(uiPanelWidth, 0);
 
         //Print first ticket
         total = lastClient + 1;
