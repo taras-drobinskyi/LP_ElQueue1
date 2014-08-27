@@ -14,17 +14,22 @@ import java.util.Date;
  * the serialization would fail.
  */
 public class SocketMessage implements Serializable {
-    public final static int ID_SENDING = 0;
+    public final static int OPEN_TERMINAL = 0;
+    public final static int CLOSE_TERMINAL = 1;
+    public final static int REQUEST_CLIENT = 2;
+    public final static int ACCEPT_CLIENT = 3;
 
     public int terminal;
     public int operation;
     public int value;
+    public boolean received;
     public Date date;
 
     public SocketMessage(int terminal, int operation, int value, Date date) {
         this.terminal = terminal;
         this.operation = operation;
         this.value = value;
+        this.received = false;
         this.date = date;
     }
 }

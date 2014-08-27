@@ -2,7 +2,7 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
-package servers;
+package services;
 
 import helpers.SocketMessage;
 
@@ -26,17 +26,35 @@ public class TerminalServer {
 
     private SocketOrganizer socketOrganizer;
 
+    public static void main(String[] args) {
+            new TerminalServer().startServer();
+    }
+
     public TerminalServer(){
+        socketOrganizer = new SocketOrganizer();
     }
 
     // Server thread accepts incoming client connections
     class ServerAccepter extends Thread {
         int port;
+        private volatile Thread myThread;
         ServerAccepter(int port) {
             this.port = port;
+            myThread = this;
+        }
+
+        public void stopThread() {
+            Thread tmpThread = myThread;
+            myThread = null;
+            if (tmpThread != null) {
+                tmpThread.interrupt();
+            }
         }
 
         public void run() {
+            if (myThread == null) {
+                return; // stopped before started.
+            }
             try{
                 ServerSocket serverSocket = new ServerSocket(port);
                 while (true){
@@ -46,31 +64,42 @@ public class TerminalServer {
                     System.out.println("server: got client");
 
                     socketOrganizer.addSocketObject(socket);
+
+                    Thread.yield(); // let another thread have some time perhaps to stop this one.
+                    if (Thread.currentThread().isInterrupted()) {
+                        throw new InterruptedException("Stopped by ifInterruptedStop()");
+                    }
                 }
-            }catch (IOException ex){
+            }catch (Exception ex){
                 ex.printStackTrace();
             }
         }
     }
 
     // Runs the sever accepter to catch incoming client connections
-    public void doServer() {
+    public void startServer() {
         System.out.println("server: start");
         serverAccepter = new ServerAccepter(8000);
         serverAccepter.start();
     }
 
+    public void stopServer(){
+        socketOrganizer.closeAll();
+    }
+
     // Sends a message remotely (must be on swing thread)
-    public void doSend() {
-        /*SocketMessage message = new SocketMessage(0, 1, new Date());
-        socketOrganizer.sendToAllOutputs(message);*/
+    public void doSend(SocketMessage message) {
+        //SocketMessage message = new SocketMessage(0, 1, new Date());
+        socketOrganizer.sendToAllOutputs(message);
     }
 
     private class SocketOrganizer{
-        private List<SocketObject> sockets;
+        private List<SocketObject> validSockets;
+        private List<SocketObject> invalidSockets;
 
         public SocketOrganizer(){
-            sockets = new ArrayList<>();
+            validSockets = new ArrayList<>();
+            invalidSockets = new ArrayList<>();
         }
 
         public synchronized void addSocketObject(Socket socket){
@@ -79,23 +108,49 @@ public class TerminalServer {
                 @Override
                 public void onInputMessage(SocketObject soc) {
                     switch (soc.message.operation){
-                        case 0:
+                        case SocketMessage.OPEN_TERMINAL:
                             soc.id = soc.message.terminal;
-                            sockets.add(soc);
+                            System.out.println("Received message statusReceived: " + String.valueOf(soc.message.received));
+                            soc.message.received = true;
+                            invalidSockets.remove(soc);
+                            validSockets.add(soc);
+                            soc.registered = true;
+                            try {
+                                soc.out.writeObject(soc.message);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            break;
+                        case SocketMessage.CLOSE_TERMINAL:
+                            break;
+                        case SocketMessage.REQUEST_CLIENT:
+                            break;
+                        case SocketMessage.ACCEPT_CLIENT:
                             break;
                         default:
                             break;
 
                     }
                 }
+
+                @Override
+                public void onCloseSocket(SocketObject socketObject) {
+                    if (socketObject.registered){
+                        validSockets.remove(socketObject);
+                    }else {
+                        invalidSockets.remove(socketObject);
+                    }
+                    System.out.println("SocketObject with ID = " + socketObject.id + " has been removed from stack");
+                }
             });
             socketObject.startInputListener();
+            invalidSockets.add(socketObject);
         }
 
         public synchronized void removeSocketObject(int id){
-            for (SocketObject soc : sockets){
+            for (SocketObject soc : validSockets){
                 if (soc.id == id){
-                    sockets.remove(soc);
+                    validSockets.remove(soc);
                     return;
                 }
             }
@@ -106,7 +161,7 @@ public class TerminalServer {
         // although could fork off a worker to do it.
         public synchronized void sendToAllOutputs(SocketMessage message) {
             System.out.println("server: send " + message);
-            Iterator it = sockets.iterator();
+            Iterator it = validSockets.iterator();
             while (it.hasNext()) {
                 SocketObject socketObj = (SocketObject) it.next();
                 try {
@@ -122,11 +177,21 @@ public class TerminalServer {
             }
         }
 
+        public void closeAll(){
+            for (SocketObject soc : validSockets){
+                soc.close();
+            }
+            for (SocketObject soc : invalidSockets){
+                soc.close();
+            }
+        }
+
         private class SocketObject{
             private Socket socket;
             private ObjectOutputStream out;
             private ObjectInputStream in;
             private SocketMessage message;
+            private boolean registered;
             private int id;
 
             List<SocketObjectListener> listeners;
@@ -141,6 +206,7 @@ public class TerminalServer {
                     //this.in = new ObjectInputStream(socket.getInputStream());
                     ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
                     this.in = new ObjectInputStream(Channels.newInputStream(channel));
+                    this.registered = false;
                     inputListener = new InputListener();
 
                     listeners = new ArrayList<>();
@@ -155,6 +221,10 @@ public class TerminalServer {
                     in.close();
                     out.close();
                     socket.close();
+                    System.out.println("Socket with ID = " + id + " has been closed");
+                    for (SocketObjectListener l : listeners){
+                        l.onCloseSocket(this);
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -217,6 +287,7 @@ public class TerminalServer {
                         }
                     }catch (Exception ex){
                         ex.printStackTrace();
+                        close();
 
                     }
                 }
@@ -225,5 +296,6 @@ public class TerminalServer {
     }
     private interface SocketObjectListener{
         public void onInputMessage(SocketOrganizer.SocketObject socketObject);
+        public void onCloseSocket(SocketOrganizer.SocketObject socketObject);
     }
 }
