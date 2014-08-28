@@ -5,10 +5,11 @@
 package services.interfaces;
 
 import helpers.SocketMessage;
+import services.TerminalServer;
 
 /**
  * Created by forando on 27.08.14.
  */
 public interface TerminalServerListener {
-    public void onTerminalMessage(SocketMessage message);
+    public void onTerminalMessage(TerminalServer.SocketOrganizer.SocketObject soc);
 }

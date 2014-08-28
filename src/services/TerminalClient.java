@@ -4,6 +4,7 @@
 
 package services;
 
+import helpers.APP;
 import helpers.SocketMessage;
 
 import java.io.ObjectInputStream;
@@ -25,8 +26,8 @@ public class TerminalClient {
 
     // Runs a client handler to connect to a server
     public void startClient() {
-            clientHandler = new ClientHandler("localhost", 8000);
-            clientHandler.start();
+        clientHandler = new ClientHandler(APP.IP, APP.PORT);
+        clientHandler.start();
     }
 
     // Client runs this to handle incoming messages
@@ -58,6 +59,7 @@ public class TerminalClient {
         // Connect to the server, loop getting messages
         public void run() {
             if (myThread == null) {
+                System.out.println("Thread has been stopped");
                 return; // stopped before started.
             }
             try {
@@ -74,7 +76,7 @@ public class TerminalClient {
 
                 //while (true) {
 
-                    SocketMessage message = new SocketMessage(1,SocketMessage.OPEN_TERMINAL, 1, new Date());
+                    SocketMessage message = new SocketMessage(1,SocketMessage.OPEN_TERMINAL, 1, new Date(), true);
 
                     out.writeUnshared(message);
                     out.flush();
@@ -82,7 +84,14 @@ public class TerminalClient {
                     // get object from server, will block until object arrives.
                     message = (SocketMessage) in.readObject();
                     System.out.println("client: read statusReceived: " + String.valueOf(message.received));
-                    // note message.ticker is null, since "transient"
+
+
+                if (message.received){
+                    message.operation = SocketMessage.ACCEPT_CLIENT;
+                    message.value = 1;
+                    /*out.writeObject(message);
+                    out.flush();*/
+                }
 
                     // post this data to the UI
                     //threadIn(message);

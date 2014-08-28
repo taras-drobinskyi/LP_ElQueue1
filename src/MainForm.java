@@ -29,21 +29,11 @@ import java.util.List;
 public class MainForm extends JFrame {
 
     final static int LEVEL_QUANT = 5;
-    final static int TERMINAL_QUANTITY = 5;
 
     final static int[] terminalHeightOffsets = {27, 44, 61, 78, 95};
     final static int[] widthOffsets = {30, 60, 85};
 
     HashMap<String, String> currentVideo;
-
-    //System Commands:
-    final static int RESET_SYSTEM = 112;//F1
-    final static int PRINTER_ERROR_ON = 113;//F2
-    final static int PRINTER_ERROR_OFF = 114;//F3
-    final static int STOP_SERVICE = 115;//F4
-    final static int RESET_SERVICE = 116;//F5
-    final static int TRIGGER_SERVICE = 117;//F6
-    final static int PRINT_TICKET = 36;//HOME
 
     //Terminal Commands:
     final static int TERMINAL_BASE = 49;
@@ -202,7 +192,15 @@ public class MainForm extends JFrame {
             @Override
             public void keyReleased(KeyEvent e) {
                 System.out.println(e.getKeyCode());
-                submitEvent(e.getKeyCode());
+
+                int keyCode = e.getKeyCode();
+                if(keyCode>=49 && keyCode<=57){
+                    int terminalNumber = keyCode - TERMINAL_BASE + 1;
+                    if (terminalNumber <= APP.TERMINAL_QUANTITY) {
+                        keyCode = keyCode - TERMINAL_BASE;
+                    }
+                }
+                submitEvent(keyCode);
             }
         });
 
@@ -243,10 +241,10 @@ public class MainForm extends JFrame {
 
     }
 
-    private void submitEvent(int keyCode) {
-        if(keyCode>=49 && keyCode<=57){
+    public void submitEvent(int keyCode) {
+        if(keyCode>=0 && keyCode<=APP.MAX_TERMINAL_QUANTITY){
             int terminalNumber = keyCode - TERMINAL_BASE + 1;
-            if (terminalNumber <= TERMINAL_QUANTITY) {
+            if (terminalNumber <= APP.TERMINAL_QUANTITY) {
                 assignTerminal(keyCode);
             }
         }else if((keyCode>=112 && keyCode<=123) || keyCode == 36){
@@ -256,12 +254,12 @@ public class MainForm extends JFrame {
 
     private void executeSystemCommand(int keyCode) {
         switch (keyCode) {
-            case RESET_SYSTEM:
+            case APP.RESET_SYSTEM:
                 total = 1;
                 lastClient = 0;
                 nextClient = 0;
                 relocateTitles();
-                for (int i=0; i< TERMINAL_QUANTITY; i++){
+                for (int i=0; i< APP.TERMINAL_QUANTITY; i++){
                     clientValues[i] = 0;
                     relocateTerminalRows();
                 }
@@ -272,14 +270,13 @@ public class MainForm extends JFrame {
                 batteryCheck();
                 variables.setLastClient(lastClient);
                 variables.setNextClient(nextClient);
-                for (int i=0; i< TERMINAL_QUANTITY; i++){
+                for (int i=0; i< APP.TERMINAL_QUANTITY; i++){
                     MainUIPanel.TerminalRow row = mainUIPanel.getTable().get(i);
                     row.clientNumber = 0;
                     row.saveToXML();
-
                 }
                 break;
-            case PRINTER_ERROR_ON:
+            case APP.PRINTER_ERROR_ON:
                 if (!SERVICE_STOPPED) {
                     PRINTER_ERROR = true;
                     ticketsPrinted = 0;
@@ -299,7 +296,7 @@ public class MainForm extends JFrame {
                     variables.setNextClient(nextClient);
                 }
                 break;
-            case PRINTER_ERROR_OFF:
+            case APP.PRINTER_ERROR_OFF:
                 if (!SERVICE_STOPPED) {
                     timerError.stop();
                     timerBottomLine.start();
@@ -308,19 +305,19 @@ public class MainForm extends JFrame {
                     relocateBottomComponents();
                 }
                 break;
-            case STOP_SERVICE:
+            case APP.STOP_SERVICE:
                 SERVICE_STOPPED = true;
                 triggerService(SERVICE_STOPPED);
                 break;
-            case RESET_SERVICE:
+            case APP.RESET_SERVICE:
                 SERVICE_STOPPED = false;
                 triggerService(SERVICE_STOPPED);
                 break;
-            case TRIGGER_SERVICE:
+            case APP.TRIGGER_SERVICE:
                 SERVICE_STOPPED = !SERVICE_STOPPED;
                 triggerService(SERVICE_STOPPED);
                 break;
-            case PRINT_TICKET:
+            case APP.PRINT_TICKET:
                 if(!TICKET_IS_PRINTING) {
                     total++;
                     lastClient = total - 1;
@@ -340,7 +337,7 @@ public class MainForm extends JFrame {
 
     private void assignTerminal(int keyCode) {
 
-        int terminalIndex = keyCode - TERMINAL_BASE;
+        int terminalIndex = keyCode;
         MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalIndex);
 
         if (row.state == MainUIPanel.TerminalRow.ACCEPTED) {
@@ -484,11 +481,11 @@ public class MainForm extends JFrame {
         variables.setLastClient(variables.getLastClient() + 1);
         lastClient = variables.getLastClient();
 
-        clientValues = new int[TERMINAL_QUANTITY];
+        clientValues = new int[APP.TERMINAL_QUANTITY];
 
         List<MainUIPanel.TerminalRow>table = mainUIPanel.getTable();
 
-        for (int i=0; i<TERMINAL_QUANTITY; i++){
+        for (int i=0; i<APP.TERMINAL_QUANTITY; i++){
             clientValues[i] = table.get(i).clientNumber;
         }
 
@@ -837,7 +834,7 @@ public class MainForm extends JFrame {
 
             table = new ArrayList<>();
 
-            for(int i=0; i< TERMINAL_QUANTITY; i++){
+            for(int i=0; i< APP.TERMINAL_QUANTITY; i++){
                 TerminalRow terminalRow = new TerminalRow(i);
                 terminalRow.addTerminalRowListener(new TerminalRowListener() {
                     @Override

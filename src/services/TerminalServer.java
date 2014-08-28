@@ -4,7 +4,9 @@
 
 package services;
 
+import helpers.APP;
 import helpers.SocketMessage;
+import services.interfaces.TerminalServerListener;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -26,12 +28,15 @@ public class TerminalServer {
 
     private SocketOrganizer socketOrganizer;
 
+    private List<TerminalServerListener> listeners;
+
     public static void main(String[] args) {
-            new TerminalServer().startServer();
+            new TerminalServer().start();
     }
 
     public TerminalServer(){
         socketOrganizer = new SocketOrganizer();
+        listeners = new ArrayList<>();
     }
 
     // Server thread accepts incoming client connections
@@ -77,14 +82,16 @@ public class TerminalServer {
     }
 
     // Runs the sever accepter to catch incoming client connections
-    public void startServer() {
-        System.out.println("server: start");
-        serverAccepter = new ServerAccepter(8000);
+    public void start() {
+        System.out.println("server: Running on port " + APP.PORT);
+        serverAccepter = new ServerAccepter(APP.PORT);
         serverAccepter.start();
     }
 
-    public void stopServer(){
+    public void stop(){
         socketOrganizer.closeAll();
+        serverAccepter.stopThread();
+        System.out.println("server: stopped");
     }
 
     // Sends a message remotely (must be on swing thread)
@@ -93,7 +100,7 @@ public class TerminalServer {
         socketOrganizer.sendToAllOutputs(message);
     }
 
-    private class SocketOrganizer{
+    public class SocketOrganizer{
         private List<SocketObject> validSockets;
         private List<SocketObject> invalidSockets;
 
@@ -126,6 +133,9 @@ public class TerminalServer {
                         case SocketMessage.REQUEST_CLIENT:
                             break;
                         case SocketMessage.ACCEPT_CLIENT:
+                            for (TerminalServerListener l : listeners){
+                                l.onTerminalMessage(soc);
+                            }
                             break;
                         default:
                             break;
@@ -186,17 +196,19 @@ public class TerminalServer {
             }
         }
 
-        private class SocketObject{
+        public class SocketObject{
             private Socket socket;
             private ObjectOutputStream out;
             private ObjectInputStream in;
-            private SocketMessage message;
+            public SocketMessage message;
             private boolean registered;
             private int id;
 
             List<SocketObjectListener> listeners;
 
+            private Validator validator;
             private InputListener inputListener;
+            private OutputWriter outputWriter;
 
 
             private SocketObject(Socket socket) {
@@ -207,7 +219,7 @@ public class TerminalServer {
                     ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
                     this.in = new ObjectInputStream(Channels.newInputStream(channel));
                     this.registered = false;
-                    inputListener = new InputListener();
+                    validator = new Validator();
 
                     listeners = new ArrayList<>();
                 }catch(Exception ex){
@@ -216,13 +228,18 @@ public class TerminalServer {
             }
 
             private void close(){
-                try {
+                if (registered) {
                     inputListener.stopThread();
+                    outputWriter.stopThread();
+                }else{
+                    validator.stopThread();
+                }
+                try {
                     in.close();
                     out.close();
                     socket.close();
                     System.out.println("Socket with ID = " + id + " has been closed");
-                    for (SocketObjectListener l : listeners){
+                    for (SocketObjectListener l : listeners) {
                         l.onCloseSocket(this);
                     }
                 } catch (IOException e) {
@@ -238,19 +255,71 @@ public class TerminalServer {
                 listeners.add(listener);
             }
 
-            private synchronized void transferMessage(SocketMessage message){
+            private void validate(){
+                inputListener = new InputListener();
+                outputWriter = new OutputWriter();
+            }
 
-                this.message = message;
+            private synchronized void transferMessage(){
 
                 for (SocketObjectListener l : listeners){
                     l.onInputMessage(this);
                 }
             }
 
+            public synchronized void send(){
+                outputWriter.stopThread();
+                outputWriter = new OutputWriter();
+                outputWriter.start();
+            }
+
             @Override
             protected void finalize() throws Throwable {
                 super.finalize();
                 close();
+            }
+
+            private class Validator extends Thread{
+                private volatile Thread myThread;
+
+                public Validator(){
+                    myThread = this;
+                }
+
+                public void stopThread() {
+                    Thread tmpThread = myThread;
+                    myThread = null;
+                    if (tmpThread != null) {
+                        tmpThread.interrupt();
+                    }
+                }
+
+                @Override
+                public void run() {
+                    if (myThread == null) {
+                        return; // stopped before started.
+                    }
+                    try {
+                        byte[] b = new byte[2];
+                        int val = socket.getInputStream().read(b);
+                        if (val > 0){
+                            System.out.println("server: received a message. Socket ID = " + id);
+                            if (b[0] == 0){
+
+                            }else{
+
+                            }
+                            validate();
+                        }else{
+                            close();
+                        }
+
+                    }catch (Exception ex){
+                        ex.printStackTrace();
+                        close();
+
+                    }
+                }
             }
 
             private class InputListener extends Thread{
@@ -276,9 +345,9 @@ public class TerminalServer {
                     try {
                         while (true) {
                             //get object from server, will block until object arrives.
-                            SocketMessage message = (SocketMessage) in.readObject();
+                            message = (SocketMessage) in.readObject();
                             System.out.println("server: received a message. Socket ID = " + id);
-                            transferMessage(message);
+                            transferMessage();
 
                             Thread.yield(); // let another thread have some time perhaps to stop this one.
                             if (Thread.currentThread().isInterrupted()) {
@@ -292,8 +361,46 @@ public class TerminalServer {
                     }
                 }
             }
+
+            private class OutputWriter extends Thread{
+                private volatile Thread myThread;
+
+                public OutputWriter(){
+                    myThread = this;
+                }
+
+                public void stopThread() {
+                    Thread tmpThread = myThread;
+                    myThread = null;
+                    if (tmpThread != null) {
+                        tmpThread.interrupt();
+                    }
+                }
+
+                @Override
+                public void run() {
+                    if (myThread == null) {
+                        return; // stopped before started.
+                    }
+                    try {
+                        if (message.transferable) {
+                            out.writeObject(message);
+                            out.flush();
+                        }else{
+                            //TODO: call to convertToByteArray method
+                        }
+                    }catch (Exception ex){
+                        ex.printStackTrace();
+                    }
+                }
+            }
         }
     }
+
+    public void addTerminalServerListener(TerminalServerListener listener){
+        listeners.add(listener);
+    }
+
     private interface SocketObjectListener{
         public void onInputMessage(SocketOrganizer.SocketObject socketObject);
         public void onCloseSocket(SocketOrganizer.SocketObject socketObject);
