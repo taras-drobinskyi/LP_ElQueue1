@@ -16,6 +16,7 @@ import java.net.Socket;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -153,7 +154,7 @@ public class TerminalServer {
                     System.out.println("SocketObject with ID = " + socketObject.id + " has been removed from stack");
                 }
             });
-            socketObject.startInputListener();
+            socketObject.startValidator();
             invalidSockets.add(socketObject);
         }
 
@@ -220,7 +221,6 @@ public class TerminalServer {
                     this.in = new ObjectInputStream(Channels.newInputStream(channel));
                     this.registered = false;
                     validator = new Validator();
-
                     listeners = new ArrayList<>();
                 }catch(Exception ex){
                     ex.printStackTrace();
@@ -247,17 +247,32 @@ public class TerminalServer {
                 }
             }
 
-            private void startInputListener(){
-                inputListener.start();
-            }
-
             private void addSocketObjectListener(SocketObjectListener listener){
                 listeners.add(listener);
             }
 
-            private void validate(){
+            /**
+             * This method registers the current object with an <b>ID</b> (equal to terminal index).
+             * After that, the object becomes valid to {@link services.TerminalServer.SocketOrganizer}.
+             * @param clientTalksWithObject Can be <b>1</b> - if a client talks to this socket
+             *                         using {@link helpers.SocketMessage} object, or <b>0</b> - if it doesn't.
+             * @param id An ID to register this object with.
+             */
+            private void validate(byte clientTalksWithObject, byte id){
+                switch (clientTalksWithObject){
+                    case 0x01:
+                        message = new SocketMessage(id,SocketMessage.OPEN_TERMINAL,0, new Date(),true);
+                        break;
+                    default:
+                        message = new SocketMessage(id,SocketMessage.OPEN_TERMINAL,0, new Date(),false);
+                        break;
+                }
+                transferMessage();
                 inputListener = new InputListener();
+                inputListener.start();
                 outputWriter = new OutputWriter();
+                message.received = true;
+                outputWriter.start();
             }
 
             private synchronized void transferMessage(){
@@ -279,6 +294,18 @@ public class TerminalServer {
                 close();
             }
 
+            public void startValidator() {
+                validator.start();
+            }
+
+            /**
+             * The object of this class receives the very first <b>message</b> from a client (socket).<br>
+             * The goal of this <b>message</b> is to notify the server whether the client is talking
+             * using {@link helpers.SocketMessage} object or raw byteArray.<br>
+             * It also provides {@link SocketObject} with an ID, thus
+             * making it completely registered to the server.<br>
+             * Once these two points done, the object becomes useless.
+             */
             private class Validator extends Thread{
                 private volatile Thread myThread;
 
@@ -300,16 +327,14 @@ public class TerminalServer {
                         return; // stopped before started.
                     }
                     try {
-                        byte[] b = new byte[2];
+                        byte[] b = new byte[100];
                         int val = socket.getInputStream().read(b);
+                        System.out.println("val = " + val);
                         if (val > 0){
-                            System.out.println("server: received a message. Socket ID = " + id);
-                            if (b[0] == 0){
-
-                            }else{
-
-                            }
-                            validate();
+                            System.out.println("b.length = " + b.length);
+                            System.out.println("b[0] = " + (int)b[0]);
+                            System.out.println("b[1] = " + (int)b[1]);
+                            validate(b[2], b[3]);
                         }else{
                             close();
                         }
@@ -377,6 +402,19 @@ public class TerminalServer {
                     }
                 }
 
+                private byte[] convertToByteArray(){
+                    byte[] rawMessage = new byte[4];
+                    rawMessage[0] = (byte)message.terminal;
+                    rawMessage[1] = (byte)message.operation;
+                    rawMessage[2] = (byte)message.value;
+                    if(message.received){
+                        rawMessage[3] = 0x01;
+                    }else {
+                        rawMessage[3] = 0;
+                    }
+                    return rawMessage;
+                }
+
                 @Override
                 public void run() {
                     if (myThread == null) {
@@ -387,7 +425,9 @@ public class TerminalServer {
                             out.writeObject(message);
                             out.flush();
                         }else{
-                            //TODO: call to convertToByteArray method
+                            byte[] buffer = convertToByteArray();
+                            out.write(buffer);
+                            out.flush();
                         }
                     }catch (Exception ex){
                         ex.printStackTrace();

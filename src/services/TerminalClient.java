@@ -10,6 +10,7 @@ import helpers.SocketMessage;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Date;
@@ -75,14 +76,18 @@ public class TerminalClient {
                 System.out.println("client: connected!");
 
                 //while (true) {
+                /*ByteBuffer buffer = ByteBuffer.allocate(2);
+                buffer.put((byte)0x01);
+                buffer.put((byte)0x05);*/
+                    byte[] buffer = new byte[2];
+                    buffer[0] = 0x01;
+                    buffer[1] = 0x04;
 
-                    SocketMessage message = new SocketMessage(1,SocketMessage.OPEN_TERMINAL, 1, new Date(), true);
-
-                    out.writeUnshared(message);
+                    out.write(buffer);
                     out.flush();
 
                     // get object from server, will block until object arrives.
-                    message = (SocketMessage) in.readObject();
+                    SocketMessage message = (SocketMessage) in.readObject();
                     System.out.println("client: read statusReceived: " + String.valueOf(message.received));
 
 
