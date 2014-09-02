@@ -18,7 +18,7 @@ public class Main {
         server.addTerminalServerListener(new TerminalServerListener() {
             @Override
             public void onTerminalMessage(TerminalServer.SocketOrganizer.SocketObject soc) {
-                form.submitEvent(soc.message.value);
+                form.submitEvent(soc.message.terminal);
             }
         });
         server.start();

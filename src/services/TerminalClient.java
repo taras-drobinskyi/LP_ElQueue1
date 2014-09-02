@@ -7,45 +7,103 @@ package services;
 import helpers.APP;
 import helpers.SocketMessage;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by forando on 27.08.14.
  */
 public class TerminalClient {
-    private ClientHandler clientHandler;
+
+    private final String hostName;
+    private final int port;
+    private final int terminalIndex;
+
+    private Validator validator;
+    private Socket socket;
+    private ObjectInputStream in;
+    private ObjectOutputStream out;
+
+    InputListener inputListener;
+    OutputWriter outputWriter;
+
+    public SocketMessage message;
+
+    private boolean registered = false;
+
+    private List<TerminalClientListener> listeners;
 
     public static void main(String[] args) {
-        new TerminalClient().startClient();
+        new TerminalClient(APP.IP, APP.PORT, 4).startClient();
+    }
+
+    public void addTerminalClientListener(TerminalClientListener listener){
+        listeners.add(listener);
+    }
+
+    public TerminalClient(String hostName, int port, int terminalIndex){
+        this.hostName = hostName;
+        this.port = port;
+        this.terminalIndex = terminalIndex;
+        listeners = new ArrayList<>();
+        validator = new Validator();
     }
 
     // Runs a client handler to connect to a server
     public void startClient() {
-        clientHandler = new ClientHandler(APP.IP, APP.PORT);
-        clientHandler.start();
+        validator.start();
     }
 
-    // Client runs this to handle incoming messages
-    // (our client only uses the inputstream of the connection)
-    private class ClientHandler extends Thread {
-        String name;
-        int port;
+    public void stopClient(){close();}
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        close();
+    }
+
+    private void close(){
+        if (registered) {
+            inputListener.stopThread();
+            outputWriter.stopThread();
+        }else{
+            validator.stopThread();
+        }
+        try {
+            in.close();
+            out.close();
+            socket.close();
+            System.out.println("Socket with ID = " + terminalIndex + " has been closed");
+            for (TerminalClientListener l : listeners) {
+                l.onCloseSocket();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void validate(SocketMessage message){
+        this.message = message;
+        registered = true;
+        inputListener = new InputListener();
+        inputListener.start();
+        outputWriter = new OutputWriter();
+        outputWriter.start();
+        for (TerminalClientListener l : listeners) {
+            l.onRegister();
+        }
+    }
+
+    private class Validator extends Thread{
         private volatile Thread myThread;
 
-        Socket socket;
-        ObjectInputStream in;
-        ObjectOutputStream out;
-        Thread worker;
-
-        ClientHandler(String name, int port) {
-            this.name = name;
-            this.port = port;
+        public Validator(){
             myThread = this;
         }
 
@@ -57,62 +115,146 @@ public class TerminalClient {
             }
         }
 
-        // Connect to the server, loop getting messages
+        @Override
         public void run() {
             if (myThread == null) {
-                System.out.println("Thread has been stopped");
                 return; // stopped before started.
             }
             try {
-                // make connection to the server name/port
-                socket = new Socket(name, port);
+                // make connection to the server hostName/port
+                socket = new Socket(hostName, port);
+                out = new ObjectOutputStream(socket.getOutputStream());
+                System.out.println("client: connected!");
+
+                byte[] buffer = {0x01, (byte)terminalIndex};
+                out.write(buffer);
+                out.flush();
 
                 // get input stream to read from server, wrap in object stream
                 ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
                 in = new ObjectInputStream(Channels.newInputStream(channel));
-                //in = new ObjectInputStream(socket.getInputStream());
 
-                out = new ObjectOutputStream(socket.getOutputStream());
-                System.out.println("client: connected!");
-
-                //while (true) {
-                /*ByteBuffer buffer = ByteBuffer.allocate(2);
-                buffer.put((byte)0x01);
-                buffer.put((byte)0x05);*/
-                    byte[] buffer = new byte[2];
-                    buffer[0] = 0x01;
-                    buffer[1] = 0x04;
-
-                    out.write(buffer);
-                    out.flush();
-
-                    // get object from server, will block until object arrives.
-                    SocketMessage message = (SocketMessage) in.readObject();
-                    System.out.println("client: read statusReceived: " + String.valueOf(message.received));
-
+                // get object from server, will block until object arrives.
+                SocketMessage message = (SocketMessage) in.readObject();
 
                 if (message.received){
-                    message.operation = SocketMessage.ACCEPT_CLIENT;
-                    message.value = 1;
-                    /*out.writeObject(message);
-                    out.flush();*/
+                    validate(message);
+                }else {
+                    close();
                 }
 
-                    // post this data to the UI
-                    //threadIn(message);
+            }catch (Exception ex){
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private synchronized void transferMessage(){
+
+        for (TerminalClientListener l : listeners){
+            l.onInputMessage();
+        }
+    }
+
+
+    private class InputListener extends Thread{
+        private volatile Thread myThread;
+
+        public InputListener(){
+            myThread = this;
+        }
+
+        public void stopThread() {
+            Thread tmpThread = myThread;
+            myThread = null;
+            if (tmpThread != null) {
+                tmpThread.interrupt();
+            }
+        }
+
+        @Override
+        public void run() {
+            if (myThread == null) {
+                return; // stopped before started.
+            }
+            try {
+                while (true) {
+                    //get object from server, will block until object arrives.
+                    message = (SocketMessage) in.readObject();
+                    System.out.println("server: received a message. OPERATION = " + message.operation
+                    + " VALUE = " + message.value);
+                    transferMessage();
 
                     Thread.yield(); // let another thread have some time perhaps to stop this one.
                     if (Thread.currentThread().isInterrupted()) {
                         throw new InterruptedException("Stopped by ifInterruptedStop()");
                     }
-               // }
-            }
-            catch (Exception ex) { // IOException and ClassNotFoundException
+                }
+            }catch (Exception ex){
                 ex.printStackTrace();
+                close();
 
             }
-            // could null out client ptr
-            // note that exception breaks out of the while loop, thus ending the thread
         }
+    }
+
+    public synchronized void send(){
+        outputWriter.stopThread();
+        outputWriter = new OutputWriter();
+        outputWriter.start();
+    }
+
+    private class OutputWriter extends Thread{
+        private volatile Thread myThread;
+
+        public OutputWriter(){
+            myThread = this;
+        }
+
+        public void stopThread() {
+            Thread tmpThread = myThread;
+            myThread = null;
+            if (tmpThread != null) {
+                tmpThread.interrupt();
+            }
+        }
+
+        private byte[] convertToByteArray(){
+            byte[] rawMessage = new byte[4];
+            rawMessage[0] = (byte)message.terminal;
+            rawMessage[1] = (byte)message.operation;
+            rawMessage[2] = (byte)message.value;
+            if(message.received){
+                rawMessage[3] = 0x01;
+            }else {
+                rawMessage[3] = 0;
+            }
+            return rawMessage;
+        }
+
+        @Override
+        public void run() {
+            if (myThread == null) {
+                return; // stopped before started.
+            }
+            try {
+                if (message.transferable) {
+                    out.writeObject(message);
+                    out.flush();
+                }else{
+                    byte[] buffer = convertToByteArray();
+                    out.write(buffer);
+                    out.flush();
+                }
+            }catch (Exception ex){
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public interface TerminalClientListener{
+        public void onRegister();
+        public void onInputMessage();
+        public void onCloseSocket();
     }
 }
