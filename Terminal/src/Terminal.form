@@ -18,18 +18,18 @@
         <properties>
           <font name="Serif" size="72" style="1"/>
           <horizontalAlignment value="0"/>
-          <text value="134"/>
+          <text value="---"/>
         </properties>
       </component>
       <component id="27479" class="javax.swing.JButton" binding="b_next">
         <constraints border-constraint="South"/>
         <properties>
-          <enabled value="false"/>
+          <enabled value="true"/>
           <font name="SansSerif" size="22" style="0"/>
           <maximumSize width="300" height="150"/>
           <minimumSize width="210" height="100"/>
           <preferredSize width="210" height="60"/>
-          <text value="Следующий"/>
+          <text value="Подключиться"/>
         </properties>
       </component>
       <grid id="96d56" binding="radioPanel" layout-manager="GridLayoutManager" row-count="1" column-count="7" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">

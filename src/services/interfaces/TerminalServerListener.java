@@ -11,5 +11,5 @@ import services.TerminalServer;
  * Created by forando on 27.08.14.
  */
 public interface TerminalServerListener {
-    public void onTerminalMessage(TerminalServer.SocketOrganizer.SocketObject soc);
+    public void onTerminalServerMessage(TerminalServer.SocketOrganizer.SocketObject soc);
 }

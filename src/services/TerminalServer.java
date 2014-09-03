@@ -27,9 +27,9 @@ public class TerminalServer {
 
     private ServerAccepter serverAccepter;
 
-    private SocketOrganizer socketOrganizer;
+    public SocketOrganizer socketOrganizer;
 
-    private List<TerminalServerListener> listeners;
+    private List<TerminalServerListener> terminalServerListeners;
 
     public static void main(String[] args) {
             new TerminalServer().start();
@@ -37,7 +37,7 @@ public class TerminalServer {
 
     public TerminalServer(){
         socketOrganizer = new SocketOrganizer();
-        listeners = new ArrayList<>();
+        terminalServerListeners = new ArrayList<>();
     }
 
     // Server thread accepts incoming client connections
@@ -123,19 +123,17 @@ public class TerminalServer {
                             invalidSockets.remove(soc);
                             validSockets.add(soc);
                             soc.registered = true;
-                            try {
-                                soc.out.writeObject(soc.message);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
                             break;
                         case SocketMessage.CLOSE_TERMINAL:
                             break;
                         case SocketMessage.REQUEST_CLIENT:
+                            for (TerminalServerListener l : terminalServerListeners){
+                                l.onTerminalServerMessage(soc);
+                            }
                             break;
                         case SocketMessage.ACCEPT_CLIENT:
-                            for (TerminalServerListener l : listeners){
-                                l.onTerminalMessage(soc);
+                            for (TerminalServerListener l : terminalServerListeners){
+                                l.onTerminalServerMessage(soc);
                             }
                             break;
                         default:
@@ -163,6 +161,28 @@ public class TerminalServer {
                 if (soc.id == id){
                     validSockets.remove(soc);
                     return;
+                }
+            }
+        }
+
+        /**
+         * Sends message to sockets which IDs are specified in <b>terminals</b> list.
+         * @param terminals Socket IDs for message to be sent.
+         * @param operation see {@link helpers.SocketMessage#operation}.
+         * @param val see {@link helpers.SocketMessage#value}.
+         */
+        public synchronized void send(int[] terminals, int operation, int val){
+            int itemsInArray = validSockets.size();
+            for (int terminal : terminals) {
+                for (int i=0; i<itemsInArray; i++) {
+                    SocketObject soc = validSockets.get(i);
+                    if (soc.id == terminal) {
+                        soc.message.operation = operation;
+                        soc.message.value = val;
+                        soc.message.received = true;
+                        soc.send();
+                        i = itemsInArray;
+                    }
                 }
             }
         }
@@ -438,7 +458,7 @@ public class TerminalServer {
     }
 
     public void addTerminalServerListener(TerminalServerListener listener){
-        listeners.add(listener);
+        terminalServerListeners.add(listener);
     }
 
     private interface SocketObjectListener{

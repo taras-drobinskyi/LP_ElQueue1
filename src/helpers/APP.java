@@ -11,6 +11,7 @@ public class APP {
 
     public final static int TERMINAL_QUANTITY = 5;
     public final static int MAX_TERMINAL_QUANTITY = 10;
+    public final static int LEVEL_QUANTITY = 2;
 
     //System Commands:
     public final static int RESET_SYSTEM = 112;//F1
@@ -24,6 +25,7 @@ public class APP {
     /*
     Server stuff
      */
-    public static final String IP = "192.168.0.181";
+    //public static final String IP = "192.168.0.181";
+    public static final String IP = "192.168.1.160";
     public static final int PORT = 8000;
 }

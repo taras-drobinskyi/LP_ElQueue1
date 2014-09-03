@@ -27,6 +27,14 @@ public class Terminal extends JFrame implements TerminalClient.TerminalClientLis
     private JRadioButton r5;
     private JPanel radioPanel;
 
+    private final static String CONNECT = "Подключиться";
+    private final static String NEXT = "Следующий";
+    private final static String ACCEPT = "Принять";
+    private final static String WAIT = "Подождите";
+
+    private int state = SocketMessage.OPEN_TERMINAL;
+    private boolean requestIsStopped = false;
+
 
     int unfoldX;
     int foldX;
@@ -89,7 +97,7 @@ public class Terminal extends JFrame implements TerminalClient.TerminalClientLis
                 Point p = e.getPoint();
                 if(snapped && !slidingINInProgress && !rootPane.getVisibleRect().contains(p)){
                     int x = p.x;
-                    if (x <= formWidth) {
+                    if (x <= formWidth && state != SocketMessage.ACCEPT_CLIENT) {
                         mouseEntered = false;
                         minimized = true;
                         System.out.println("MOUSE EXITED!");
@@ -102,15 +110,23 @@ public class Terminal extends JFrame implements TerminalClient.TerminalClientLis
         b_next.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                terminalClient.message.operation = SocketMessage.ACCEPT_CLIENT;
-                terminalClient.message.received = false;
-                terminalClient.send();
+                switch (state){
+                    case SocketMessage.REQUEST_CLIENT:
+                        terminalClient.message.operation = SocketMessage.REQUEST_CLIENT;
+                        terminalClient.message.received = false;
+                        terminalClient.send();
+                        break;
+                    case SocketMessage.ACCEPT_CLIENT:
+                        terminalClient.message.operation = SocketMessage.ACCEPT_CLIENT;
+                        terminalClient.message.received = false;
+                        terminalClient.send();
+                        break;
+                    default://Open Terminal
+                        startTerminalClient();
+                        break;
+                }
             }
         });
-
-
-        terminalClient = new TerminalClient(APP.IP, APP.PORT, 4);
-        terminalClient.addTerminalClientListener(this);
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -118,23 +134,23 @@ public class Terminal extends JFrame implements TerminalClient.TerminalClientLis
                 formWidth = getSize().width;
                 formHeight = getSize().height;
                 Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-                screenWidth = (int)screenSize.getWidth();
+                screenWidth = (int) screenSize.getWidth();
                 unfoldX = screenWidth - formWidth;
-                foldX = (int)screenSize.getWidth() - 10;
+                foldX = (int) screenSize.getWidth() - 10;
                 nx = unfoldX;
-                ny = ((int)screenSize.getHeight() - formHeight)/2;
+                ny = ((int) screenSize.getHeight() - formHeight) / 2;
 
-                setBounds(nx, ny,formWidth, formHeight);
+                setBounds(nx, ny, formWidth, formHeight);
                 snapped = true;
-
-                terminalClient.startClient();
             }
         });
 
         setVisible(true);
     }
 
-    private void startClient(){
+    private void startTerminalClient(){
+        terminalClient = new TerminalClient(APP.IP, APP.PORT, 4);
+        terminalClient.addTerminalClientListener(this);
         terminalClient.startClient();
     }
 
@@ -142,14 +158,14 @@ public class Terminal extends JFrame implements TerminalClient.TerminalClientLis
         radioPanel.setVisible(false);
         l_client.setVisible(false);
         b_next.setVisible(false);
-        Timer timer = new Timer(10, new SliderTimer(nx, ny, formWidth, 10, formHeight, false));
+        Timer timer = new Timer(10, new SliderTimerListener(nx, ny, formWidth, 10, formHeight, false));
         timer.setInitialDelay(0);
         timer.start();
     }
 
     private synchronized void doSlideIN() {
         //locked = true;
-        Timer timer = new Timer(10, new SliderTimer(nx, ny, 10, 250, formHeight, true));
+        Timer timer = new Timer(10, new SliderTimerListener(nx, ny, 10, 250, formHeight, true));
         timer.setInitialDelay(0);
         timer.start();
     }
@@ -198,7 +214,7 @@ public class Terminal extends JFrame implements TerminalClient.TerminalClientLis
         locked = false;
     }
 
-    private class SliderTimer implements ActionListener{
+    private class SliderTimerListener implements ActionListener{
         /*int x;
         int y;*/
         int initialWidth;
@@ -207,7 +223,7 @@ public class Terminal extends JFrame implements TerminalClient.TerminalClientLis
         boolean slideIN;
         boolean stopAction = false;
 
-        private SliderTimer(int x, int y, int initialWidth, int finalWidth, int height, boolean slideIN) {
+        private SliderTimerListener(int x, int y, int initialWidth, int finalWidth, int height, boolean slideIN) {
             this.initialWidth = initialWidth;
             this.finalWidth = finalWidth;
             this.height = height;
@@ -259,15 +275,23 @@ public class Terminal extends JFrame implements TerminalClient.TerminalClientLis
         }
     }
 
-    private synchronized void checkForExiting(Point p){
-        new MouseExiteChecker(p).start();
+    private class BlinkTimerListener implements ActionListener{
 
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (state == SocketMessage.ACCEPT_CLIENT) {
+                l_client.setVisible(!l_client.isVisible());
+            }else{
+                ((Timer)e.getSource()).stop();
+                l_client.setVisible(true);
+            }
+        }
     }
 
-    private class MouseExiteChecker extends Thread{
+    private class MouseExitChecker extends Thread{
         private Point point;
 
-        public MouseExiteChecker(Point p){
+        public MouseExitChecker(Point p){
             this.point = p;
         }
 
@@ -287,19 +311,69 @@ public class Terminal extends JFrame implements TerminalClient.TerminalClientLis
         }
     }
 
+    private synchronized void submitInputMessage(){
+        switch (terminalClient.message.operation){
+            case SocketMessage.ACCEPT_CLIENT:
+                if (terminalClient.message.received){
+                    l_client.setText("0");
+                    state = SocketMessage.REQUEST_CLIENT;
+                    if (requestIsStopped) {
+                        b_next.setEnabled(false);
+                        b_next.setText(WAIT);
+                    }else{
+                        b_next.setText(NEXT);
+                    }
+                }
+                break;
+            case SocketMessage.REQUEST_CLIENT:
+                if (terminalClient.message.received){
+                    l_client.setText(String.valueOf(terminalClient.message.value));
+                    b_next.setText(ACCEPT);
+                    state = SocketMessage.ACCEPT_CLIENT;
+                    new Timer(500, new BlinkTimerListener()).start();
+                    if (minimized){
+                        minimized = false;
+                        slidingINInProgress = true;
+                        doSlideIN();
+                    }
+                }
+            case SocketMessage.HOLD_TERMINAL:
+                if (terminalClient.message.value == 1){
+                    requestIsStopped = true;
+                    if (state == SocketMessage.REQUEST_CLIENT) {
+                        b_next.setEnabled(false);
+                        b_next.setText(WAIT);
+                    }
+                }else{
+                    requestIsStopped = false;
+                    if (state == SocketMessage.REQUEST_CLIENT) {
+                        b_next.setEnabled(true);
+                        b_next.setText(NEXT);
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
     @Override
     public void onRegister() {
-        b_next.setEnabled(true);
+        b_next.setText(NEXT);
+        l_client.setText("0");
+        state = SocketMessage.REQUEST_CLIENT;
     }
 
     @Override
     public void onInputMessage() {
-
+        submitInputMessage();
     }
 
     @Override
     public void onCloseSocket() {
-        b_next.setEnabled(false);
-        startClient();
+        l_client.setText("---");
+        b_next.setText(CONNECT);
+        state = SocketMessage.OPEN_TERMINAL;
+        terminalClient = null;
     }
 }

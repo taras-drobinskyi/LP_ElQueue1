@@ -8,20 +8,35 @@ import services.interfaces.TerminalServerListener;
  */
 public class Main {
 
-    MainForm form;
-
     public static void main(String[] args) {
         //XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
+        final TerminalServer server = new TerminalServer();
         final MainForm form = new MainForm();
-
-        TerminalServer server = new TerminalServer();
         server.addTerminalServerListener(new TerminalServerListener() {
             @Override
-            public void onTerminalMessage(TerminalServer.SocketOrganizer.SocketObject soc) {
+            public void onTerminalServerMessage(TerminalServer.SocketOrganizer.SocketObject soc) {
                 form.submitEvent(soc.message.terminal);
             }
         });
         server.start();
+        form.addMainFormListener(new MainForm.MainFormListener() {
+            @Override
+            public void onAssignClient(int terminalIndex, int client) {
+                int[] terminals = {terminalIndex};
+                server.socketOrganizer.send(terminals, SocketMessage.REQUEST_CLIENT, client);
+            }
+
+            @Override
+            public void onAcceptClient(int terminalIndex, int client) {
+                int[] terminals = {terminalIndex};
+                server.socketOrganizer.send(terminals, SocketMessage.ACCEPT_CLIENT, client);
+            }
+
+            @Override
+            public void onHoldTerminals(int[] terminals, int val) {
+                server.socketOrganizer.send(terminals, SocketMessage.HOLD_TERMINAL, val);
+            }
+        });
 
 
 

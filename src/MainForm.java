@@ -28,8 +28,6 @@ import java.util.List;
  */
 public class MainForm extends JFrame {
 
-    final static int LEVEL_QUANT = 5;
-
     final static int[] terminalHeightOffsets = {27, 44, 61, 78, 95};
     final static int[] widthOffsets = {30, 60, 85};
 
@@ -818,8 +816,10 @@ public class MainForm extends JFrame {
         private List<TerminalRow> table;
 
         private int USEDLevels;
+        private int levelsToBeUSED;
 
         private boolean isRowsSliding = false;
+        private boolean isOnHoldTerminals = false;
 
         private ClientMessageForm form;
 
@@ -831,7 +831,7 @@ public class MainForm extends JFrame {
             XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
             USEDLevels = variables.getUSEDlevels();
-
+            initialTerminalAssignmentCheck();
             table = new ArrayList<>();
 
             for(int i=0; i< APP.TERMINAL_QUANTITY; i++){
@@ -840,6 +840,10 @@ public class MainForm extends JFrame {
                     @Override
                     public void onTransitionCompleted(TerminalRow row) {
                         (new RowsSlideUPRunner(row)).start();
+                        for (MainFormListener l : mainFormListeners){
+                            l.onAcceptClient(row.terminalNumber, row.clientNumber);
+                            System.out.println("MainFormListener onAcceptClient");
+                        }
                     }
 
                     @Override
@@ -863,6 +867,10 @@ public class MainForm extends JFrame {
                         }else {
                             form.addMessage(row.clientNumber, row.terminalNumber + 1);
                         }
+                        for (MainFormListener l : mainFormListeners){
+                            l.onAssignClient(row.terminalNumber, row.clientNumber);
+                            System.out.println("MainFormListener onAssignClient");
+                        }
                     }
 
                     @Override
@@ -885,13 +893,52 @@ public class MainForm extends JFrame {
             return null;
         }
 
-        public void setUSEDLevels(int val){
+        public synchronized void setUSEDLevels(int val){
             USEDLevels = val;
             variables.setUSEDlevels(val);
         }
 
-        public int getUSEDLevels(){
+        public synchronized int getUSEDLevels(){
             return USEDLevels;
+        }
+
+        private void initialTerminalAssignmentCheck(){
+            if (USEDLevels >= APP.LEVEL_QUANTITY){
+                sendOnHoldTerminalsSet(1);
+            }
+            levelsToBeUSED = USEDLevels;
+        }
+
+        private synchronized void checkForTerminalsOnHoldSet(){
+            levelsToBeUSED++;
+            if (levelsToBeUSED >= APP.LEVEL_QUANTITY && !isOnHoldTerminals) {
+                isOnHoldTerminals = true;
+                sendOnHoldTerminalsSet(1);
+            }
+        }
+
+        public synchronized void checkForTerminalsOnHoldRelease(){
+            levelsToBeUSED--;
+            if (levelsToBeUSED < APP.LEVEL_QUANTITY && isOnHoldTerminals) {
+                isOnHoldTerminals = false;
+                sendOnHoldTerminalsSet(0);
+            }
+        }
+
+        private void sendOnHoldTerminalsSet(int val){
+            List<Integer> list = new ArrayList<>();
+            for (TerminalRow row : table){
+                if (row.state != TerminalRow.CALLING && row.state != TerminalRow.WAITING){
+                    list.add(row.terminalNumber);
+                }
+            }
+            int[] terminals = new int[list.size()];
+            for (int i=0; i<list.size(); i++){
+                terminals[i] = list.get(i);
+            }
+            for (MainFormListener l : mainFormListeners){
+                l.onHoldTerminals(terminals, val);
+            }
         }
 
         /**
@@ -1092,9 +1139,11 @@ public class MainForm extends JFrame {
                 if (state == ACCEPTED) {
                     state = CALLING;
                     visible = true;
+                    checkForTerminalsOnHoldSet();
                     (new Timer(10, new SlidingUPTimerListener(USEDLevels))).start();
                 }else if (state == WAITING){
                     state = ACCEPTING;
+                    checkForTerminalsOnHoldRelease();
                     (new Timer(10, new SlidingAsideTimerListener(xpos))).start();
                 }
             }
@@ -1225,4 +1274,18 @@ public class MainForm extends JFrame {
         public void onShowMessageForm(MainUIPanel.TerminalRow row);
         public void onDisposeMessageForm(MainUIPanel.TerminalRow row);
     }
+
+    private List<MainFormListener> mainFormListeners = new ArrayList<>();
+
+    public void addMainFormListener(MainFormListener listener){
+        mainFormListeners.add(listener);
+    }
+
+    public interface MainFormListener{
+        public void onAssignClient(int terminalIndex, int client);
+        public void onAcceptClient(int terminalIndex, int client);
+        public void onHoldTerminals(int[] terminals, int val);
+    }
+
+
 }

@@ -91,13 +91,13 @@ public class TerminalClient {
     public void validate(SocketMessage message){
         this.message = message;
         registered = true;
-        inputListener = new InputListener();
-        inputListener.start();
-        outputWriter = new OutputWriter();
-        outputWriter.start();
         for (TerminalClientListener l : listeners) {
             l.onRegister();
         }
+        inputListener = new InputListener();
+        inputListener.start();
+        outputWriter = new OutputWriter();
+        //outputWriter.start();
     }
 
     private class Validator extends Thread{
@@ -136,8 +136,8 @@ public class TerminalClient {
 
                 // get object from server, will block until object arrives.
                 SocketMessage message = (SocketMessage) in.readObject();
-
-                if (message.received){
+                System.out.println("Validator received message OPERATION = " + message.operation);
+                if (message.operation == SocketMessage.OPEN_TERMINAL && message.received){
                     validate(message);
                 }else {
                     close();
