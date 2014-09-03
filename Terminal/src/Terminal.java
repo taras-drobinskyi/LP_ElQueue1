@@ -338,6 +338,7 @@ public class Terminal extends JFrame implements TerminalClient.TerminalClientLis
                     }
                 }
             case SocketMessage.HOLD_TERMINAL:
+                System.out.println("TERMINAL onHOLD value = " + terminalClient.message.value);
                 if (terminalClient.message.value == 1){
                     requestIsStopped = true;
                     if (state == SocketMessage.REQUEST_CLIENT) {
@@ -359,9 +360,17 @@ public class Terminal extends JFrame implements TerminalClient.TerminalClientLis
 
     @Override
     public void onRegister() {
-        b_next.setText(NEXT);
-        l_client.setText("0");
+        if (terminalClient.message.operation == SocketMessage.HOLD_TERMINAL &&
+                terminalClient.message.value == 1){
+            System.out.println("TERMINAL onHOLD value = " + terminalClient.message.value);
+            requestIsStopped = true;
+            b_next.setEnabled(false);
+            b_next.setText(WAIT);
+        }else{
+            b_next.setText(NEXT);
+        }
         state = SocketMessage.REQUEST_CLIENT;
+        l_client.setText("0");
     }
 
     @Override

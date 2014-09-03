@@ -105,6 +105,8 @@ public class TerminalServer {
         private List<SocketObject> validSockets;
         private List<SocketObject> invalidSockets;
 
+        private volatile boolean isOnHoldTerminals = false;
+
         public SocketOrganizer(){
             validSockets = new ArrayList<>();
             invalidSockets = new ArrayList<>();
@@ -183,6 +185,15 @@ public class TerminalServer {
                         soc.send();
                         i = itemsInArray;
                     }
+                }
+            }
+            if (operation==SocketMessage.HOLD_TERMINAL){
+                if (val == 1) {
+                    isOnHoldTerminals = true;
+                    System.out.println("server isOnHoldTerminals = " + isOnHoldTerminals);
+                }else{
+                    isOnHoldTerminals = false;
+                    System.out.println("server isOnHoldTerminals = " + isOnHoldTerminals);
                 }
             }
         }
@@ -292,6 +303,11 @@ public class TerminalServer {
                 inputListener.start();
                 outputWriter = new OutputWriter();
                 message.received = true;
+                System.out.println("validate isOnHoldTerminals = " + isOnHoldTerminals);
+                if (isOnHoldTerminals){
+                    message.operation = SocketMessage.HOLD_TERMINAL;
+                    message.value = 1;
+                }
                 outputWriter.start();
             }
 
@@ -303,6 +319,7 @@ public class TerminalServer {
             }
 
             public synchronized void send(){
+                System.out.println("Socket send OPERATION = " + message.operation);
                 outputWriter.stopThread();
                 outputWriter = new OutputWriter();
                 outputWriter.start();
@@ -442,7 +459,10 @@ public class TerminalServer {
                     }
                     try {
                         if (message.transferable) {
-                            out.writeObject(message);
+                            System.out.println("Socket OUT write message with OPERATION = " + message.operation +
+                            " and VALUE = " + message.value);
+                            //out.writeObject(message);
+                            out.writeUnshared(message);
                             out.flush();
                         }else{
                             byte[] buffer = convertToByteArray();

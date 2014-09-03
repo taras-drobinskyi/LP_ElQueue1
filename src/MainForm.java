@@ -74,7 +74,7 @@ public class MainForm extends JFrame {
     private JLabel l_totalTitle;
     private JLabel l_total;
     private JLabel l_takeTicket;
-    private MainUIPanel mainUIPanel;
+    public MainUIPanel mainUIPanel;
     private JLabel l_serviceStopped;
     private JPanel bottomPanel;
     private JPanel mediaContentPanel;
@@ -812,7 +812,7 @@ public class MainForm extends JFrame {
         }
     }
 
-    private class MainUIPanel extends JPanel{
+    public class MainUIPanel extends JPanel{
         private List<TerminalRow> table;
 
         private int USEDLevels;
@@ -831,7 +831,6 @@ public class MainForm extends JFrame {
             XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
             USEDLevels = variables.getUSEDlevels();
-            initialTerminalAssignmentCheck();
             table = new ArrayList<>();
 
             for(int i=0; i< APP.TERMINAL_QUANTITY; i++){
@@ -902,30 +901,38 @@ public class MainForm extends JFrame {
             return USEDLevels;
         }
 
-        private void initialTerminalAssignmentCheck(){
+        public void initialTerminalAssignmentCheck(){
             if (USEDLevels >= APP.LEVEL_QUANTITY){
-                sendOnHoldTerminalsSet(1);
+                sendOnHoldTerminals(1);
             }
             levelsToBeUSED = USEDLevels;
         }
 
         private synchronized void checkForTerminalsOnHoldSet(){
             levelsToBeUSED++;
+            System.out.println("checkForTerminalsOnHoldSet levelsToBeUSED = " + levelsToBeUSED +
+                    " LEVEL_QUANTITY = " + APP.LEVEL_QUANTITY);
+            System.out.println("isOnHoldTerminals = " + isOnHoldTerminals);
             if (levelsToBeUSED >= APP.LEVEL_QUANTITY && !isOnHoldTerminals) {
                 isOnHoldTerminals = true;
-                sendOnHoldTerminalsSet(1);
+                System.out.println("checkForTerminalsOnHoldSet sendOnHoldTerminals val = " + 1);
+                sendOnHoldTerminals(1);
             }
         }
 
         public synchronized void checkForTerminalsOnHoldRelease(){
             levelsToBeUSED--;
+            System.out.println("checkForTerminalsOnHoldRelease levelsToBeUSED = " + levelsToBeUSED +
+            " LEVEL_QUANTITY = " + APP.LEVEL_QUANTITY);
+            System.out.println("isOnHoldTerminals = " + isOnHoldTerminals);
             if (levelsToBeUSED < APP.LEVEL_QUANTITY && isOnHoldTerminals) {
                 isOnHoldTerminals = false;
-                sendOnHoldTerminalsSet(0);
+                System.out.println("checkForTerminalsOnHoldRelease sendOnHoldTerminals val = " + 0);
+                sendOnHoldTerminals(0);
             }
         }
 
-        private void sendOnHoldTerminalsSet(int val){
+        private void sendOnHoldTerminals(int val){
             List<Integer> list = new ArrayList<>();
             for (TerminalRow row : table){
                 if (row.state != TerminalRow.CALLING && row.state != TerminalRow.WAITING){
@@ -933,6 +940,8 @@ public class MainForm extends JFrame {
                 }
             }
             int[] terminals = new int[list.size()];
+            System.out.println("sendOnHoldTerminals table.size() = " + table.size());
+            System.out.println("sendOnHoldTerminals list.size() = " + list.size());
             for (int i=0; i<list.size(); i++){
                 terminals[i] = list.get(i);
             }

@@ -137,7 +137,8 @@ public class TerminalClient {
                 // get object from server, will block until object arrives.
                 SocketMessage message = (SocketMessage) in.readObject();
                 System.out.println("Validator received message OPERATION = " + message.operation);
-                if (message.operation == SocketMessage.OPEN_TERMINAL && message.received){
+                if ((message.operation == SocketMessage.OPEN_TERMINAL ||
+                        message.operation == SocketMessage.HOLD_TERMINAL) && message.received){
                     validate(message);
                 }else {
                     close();
@@ -181,7 +182,7 @@ public class TerminalClient {
                 while (true) {
                     //get object from server, will block until object arrives.
                     message = (SocketMessage) in.readObject();
-                    System.out.println("server: received a message. OPERATION = " + message.operation
+                    System.out.println("client: received a message. OPERATION = " + message.operation
                     + " VALUE = " + message.value);
                     transferMessage();
 
@@ -239,7 +240,8 @@ public class TerminalClient {
             }
             try {
                 if (message.transferable) {
-                    out.writeObject(message);
+                    //out.writeObject(message);
+                    out.writeUnshared(message);
                     out.flush();
                 }else{
                     byte[] buffer = convertToByteArray();

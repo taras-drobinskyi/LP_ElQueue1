@@ -34,9 +34,11 @@ public class Main {
 
             @Override
             public void onHoldTerminals(int[] terminals, int val) {
+                System.out.println("onHoldTerminals val = " + val);
                 server.socketOrganizer.send(terminals, SocketMessage.HOLD_TERMINAL, val);
             }
         });
+        form.mainUIPanel.initialTerminalAssignmentCheck();
 
 
 
