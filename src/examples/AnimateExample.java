@@ -14,7 +14,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 
 @SuppressWarnings("serial")
-public class AnimateExample extends JPanel {
+public class AnimateExample extends JPanel implements MouseMotionListener {
     public static final String IMG_PATH = "/resources/ic_launcher.png";
     private static final int PREF_W = 800;
     private static final int PREF_H = 800;
@@ -34,6 +34,9 @@ public class AnimateExample extends JPanel {
     private int bgStringY;
 
     public AnimateExample() {
+
+        addMouseMotionListener(this);
+
         for (Direction dir : Direction.values()) {
             dirMap.put(dir, Boolean.FALSE);
         }
@@ -110,6 +113,16 @@ public class AnimateExample extends JPanel {
         }
     }
 
+    @Override
+    public void mouseDragged(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        System.out.println("Mouse Moved to " + e.getX() + "x" + e.getY());
+    }
+
     private class TimerListener implements ActionListener {
         public void actionPerformed(java.awt.event.ActionEvent e) {
             for (Direction dir : Direction.values()) {
@@ -155,11 +168,25 @@ public class AnimateExample extends JPanel {
     private static void createAndShowGui() {
         AnimateExample mainPanel = new AnimateExample();
 
-        JFrame frame = new JFrame("Animate Example");
+        final JFrame frame = new JFrame("Animate Example");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().add(mainPanel);
         frame.pack();
-        frame.setLocationByPlatform(true);
+        //frame.setLocationByPlatform(true);
+
+        frame.addWindowListener(new WindowAdapter() {
+
+            @Override
+            public void windowActivated(WindowEvent e) {
+                System.out.println("WINDOW ACTIVATED!!!");
+                frame.setLocation(1300,200);
+                frame.setLocation(1500,200);
+            }
+        });
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int width = (int)screenSize.getWidth();
+        int height = (int)screenSize.getHeight();
+        System.out.println("Screen Size is " + width + "x" + height);
         frame.setVisible(true);
     }
 

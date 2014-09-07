@@ -15,6 +15,9 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * This Class gets connected to external xml file with all project META DATA
@@ -170,16 +173,48 @@ public class XMLVARIABLES {
         return (Element) clientassigned_List.item(0);
     }
 
-    public int getClientAsigned(int position) {
-        Element Terminal_Node = getTerminalNode(position - 1);
-        Element clientassigned_Node = getClientaAsignedNode(Terminal_Node);
-        return Integer.valueOf(clientassigned_Node.getTextContent());
+    public int getUSEDlevels(){
+        Element rootElement = doc.getDocumentElement();
+        NodeList terminals_List = rootElement.getElementsByTagName("terminals");
+        Element terminals_Node = (Element) terminals_List.item(0);
+
+        return Integer.valueOf(terminals_Node.getAttribute("usedlevels"));
     }
 
-    public void setClientAsigned(int position, int val) {
-        Element Terminal_Node = getTerminalNode(position - 1);
+    public void setUSEDlevels(int val){
+        Element rootElement = doc.getDocumentElement();
+        NodeList terminals_List = rootElement.getElementsByTagName("terminals");
+        Element terminals_Node = (Element) terminals_List.item(0);
+
+        terminals_Node.setAttribute("usedlevels", String.valueOf(val));
+    }
+
+    public HashMap<String, Integer> getTerminalRowData(int position) {
+        HashMap<String, Integer> terminalRowData = new HashMap<String, Integer>();
+        Element Terminal_Node = getTerminalNode(position);
+        int levelindex = Integer.valueOf(Terminal_Node.getAttribute("levelindex"));
+        terminalRowData.put("levelindex", levelindex);
+        int terminalnumber = Integer.valueOf(Terminal_Node.getAttribute("terminalnumber"));
+        terminalRowData.put("terminalnumber", terminalnumber);
         Element clientassigned_Node = getClientaAsignedNode(Terminal_Node);
-        clientassigned_Node.setTextContent(String.valueOf(val));
+        int clientnumber = Integer.valueOf(clientassigned_Node.getTextContent());
+        terminalRowData.put("clientnumber", clientnumber);
+        int visible = Integer.valueOf(Terminal_Node.getAttribute("visible"));
+        terminalRowData.put("visible", visible);
+        int state = Integer.valueOf(Terminal_Node.getAttribute("state"));
+        terminalRowData.put("state", state);
+
+        return terminalRowData;
+    }
+
+    public void setTerminalRowData(int position, HashMap<String, Integer> terminalRowData) {
+        Element Terminal_Node = getTerminalNode(position);
+        Terminal_Node.setAttribute("levelindex", String.valueOf(terminalRowData.get("levelindex")));
+        Terminal_Node.setAttribute("terminalnumber", String.valueOf(terminalRowData.get("terminalnumber")));
+        Terminal_Node.setAttribute("visible", String.valueOf(terminalRowData.get("visible")));
+        Terminal_Node.setAttribute("state", String.valueOf(terminalRowData.get("state")));
+        Element clientassigned_Node = getClientaAsignedNode(Terminal_Node);
+        clientassigned_Node.setTextContent(String.valueOf(terminalRowData.get("clientnumber")));
         saveDocument();
     }
 
@@ -247,5 +282,74 @@ public class XMLVARIABLES {
         Element takeTicketBlinkRate_Node = (Element) takeTicketBlinkRate_List.item(0);
         takeTicketBlinkRate_Node.setTextContent(String.valueOf(val));
         saveDocument();
+    }
+
+    private Element getMediaContentNode() {
+        Element rootElement = doc.getDocumentElement();
+        NodeList mediacontent_List = rootElement.getElementsByTagName("mediacontent");
+        return (Element) mediacontent_List.item(0);
+    }
+
+    private Element getVideosNode() {
+        Element mediacontent_Node = getMediaContentNode();
+        NodeList videos_List = mediacontent_Node.getElementsByTagName("videos");
+        return (Element) videos_List.item(0);
+    }
+
+    private Element getMessagesNode() {
+        Element mediacontent_Node = getMediaContentNode();
+        NodeList messages_List = mediacontent_Node.getElementsByTagName("messages");
+        return (Element) messages_List.item(0);
+    }
+
+    public List<String> getMessages(){
+        List<String> messages = new ArrayList<String>();
+        Element messages_Node = getMessagesNode();
+        NodeList message_List = messages_Node.getElementsByTagName("message");
+        for(int i=0; i< message_List.getLength(); i++){
+            Element message_Node = (Element) message_List.item(i);
+            messages.add(message_Node.getTextContent());
+        }
+        if (messages.size()>0) {
+            return messages;
+        }else{
+            return null;
+        }
+    }
+
+    public HashMap<String, String> getCurrentVieoData(){
+        HashMap<String, String> video = new HashMap<>();
+        String path = "";
+        String attr = "";
+        Element videocontent_Node = getVideosNode();
+        Element videopath_Node = (Element)videocontent_Node.getElementsByTagName("currentvideopath").item(0);
+        path = videopath_Node.getTextContent();
+        path = path.trim();
+        attr = videopath_Node.getAttribute("play");
+        video.put("path", path);
+        video.put("play", attr);
+        if (path == ""){
+            return null;
+        }else {
+            return video;
+        }
+    }
+
+    public HashMap<String, String> getNewVieoData(){
+        HashMap<String, String> video = new HashMap<>();
+        String path = "";
+        String attr = "";
+        Element videocontent_Node = getVideosNode();
+        Element videopath_Node = (Element)videocontent_Node.getElementsByTagName("newvideopath").item(0);
+        path = videopath_Node.getTextContent();
+        path = path.trim();
+        attr = videopath_Node.getAttribute("change");
+        video.put("path", path);
+        video.put("change", attr);
+        if (path == ""){
+            return null;
+        }else {
+            return video;
+        }
     }
 }

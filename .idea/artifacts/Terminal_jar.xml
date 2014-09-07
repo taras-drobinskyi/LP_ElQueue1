@@ -1,7 +1,8 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="LP_ElQueue1:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts/LP_ElQueue1_jar</output-path>
-    <root id="archive" name="LP_ElQueue1.jar">
+  <artifact type="jar" name="Terminal:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Terminal_jar</output-path>
+    <root id="archive" name="Terminal.jar">
+      <element id="module-output" name="Terminal" />
       <element id="module-output" name="LP_ElQueue1" />
       <element id="extracted-dir" path="$USER_HOME$/Документы/JARs/vlcj-2.4.1/jna-3.5.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/Документы/JARs/vlcj-2.4.1/platform-3.5.2.jar" path-in-jar="/" />
