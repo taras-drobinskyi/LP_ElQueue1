@@ -2,7 +2,12 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/ClientServer/ClientServer.iml" filepath="$PROJECT_DIR$/ClientServer/ClientServer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Display/Display.iml" filepath="$PROJECT_DIR$/Display/Display.iml" />
+      <module fileurl="file://$PROJECT_DIR$/HostServer/HostServer.iml" filepath="$PROJECT_DIR$/HostServer/HostServer.iml" />
       <module fileurl="file://$PROJECT_DIR$/LP_ElQueue1.iml" filepath="$PROJECT_DIR$/LP_ElQueue1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Printer/Printer.iml" filepath="$PROJECT_DIR$/Printer/Printer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Resources/Resources.iml" filepath="$PROJECT_DIR$/Resources/Resources.iml" />
       <module fileurl="file://$PROJECT_DIR$/Terminal/Terminal.iml" filepath="$PROJECT_DIR$/Terminal/Terminal.iml" />
     </modules>
   </component>

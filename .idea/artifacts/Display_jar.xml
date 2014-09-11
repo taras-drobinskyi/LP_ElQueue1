@@ -1,0 +1,16 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Display:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Display_jar</output-path>
+    <root id="archive" name="Display.jar">
+      <element id="module-output" name="Display" />
+      <element id="extracted-dir" path="$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1-tests.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Документы/JARs/vlcj-2.4.1/jna-3.5.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Документы/JARs/vlcj-2.4.1/platform-3.5.2.jar" path-in-jar="/" />
+      <element id="module-output" name="HostServer" />
+      <element id="module-output" name="Resources" />
+      <element id="module-output" name="Printer" />
+      <element id="module-output" name="ClientServer" />
+    </root>
+  </artifact>
+</component>

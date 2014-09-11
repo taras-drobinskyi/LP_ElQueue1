@@ -12,7 +12,7 @@ public class Main {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                Terminal terminalForm = new Terminal();
+                TerminalForm terminalForm = new TerminalForm();
             }
         });
     }

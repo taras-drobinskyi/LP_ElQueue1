@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="ClientServer" exported="" />
+    <orderEntry type="module" module-name="Resources" exported="" />
+    <orderEntry type="module" module-name="HostServer" exported="" />
+    <orderEntry type="module" module-name="Printer" exported="" />
+    <orderEntry type="library" name="jna-3.5.2" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/jna-3.5.2.jar!/" />
+          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/platform-3.5.2.jar!/" />
+          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1.jar!/" />
+          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1-tests.jar!/" />
+        </CLASSES>
+        <JAVADOC>
+          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1-javadoc.jar!/" />
+        </JAVADOC>
+        <SOURCES>
+          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1-sources.jar!/" />
+          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1-test-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+  </component>
+</module>
+
