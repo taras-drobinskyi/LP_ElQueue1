@@ -28,7 +28,7 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
     private final static String ACCEPT = "Принять";
     private final static String WAIT = "Подождите";
 
-    private int state = SocketMessage.OPEN_TERMINAL;
+    private int state = SocketMessage.REGISTER_SOCKET;
     private boolean requestIsStopped = false;
 
 
@@ -378,7 +378,7 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
     public void onCloseSocket() {
         l_client.setText("---");
         b_next.setText(CONNECT);
-        state = SocketMessage.OPEN_TERMINAL;
+        state = SocketMessage.REGISTER_SOCKET;
         clientServer = null;
     }
 }

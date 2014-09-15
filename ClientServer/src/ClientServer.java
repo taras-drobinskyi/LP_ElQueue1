@@ -121,23 +121,35 @@ public class ClientServer {
                 out = new ObjectOutputStream(socket.getOutputStream());
                 System.out.println("client: connected!");
 
-                byte[] buffer = {0x01, (byte)terminalIndex};
+                byte[] buffer = {0x01, (byte)SocketMessage.TERMINAL, (byte)terminalIndex};
                 out.write(buffer);
                 out.flush();
 
-                // get input stream to read from server, wrap in object stream
+
+                byte[] b = new byte[4];
+                ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
+                int val = Channels.newInputStream(channel).read(b);
+                int bytesNumber = b[1];
+                if (val > 0 && bytesNumber == 2 && b[2]==0x01 && b[3]>=0){
+                    validate(message);
+                    System.out.println("Validator: client registered with ID = " + b[3]);
+                }else{
+                    close();
+                }
+
+                /*// get input stream to read from server, wrap in object stream
                 ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
                 in = new ObjectInputStream(Channels.newInputStream(channel));
 
                 // get object from server, will block until object arrives.
-                SocketMessage message = (SocketMessage) in.readObject();
-                System.out.println("Validator received message OPERATION = " + message.operation);
-                if ((message.operation == SocketMessage.OPEN_TERMINAL ||
+                SocketMessage message = (SocketMessage) in.readObject();*/
+                /*System.out.println("Validator received message OPERATION = " + message.operation);
+                if ((message.operation == SocketMessage.REGISTER_SOCKET ||
                         message.operation == SocketMessage.HOLD_TERMINAL) && message.received){
                     validate(message);
                 }else {
                     close();
-                }
+                }*/
 
             }catch (Exception ex){
                 ex.printStackTrace();

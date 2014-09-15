@@ -1,7 +1,5 @@
 package examples;
 
-import helpers.ResourceFile;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -41,8 +39,8 @@ public class AnimateExample extends JPanel implements MouseMotionListener {
             dirMap.put(dir, Boolean.FALSE);
         }
         try {
-            ResourceFile rf = new ResourceFile(IMG_PATH);
-            File imageFile = rf.getFile();
+            //ResourceFile rf = new ResourceFile(IMG_PATH);
+            File imageFile = null;
             image = ImageIO.read(imageFile);
 
         } catch (MalformedURLException e) {

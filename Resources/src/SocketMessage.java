@@ -12,22 +12,29 @@ import java.util.Date;
  * the serialization would fail.
  */
 public class SocketMessage implements Serializable {
-    public final static int OPEN_TERMINAL = 0;
+    public final static int REGISTER_SOCKET = 0;
     public final static int CLOSE_TERMINAL = 1;
     public final static int REQUEST_CLIENT = 2;
     public final static int ACCEPT_CLIENT = 3;
+
     /**
      * Defines whether terminal is allowed to request a new client.<br>
      * if {@link #value} = 0 - it's allowed, if {@link #value} = 1 - it's not
      */
     public final static int HOLD_TERMINAL = 4;
 
+
+    //The types of clients:
+    public static final int PRINTER = 0;
+    public static final int TERMINAL = 1;
+    public static final int DISPLAY = 2;
+
     public int terminal;
     /**
      * A command type to be committed.<br>
      *     can be:
      *     <ul>
-     *         <li>{@link #OPEN_TERMINAL}</li>
+     *         <li>{@link #REGISTER_SOCKET}</li>
      *         <li>{@link #CLOSE_TERMINAL}</li>
      *         <li>{@link #REQUEST_CLIENT}</li>
      *         <li>{@link #ACCEPT_CLIENT}</li>

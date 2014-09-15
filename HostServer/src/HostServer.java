@@ -5,12 +5,12 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -96,13 +96,17 @@ public class HostServer {
     }
 
     public class SocketOrganizer{
-        private List<SocketObject> validSockets;
+        private List<SocketObject> displays;
+        private List<SocketObject> terminals;
+        private List<SocketObject> printers;
         private List<SocketObject> invalidSockets;
 
         private volatile boolean isOnHoldTerminals = false;
 
         public SocketOrganizer(){
-            validSockets = new ArrayList<>();
+            displays = new ArrayList<>();
+            terminals = new ArrayList<>();
+            printers = new ArrayList<>();
             invalidSockets = new ArrayList<>();
         }
 
@@ -110,14 +114,48 @@ public class HostServer {
             SocketObject socketObject = new SocketObject(socket);
             socketObject.addSocketObjectListener(new SocketObjectListener() {
                 @Override
+                public void onRegister(SocketObject soc) {
+                    switch (soc.type){
+                        case SocketMessage.DISPLAY:
+                            invalidSockets.remove(soc);
+                            displays.add(soc);
+                            soc.registered = true;
+                            if (soc.id < 0 ){
+                                soc.id = displays.size() - 1;
+                            }
+                            System.out.println("onRegister socket.type = DISPLAY");
+                            break;
+                        case SocketMessage.TERMINAL:
+                            invalidSockets.remove(soc);
+                            terminals.add(soc);
+                            soc.registered = true;
+                            System.out.println("onRegister socket.type = TERMINAL");
+                            break;
+                        case SocketMessage.PRINTER:
+                            invalidSockets.remove(soc);
+                            printers.add(soc);
+                            soc.registered = true;
+                            if (soc.id < 0 ){
+                                soc.id = printers.size() - 1;
+                            }
+                            System.out.println("onRegister socket.type = TERMINAL");
+                            break;
+                        default:
+                            soc.close();
+                            invalidSockets.remove(soc);
+                            break;
+                    }
+                }
+
+                @Override
                 public void onInputMessage(SocketObject soc) {
                     switch (soc.message.operation){
-                        case SocketMessage.OPEN_TERMINAL:
-                            soc.id = soc.message.terminal;
+                        case SocketMessage.REGISTER_SOCKET:
+                            /*soc.id = soc.message.terminal;
                             System.out.println("Received message statusReceived: " + String.valueOf(soc.message.received));
-                            soc.message.received = true;
+                            soc.message.received = true;*/
                             invalidSockets.remove(soc);
-                            validSockets.add(soc);
+                            displays.add(soc);
                             soc.registered = true;
                             break;
                         case SocketMessage.CLOSE_TERMINAL:
@@ -141,7 +179,7 @@ public class HostServer {
                 @Override
                 public void onCloseSocket(SocketObject socketObject) {
                     if (socketObject.registered){
-                        validSockets.remove(socketObject);
+                        displays.remove(socketObject);
                     }else {
                         invalidSockets.remove(socketObject);
                     }
@@ -152,12 +190,24 @@ public class HostServer {
             invalidSockets.add(socketObject);
         }
 
-        public synchronized void removeSocketObject(int id){
-            for (SocketObject soc : validSockets){
-                if (soc.id == id){
-                    validSockets.remove(soc);
-                    return;
-                }
+        public synchronized void removeSocketObject(SocketObject soc){
+            switch (soc.type){
+                case SocketMessage.DISPLAY:
+                    displays.remove(soc);
+                    System.out.println("removeSocketObject socket.type = DISPLAY");
+                    break;
+                case SocketMessage.TERMINAL:
+                    terminals.remove(soc);
+                    System.out.println("removeSocketObject socket.type = TERMINAL");
+                    break;
+                case SocketMessage.PRINTER:
+                    printers.remove(soc);
+                    System.out.println("removeSocketObject socket.type = PRINTER");
+                    break;
+                default:
+                    invalidSockets.remove(soc);
+                    System.out.println("removeSocketObject socket.type = invalidSockets");
+                    break;
             }
         }
 
@@ -168,10 +218,10 @@ public class HostServer {
          * @param val see {@link SocketMessage#value}.
          */
         public synchronized void send(int[] terminals, int operation, int val){
-            int itemsInArray = validSockets.size();
+            int itemsInArray = displays.size();
             for (int terminal : terminals) {
                 for (int i=0; i<itemsInArray; i++) {
-                    SocketObject soc = validSockets.get(i);
+                    SocketObject soc = displays.get(i);
                     if (soc.id == terminal) {
                         soc.message.operation = operation;
                         soc.message.value = val;
@@ -197,7 +247,7 @@ public class HostServer {
         // although could fork off a worker to do it.
         public synchronized void sendToAllOutputs(SocketMessage message) {
             System.out.println("server: send " + message);
-            Iterator it = validSockets.iterator();
+            Iterator it = displays.iterator();
             while (it.hasNext()) {
                 SocketObject socketObj = (SocketObject) it.next();
                 try {
@@ -214,7 +264,7 @@ public class HostServer {
         }
 
         public void closeAll(){
-            for (SocketObject soc : validSockets){
+            for (SocketObject soc : displays){
                 soc.close();
             }
             for (SocketObject soc : invalidSockets){
@@ -223,12 +273,23 @@ public class HostServer {
         }
 
         public class SocketObject{
+
+            /**
+             * Describes the type of a client, that is connected to this socket<br>
+             *     can be: <ul>
+             *         <li>{@link SocketMessage#DISPLAY}</li>
+             *         <li>{@link SocketMessage#TERMINAL}</li>
+             *         <li>{@link SocketMessage#PRINTER}</li>
+             *     </ul>
+             */
+            private int type;
+
             private Socket socket;
             private ObjectOutputStream out;
             private ObjectInputStream in;
             public SocketMessage message;
             private boolean registered;
-            private int id;
+            private int id = -1;
 
             List<SocketObjectListener> listeners;
 
@@ -277,32 +338,43 @@ public class HostServer {
             }
 
             /**
-             * This method registers the current object with an <b>ID</b> (equal to terminal index).
+             * This method registers the current object with an <b>ID</b>.
              * After that, the object becomes valid to {@link HostServer.SocketOrganizer}.
              * @param clientTalksWithObject Can be <b>1</b> - if a client talks to this socket
              *                         using {@link SocketMessage} object, or <b>0</b> - if it doesn't.
-             * @param id An ID to register this object with.
+             * @param type The client type (see {@link HostServer.SocketOrganizer.SocketObject#type}).
+             * @param id An ID to register this object with. If it's == -1, than id must be provided by server.
              */
-            private void validate(byte clientTalksWithObject, byte id){
-                switch (clientTalksWithObject){
+            private void validate(byte clientTalksWithObject, byte type, byte id){
+                /*switch (clientTalksWithObject){
                     case 0x01:
-                        message = new SocketMessage(id,SocketMessage.OPEN_TERMINAL,0, new Date(),true);
+                        message = new SocketMessage(id,SocketMessage.REGISTER_SOCKET,0, new Date(),true);
                         break;
                     default:
-                        message = new SocketMessage(id,SocketMessage.OPEN_TERMINAL,0, new Date(),false);
+                        message = new SocketMessage(id,SocketMessage.REGISTER_SOCKET,0, new Date(),false);
                         break;
+                }*/
+                if (id>=0){
+                    this.id = id;
                 }
-                transferMessage();
+                register();
                 inputListener = new InputListener();
                 inputListener.start();
-                outputWriter = new OutputWriter();
+                /*outputWriter = new OutputWriter();
                 message.received = true;
                 System.out.println("validate isOnHoldTerminals = " + isOnHoldTerminals);
                 if (isOnHoldTerminals){
                     message.operation = SocketMessage.HOLD_TERMINAL;
                     message.value = 1;
                 }
-                outputWriter.start();
+                outputWriter.start();*/
+            }
+
+            private void register(){
+
+                for (SocketObjectListener l : listeners){
+                    l.onRegister(this);
+                }
             }
 
             private synchronized void transferMessage(){
@@ -358,14 +430,18 @@ public class HostServer {
                         return; // stopped before started.
                     }
                     try {
-                        byte[] b = new byte[100];
-                        int val = socket.getInputStream().read(b);
+                        byte[] b = new byte[5];
+                        ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
+                        int val = Channels.newInputStream(channel).read(b);
+                        //int val = socket.getInputStream().read(b);
                         System.out.println("val = " + val);
-                        if (val > 0){
-                            System.out.println("b.length = " + b.length);
-                            System.out.println("b[0] = " + (int)b[0]);
-                            System.out.println("b[1] = " + (int)b[1]);
-                            validate(b[2], b[3]);
+                        int bytesNumber = b[1];
+                        if (val > 0 && bytesNumber == 3){
+                            validate(b[2], b[3], b[4]);
+                            byte[] buffer = {0x01, (byte)id};
+                            OutputStream outStream = socket.getOutputStream();
+                            outStream.write(buffer);
+                            outStream.flush();
                         }else{
                             close();
                         }
@@ -476,6 +552,7 @@ public class HostServer {
     }
 
     private interface SocketObjectListener{
+        public void onRegister(SocketOrganizer.SocketObject socketObject);
         public void onInputMessage(SocketOrganizer.SocketObject socketObject);
         public void onCloseSocket(SocketOrganizer.SocketObject socketObject);
     }
