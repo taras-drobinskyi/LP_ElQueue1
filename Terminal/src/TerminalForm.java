@@ -355,16 +355,16 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
     }
 
     @Override
-    public void onRegister() {
-        if (clientServer.message.operation == SocketMessage.HOLD_TERMINAL &&
+    public void onRegister(int id) {
+        /*if (clientServer.message.operation == SocketMessage.HOLD_TERMINAL &&
                 clientServer.message.value == 1){
             System.out.println("TERMINAL onHOLD value = " + clientServer.message.value);
             requestIsStopped = true;
             b_next.setEnabled(false);
             b_next.setText(WAIT);
-        }else{
+        }else{*/
             b_next.setText(NEXT);
-        }
+        //}
         state = SocketMessage.REQUEST_CLIENT;
         l_client.setText("0");
     }

@@ -2,9 +2,7 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -18,34 +16,38 @@ public class ClientServer {
 
     private final String hostName;
     private final int port;
-    private final int terminalIndex;
+    private int id;
+    private int type;
 
     private Validator validator;
     private Socket socket;
     private ObjectInputStream in;
-    private ObjectOutputStream out;
+    //private ObjectOutputStream out;
 
     InputListener inputListener;
     OutputWriter outputWriter;
 
-    public SocketMessage message;
+    //public SocketMessage message;
+
+    //public Object object;
 
     private boolean registered = false;
 
     private List<ClientServerListener> listeners;
 
     public static void main(String[] args) {
-        new ClientServer(APP.IP, APP.PORT, 4).startClient();
+        new ClientServer(APP.IP, APP.PORT, 0, 2).startClient();
     }
 
     public void addClientServerListener(ClientServerListener listener){
         listeners.add(listener);
     }
 
-    public ClientServer(String hostName, int port, int terminalIndex){
+    public ClientServer(String hostName, int port, int type, int id){
         this.hostName = hostName;
         this.port = port;
-        this.terminalIndex = terminalIndex;
+        this.type = type;
+        this.id = id;
         listeners = new ArrayList<>();
         validator = new Validator();
     }
@@ -72,9 +74,9 @@ public class ClientServer {
         }
         try {
             in.close();
-            out.close();
+            //out.close();
             socket.close();
-            System.out.println("Socket with ID = " + terminalIndex + " has been closed");
+            System.out.println("Socket with ID = " + id + " has been closed");
             for (ClientServerListener l : listeners) {
                 l.onCloseSocket();
             }
@@ -83,16 +85,27 @@ public class ClientServer {
         }
     }
 
-    public void validate(SocketMessage message){
-        this.message = message;
+
+    public void validate(int id){
         registered = true;
-        for (ClientServerListener l : listeners) {
-            l.onRegister();
+        if (this.id != id){
+            this.id = id;
         }
-        inputListener = new InputListener();
-        inputListener.start();
-        outputWriter = new OutputWriter();
-        //outputWriter.start();
+        for (ClientServerListener l : listeners) {
+            l.onRegister(id);
+        }
+    }
+
+    private void initStreams(Socket soc){
+        this.socket = soc;
+        try {
+            ReadableByteChannel channel = Channels.newChannel(this.socket.getInputStream());
+            this.in = new ObjectInputStream(Channels.newInputStream(channel));
+            inputListener = new InputListener();
+            inputListener.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private class Validator extends Thread{
@@ -117,50 +130,38 @@ public class ClientServer {
             }
             try {
                 // make connection to the server hostName/port
-                socket = new Socket(hostName, port);
-                out = new ObjectOutputStream(socket.getOutputStream());
+                Socket socket = new Socket(hostName, port);
+
                 System.out.println("client: connected!");
 
-                byte[] buffer = {0x01, (byte)SocketMessage.TERMINAL, (byte)terminalIndex};
-                out.write(buffer);
-                out.flush();
+                byte[] outBuffer = {0x01, (byte)type, (byte) id};
 
+                ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
+                output.write(outBuffer);
+                output.flush();
 
-                byte[] b = new byte[4];
                 ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
-                int val = Channels.newInputStream(channel).read(b);
-                int bytesNumber = b[1];
-                if (val > 0 && bytesNumber == 2 && b[2]==0x01 && b[3]>=0){
-                    validate(message);
-                    System.out.println("Validator: client registered with ID = " + b[3]);
+                ObjectInputStream input = new ObjectInputStream(Channels.newInputStream(channel));
+
+                byte[] inputBuffer = new byte[10];
+                int val = input.read(inputBuffer);
+                if (val > 0 && inputBuffer[0]==0x01 && inputBuffer[1]>=0){
+                    validate(inputBuffer[1]);
+                    System.out.println("Validator: client registered with ID = " + inputBuffer[1]);
+                    initStreams(socket);
                 }else{
                     close();
                 }
-
-                /*// get input stream to read from server, wrap in object stream
-                ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
-                in = new ObjectInputStream(Channels.newInputStream(channel));
-
-                // get object from server, will block until object arrives.
-                SocketMessage message = (SocketMessage) in.readObject();*/
-                /*System.out.println("Validator received message OPERATION = " + message.operation);
-                if ((message.operation == SocketMessage.REGISTER_SOCKET ||
-                        message.operation == SocketMessage.HOLD_TERMINAL) && message.received){
-                    validate(message);
-                }else {
-                    close();
-                }*/
-
             }catch (Exception ex){
                 ex.printStackTrace();
             }
         }
     }
 
-    private synchronized void transferMessage(){
+    private synchronized void transferMessage(Object object){
 
         for (ClientServerListener l : listeners){
-            l.onInputMessage();
+            l.onInputMessage(object);
         }
     }
 
@@ -188,10 +189,8 @@ public class ClientServer {
             try {
                 while (true) {
                     //get object from server, will block until object arrives.
-                    message = (SocketMessage) in.readObject();
-                    System.out.println("client: received a message. OPERATION = " + message.operation
-                    + " VALUE = " + message.value);
-                    transferMessage();
+                    Object object = in.readObject();
+                    transferMessage(object);
 
                     Thread.yield(); // let another thread have some time perhaps to stop this one.
                     if (Thread.currentThread().isInterrupted()) {
@@ -206,17 +205,19 @@ public class ClientServer {
         }
     }
 
-    public synchronized void send(){
+    public synchronized void send(Object object){
         outputWriter.stopThread();
-        outputWriter = new OutputWriter();
+        outputWriter = new OutputWriter(object);
         outputWriter.start();
     }
 
     private class OutputWriter extends Thread{
         private volatile Thread myThread;
+        private Object object;
 
-        public OutputWriter(){
+        public OutputWriter(Object object){
             myThread = this;
+            this.object = object;
         }
 
         public void stopThread() {
@@ -227,34 +228,15 @@ public class ClientServer {
             }
         }
 
-        private byte[] convertToByteArray(){
-            byte[] rawMessage = new byte[4];
-            rawMessage[0] = (byte)message.terminal;
-            rawMessage[1] = (byte)message.operation;
-            rawMessage[2] = (byte)message.value;
-            if(message.received){
-                rawMessage[3] = 0x01;
-            }else {
-                rawMessage[3] = 0;
-            }
-            return rawMessage;
-        }
-
         @Override
         public void run() {
             if (myThread == null) {
                 return; // stopped before started.
             }
             try {
-                if (message.transferable) {
-                    //out.writeObject(message);
-                    out.writeUnshared(message);
-                    out.flush();
-                }else{
-                    byte[] buffer = convertToByteArray();
-                    out.write(buffer);
-                    out.flush();
-                }
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                out.writeUnshared(this.object);
+                out.flush();
             }catch (Exception ex){
                 ex.printStackTrace();
             }
@@ -262,8 +244,8 @@ public class ClientServer {
     }
 
     public interface ClientServerListener {
-        public void onRegister();
-        public void onInputMessage();
+        public void onRegister(int id);
+        public void onInputMessage(Object object);
         public void onCloseSocket();
     }
 }

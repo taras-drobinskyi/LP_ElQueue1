@@ -2,10 +2,7 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.Channels;
@@ -138,7 +135,7 @@ public class HostServer {
                             if (soc.id < 0 ){
                                 soc.id = printers.size() - 1;
                             }
-                            System.out.println("onRegister socket.type = TERMINAL");
+                            System.out.println("onRegister socket.type = PRINTER");
                             break;
                         default:
                             soc.close();
@@ -149,26 +146,18 @@ public class HostServer {
 
                 @Override
                 public void onInputMessage(SocketObject soc) {
-                    switch (soc.message.operation){
-                        case SocketMessage.REGISTER_SOCKET:
-                            /*soc.id = soc.message.terminal;
-                            System.out.println("Received message statusReceived: " + String.valueOf(soc.message.received));
-                            soc.message.received = true;*/
-                            invalidSockets.remove(soc);
-                            displays.add(soc);
-                            soc.registered = true;
+                    switch (soc.type){
+                        case SocketMessage.DISPLAY:
                             break;
-                        case SocketMessage.CLOSE_TERMINAL:
-                            break;
-                        case SocketMessage.REQUEST_CLIENT:
-                            for (HostServerListener l : hostServerListeners){
+                        case SocketMessage.TERMINAL:
+                            /*for (HostServerListener l : hostServerListeners){
                                 l.onTerminalServerMessage(soc);
-                            }
+                            }*/
                             break;
-                        case SocketMessage.ACCEPT_CLIENT:
-                            for (HostServerListener l : hostServerListeners){
+                        case SocketMessage.PRINTER:
+                            /*for (HostServerListener l : hostServerListeners){
                                 l.onTerminalServerMessage(soc);
-                            }
+                            }*/
                             break;
                         default:
                             break;
@@ -214,24 +203,20 @@ public class HostServer {
         /**
          * Sends message to sockets which IDs are specified in <b>terminals</b> list.
          * @param terminals Socket IDs for message to be sent.
-         * @param operation see {@link SocketMessage#operation}.
-         * @param val see {@link SocketMessage#value}.
+         * @param object java.lang Object
          */
-        public synchronized void send(int[] terminals, int operation, int val){
+        public synchronized void send(int[] terminals, Object object){
             int itemsInArray = displays.size();
             for (int terminal : terminals) {
                 for (int i=0; i<itemsInArray; i++) {
                     SocketObject soc = displays.get(i);
                     if (soc.id == terminal) {
-                        soc.message.operation = operation;
-                        soc.message.value = val;
-                        soc.message.received = true;
-                        soc.send();
+                        soc.send(object);
                         i = itemsInArray;
                     }
                 }
             }
-            if (operation==SocketMessage.HOLD_TERMINAL){
+            /*if (operation==SocketMessage.HOLD_TERMINAL){
                 if (val == 1) {
                     isOnHoldTerminals = true;
                     System.out.println("server isOnHoldTerminals = " + isOnHoldTerminals);
@@ -239,22 +224,18 @@ public class HostServer {
                     isOnHoldTerminals = false;
                     System.out.println("server isOnHoldTerminals = " + isOnHoldTerminals);
                 }
-            }
+            }*/
         }
 
         // Sends a message to all of the outgoing streams
         // Writing rarely blocks, so doing this on the swing thread is ok,
         // although could fork off a worker to do it.
-        public synchronized void sendToAllOutputs(SocketMessage message) {
-            System.out.println("server: send " + message);
+        public synchronized void sendToAllOutputs(Object object) {
             Iterator it = displays.iterator();
             while (it.hasNext()) {
                 SocketObject socketObj = (SocketObject) it.next();
                 try {
-                    // writeUnshared() is like writeObject(), but always writes a new copy of the object.
-                    socketObj.out.writeUnshared(message);
-                    //The flush forces the bytes out now
-                    socketObj.out.flush();
+                    socketObj.send(object);
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -282,12 +263,13 @@ public class HostServer {
              *         <li>{@link SocketMessage#PRINTER}</li>
              *     </ul>
              */
-            private int type;
+            public int type;
+            public Object message;
 
             private Socket socket;
-            private ObjectOutputStream out;
+            //private ObjectOutputStream out;
             private ObjectInputStream in;
-            public SocketMessage message;
+            //public SocketMessage message;
             private boolean registered;
             private int id = -1;
 
@@ -301,10 +283,6 @@ public class HostServer {
             private SocketObject(Socket socket) {
                 try {
                     this.socket = socket;
-                    this.out = new ObjectOutputStream(socket.getOutputStream());
-                    //this.in = new ObjectInputStream(socket.getInputStream());
-                    ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
-                    this.in = new ObjectInputStream(Channels.newInputStream(channel));
                     this.registered = false;
                     validator = new Validator();
                     listeners = new ArrayList<>();
@@ -322,7 +300,7 @@ public class HostServer {
                 }
                 try {
                     in.close();
-                    out.close();
+                    //out.close();
                     socket.close();
                     System.out.println("Socket with ID = " + id + " has been closed");
                     for (SocketObjectListener l : listeners) {
@@ -354,12 +332,11 @@ public class HostServer {
                         message = new SocketMessage(id,SocketMessage.REGISTER_SOCKET,0, new Date(),false);
                         break;
                 }*/
+                this.type = type;
                 if (id>=0){
                     this.id = id;
                 }
                 register();
-                inputListener = new InputListener();
-                inputListener.start();
                 /*outputWriter = new OutputWriter();
                 message.received = true;
                 System.out.println("validate isOnHoldTerminals = " + isOnHoldTerminals);
@@ -368,6 +345,19 @@ public class HostServer {
                     message.value = 1;
                 }
                 outputWriter.start();*/
+            }
+
+            private void initStreams(){
+                try {
+                    //this.out = new ObjectOutputStream(socket.getOutputStream());
+                    //this.in = new ObjectInputStream(socket.getInputStream());
+                    ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
+                    this.in = new ObjectInputStream(Channels.newInputStream(channel));
+                    inputListener = new InputListener();
+                    inputListener.start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             private void register(){
@@ -384,10 +374,9 @@ public class HostServer {
                 }
             }
 
-            public synchronized void send(){
-                System.out.println("Socket send OPERATION = " + message.operation);
+            public synchronized void send(Object object){
                 outputWriter.stopThread();
-                outputWriter = new OutputWriter();
+                outputWriter = new OutputWriter(object);
                 outputWriter.start();
             }
 
@@ -430,18 +419,18 @@ public class HostServer {
                         return; // stopped before started.
                     }
                     try {
-                        byte[] b = new byte[5];
+                        byte[] b = new byte[3];
                         ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
-                        int val = Channels.newInputStream(channel).read(b);
+                        ObjectInputStream input = new ObjectInputStream(Channels.newInputStream(channel));
+                        int val = input.read(b);
                         //int val = socket.getInputStream().read(b);
-                        System.out.println("val = " + val);
-                        int bytesNumber = b[1];
-                        if (val > 0 && bytesNumber == 3){
-                            validate(b[2], b[3], b[4]);
+                        if (val > 0){
+                            validate(b[0], b[1], b[2]);
                             byte[] buffer = {0x01, (byte)id};
-                            OutputStream outStream = socket.getOutputStream();
-                            outStream.write(buffer);
-                            outStream.flush();
+                            ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
+                            output.write(buffer);
+                            output.flush();
+                            initStreams();
                         }else{
                             close();
                         }
@@ -496,9 +485,11 @@ public class HostServer {
 
             private class OutputWriter extends Thread{
                 private volatile Thread myThread;
+                private Object object;
 
-                public OutputWriter(){
+                public OutputWriter(Object object){
                     myThread = this;
+                    this.object = object;
                 }
 
                 public void stopThread() {
@@ -509,7 +500,7 @@ public class HostServer {
                     }
                 }
 
-                private byte[] convertToByteArray(){
+                /*private byte[] convertToByteArray(){
                     byte[] rawMessage = new byte[4];
                     rawMessage[0] = (byte)message.terminal;
                     rawMessage[1] = (byte)message.operation;
@@ -520,7 +511,7 @@ public class HostServer {
                         rawMessage[3] = 0;
                     }
                     return rawMessage;
-                }
+                }*/
 
                 @Override
                 public void run() {
@@ -528,17 +519,9 @@ public class HostServer {
                         return; // stopped before started.
                     }
                     try {
-                        if (message.transferable) {
-                            System.out.println("Socket OUT write message with OPERATION = " + message.operation +
-                            " and VALUE = " + message.value);
-                            //out.writeObject(message);
-                            out.writeUnshared(message);
-                            out.flush();
-                        }else{
-                            byte[] buffer = convertToByteArray();
-                            out.write(buffer);
-                            out.flush();
-                        }
+                        ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                        out.writeUnshared(this.object);
+                        out.flush();
                     }catch (Exception ex){
                         ex.printStackTrace();
                     }
