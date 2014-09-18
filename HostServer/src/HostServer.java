@@ -86,12 +86,6 @@ public class HostServer {
         System.out.println("server: stopped");
     }
 
-    // Sends a message remotely (must be on swing thread)
-    public void doSend(SocketMessage message) {
-        //SocketMessage message = new SocketMessage(0, 1, new Date());
-        socketOrganizer.sendToAllOutputs(message);
-    }
-
     public class SocketOrganizer{
         private List<SocketObject> displays;
         private List<SocketObject> terminals;
@@ -112,107 +106,114 @@ public class HostServer {
             socketObject.addSocketObjectListener(new SocketObjectListener() {
                 @Override
                 public void onRegister(SocketObject soc) {
-                    switch (soc.type){
-                        case SocketMessage.DISPLAY:
-                            invalidSockets.remove(soc);
-                            displays.add(soc);
-                            soc.registered = true;
-                            if (soc.id < 0 ){
-                                soc.id = displays.size() - 1;
-                            }
-                            System.out.println("onRegister socket.type = DISPLAY");
-                            break;
-                        case SocketMessage.TERMINAL:
-                            invalidSockets.remove(soc);
-                            terminals.add(soc);
-                            soc.registered = true;
-                            System.out.println("onRegister socket.type = TERMINAL");
-                            break;
-                        case SocketMessage.PRINTER:
-                            invalidSockets.remove(soc);
-                            printers.add(soc);
-                            soc.registered = true;
-                            if (soc.id < 0 ){
-                                soc.id = printers.size() - 1;
-                            }
-                            System.out.println("onRegister socket.type = PRINTER");
-                            break;
-                        default:
-                            soc.close();
-                            invalidSockets.remove(soc);
-                            break;
-                    }
+                    addSocketObject(soc);
                 }
 
                 @Override
                 public void onInputMessage(SocketObject soc) {
-                    switch (soc.type){
-                        case SocketMessage.DISPLAY:
-                            break;
-                        case SocketMessage.TERMINAL:
-                            /*for (HostServerListener l : hostServerListeners){
-                                l.onTerminalServerMessage(soc);
-                            }*/
-                            break;
-                        case SocketMessage.PRINTER:
-                            /*for (HostServerListener l : hostServerListeners){
-                                l.onTerminalServerMessage(soc);
-                            }*/
-                            break;
-                        default:
-                            break;
-
-                    }
+                    transferMessage(soc);
                 }
 
                 @Override
-                public void onCloseSocket(SocketObject socketObject) {
-                    if (socketObject.registered){
-                        displays.remove(socketObject);
-                    }else {
-                        invalidSockets.remove(socketObject);
-                    }
-                    System.out.println("SocketObject with ID = " + socketObject.id + " has been removed from stack");
+                public void onCloseSocket(SocketObject soc) {
+                    removeSocketObject(soc);
                 }
             });
             socketObject.startValidator();
             invalidSockets.add(socketObject);
         }
 
-        public synchronized void removeSocketObject(SocketObject soc){
+        private synchronized void addSocketObject(SocketObject soc){
+            switch (soc.type){
+                case SocketMessage.DISPLAY:
+                    invalidSockets.remove(soc);
+                    displays.add(soc);
+                    soc.registered = true;
+                    if (soc.id < 0 ){
+                        soc.id = displays.size() - 1;
+                    }
+                    System.out.println("onRegister socket.type = DISPLAY");
+                    break;
+                case SocketMessage.TERMINAL:
+                    invalidSockets.remove(soc);
+                    terminals.add(soc);
+                    soc.registered = true;
+                    System.out.println("onRegister socket.type = TERMINAL");
+                    break;
+                case SocketMessage.PRINTER:
+                    invalidSockets.remove(soc);
+                    printers.add(soc);
+                    soc.registered = true;
+                    if (soc.id < 0 ){
+                        soc.id = printers.size() - 1;
+                    }
+                    System.out.println("onRegister socket.type = PRINTER");
+                    break;
+                default:
+                    soc.close();
+                    invalidSockets.remove(soc);
+                    break;
+            }
+        }
+
+        private void transferMessage(SocketObject soc){
+            switch (soc.type){
+                case SocketMessage.DISPLAY:
+                    break;
+                case SocketMessage.TERMINAL:
+                            /*for (HostServerListener l : hostServerListeners){
+                                l.onTerminalServerMessage(soc);
+                            }*/
+                    break;
+                case SocketMessage.PRINTER:
+                            /*for (HostServerListener l : hostServerListeners){
+                                l.onTerminalServerMessage(soc);
+                            }*/
+                    break;
+                default:
+                    break;
+
+            }
+        }
+
+        private synchronized void removeSocketObject(SocketObject soc){
             switch (soc.type){
                 case SocketMessage.DISPLAY:
                     displays.remove(soc);
-                    System.out.println("removeSocketObject socket.type = DISPLAY");
+                    System.out.println("SocketObject TYPE =" +
+                            " DISPLAY with ID = " + soc.id + " has been removed from stack");
                     break;
                 case SocketMessage.TERMINAL:
                     terminals.remove(soc);
-                    System.out.println("removeSocketObject socket.type = TERMINAL");
+                    System.out.println("SocketObject TYPE =" +
+                            " TERMINAL with ID = " + soc.id + " has been removed from stack");
                     break;
                 case SocketMessage.PRINTER:
                     printers.remove(soc);
-                    System.out.println("removeSocketObject socket.type = PRINTER");
+                    System.out.println("SocketObject TYPE =" +
+                            " PRINTER with ID = " + soc.id + " has been removed from stack");
                     break;
                 default:
                     invalidSockets.remove(soc);
-                    System.out.println("removeSocketObject socket.type = invalidSockets");
+                    System.out.println("SocketObject TYPE = invalidSockets has been removed from stack");
                     break;
             }
         }
 
         /**
-         * Sends message to sockets which IDs are specified in <b>terminals</b> list.
-         * @param terminals Socket IDs for message to be sent.
-         * @param object java.lang Object
+         * Sends message to sockets <b>type</b>={@link SocketMessage#TERMINAL} which
+         * IDs are specified in <b>idArr</b> list.
+         * @param idArr Socket IDs for message to be sent.
+         * @param message {@link java.lang.Object}
          */
-        public synchronized void send(int[] terminals, Object object){
-            int itemsInArray = displays.size();
-            for (int terminal : terminals) {
+        public synchronized void sendTerminals(int[] idArr, Object message){
+            int itemsInArray = terminals.size();
+            for (int terminal : idArr) {
                 for (int i=0; i<itemsInArray; i++) {
-                    SocketObject soc = displays.get(i);
+                    SocketObject soc = terminals.get(i);
                     if (soc.id == terminal) {
-                        soc.send(object);
-                        i = itemsInArray;
+                        soc.send(message);
+                        i = itemsInArray;//exiting the loop
                     }
                 }
             }
@@ -225,6 +226,44 @@ public class HostServer {
                     System.out.println("server isOnHoldTerminals = " + isOnHoldTerminals);
                 }
             }*/
+        }
+
+        /**
+         * Sends message to sockets <b>type</b>={@link SocketMessage#DISPLAY} which
+         * IDs are specified in <b>idArr</b> list.
+         * @param idArr Socket IDs for message to be sent.
+         * @param message {@link java.lang.Object}
+         */
+        public synchronized void sendDisplays(int[] idArr, Object message){
+            int itemsInArray = displays.size();
+            for (int terminal : idArr) {
+                for (int i=0; i<itemsInArray; i++) {
+                    SocketObject soc = displays.get(i);
+                    if (soc.id == terminal) {
+                        soc.send(message);
+                        i = itemsInArray;//exiting the loop
+                    }
+                }
+            }
+        }
+
+        /**
+         * Sends message to sockets <b>type</b>={@link SocketMessage#PRINTER} which
+         * IDs are specified in <b>idArr</b> list.
+         * @param idArr Socket IDs for message to be sent.
+         * @param message {@link java.lang.Object}
+         */
+        public synchronized void sendPrinters(int[] idArr, Object message){
+            int itemsInArray = printers.size();
+            for (int terminal : idArr) {
+                for (int i=0; i<itemsInArray; i++) {
+                    SocketObject soc = printers.get(i);
+                    if (soc.id == terminal) {
+                        soc.send(message);
+                        i = itemsInArray;//exiting the loop
+                    }
+                }
+            }
         }
 
         // Sends a message to all of the outgoing streams
@@ -502,7 +541,7 @@ public class HostServer {
 
                 /*private byte[] convertToByteArray(){
                     byte[] rawMessage = new byte[4];
-                    rawMessage[0] = (byte)message.terminal;
+                    rawMessage[0] = (byte)message.id;
                     rawMessage[1] = (byte)message.operation;
                     rawMessage[2] = (byte)message.value;
                     if(message.received){

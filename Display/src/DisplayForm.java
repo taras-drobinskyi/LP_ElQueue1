@@ -846,7 +846,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         void initClients(){
             XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
-            //todo: assign USEDLevels not from stored value but figuring out from terminal nodes
+            //todo: assign USEDLevels not from stored value but figuring out from id nodes
             USEDLevels = variables.getUSEDlevels();
             table = new ArrayList<>();
 

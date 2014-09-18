@@ -162,7 +162,7 @@ public class ClientMessageForm extends JFrame {
          * Currently rowsSet can contain not more than {@value #MAX_ROWS} rows.
          * Otherwise ArrayIndexOutOfBoundsException will be thrown.
          * @param client The client number
-         * @param terminal The terminal number
+         * @param terminal The id number
          */
         private void addRow(int client, int terminal){
             levelsQuant++;
@@ -184,7 +184,7 @@ public class ClientMessageForm extends JFrame {
          * Removes a message row from a rowsSet.<br>
          * Currently rowsSet can contain not more than {@value #MAX_ROWS} rows.
          * Otherwise ArrayIndexOutOfBoundsException will be thrown.
-         * @param terminal The terminal number
+         * @param terminal The id number
          */
         private void removeRow(int terminal){
             for (int i=0; i< levelsQuant; i++){

@@ -19,19 +19,19 @@ public class Main {
             @Override
             public void onAssignClient(int terminalIndex, int client) {
                 int[] terminals = {terminalIndex};
-                server.socketOrganizer.send(terminals, SocketMessage.REQUEST_CLIENT, client);
+                server.socketOrganizer.sendTerminals(terminals, SocketMessage.REQUEST_CLIENT, client);
             }
 
             @Override
             public void onAcceptClient(int terminalIndex, int client) {
                 int[] terminals = {terminalIndex};
-                server.socketOrganizer.send(terminals, SocketMessage.ACCEPT_CLIENT, client);
+                server.socketOrganizer.sendTerminals(terminals, SocketMessage.ACCEPT_CLIENT, client);
             }
 
             @Override
             public void onHoldTerminals(int[] terminals, int val) {
                 System.out.println("onHoldTerminals val = " + val);
-                server.socketOrganizer.send(terminals, SocketMessage.HOLD_TERMINAL, val);
+                server.socketOrganizer.sendTerminals(terminals, SocketMessage.HOLD_TERMINAL, val);
             }
         });
         form.mainUIPanel.initialTerminalAssignmentCheck();
