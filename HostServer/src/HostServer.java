@@ -148,6 +148,9 @@ public class HostServer {
                         soc.id = printers.size() - 1;
                     }
                     System.out.println("onRegister socket.type = PRINTER");
+                    for (HostServerListener l : hostServerListeners){
+                        l.onPrinterAvailable(soc);
+                    }
                     break;
                 default:
                     soc.close();
@@ -304,13 +307,13 @@ public class HostServer {
              */
             public int type;
             public Object message;
+            public int id = -1;
 
             private Socket socket;
             //private ObjectOutputStream out;
             private ObjectInputStream in;
             //public SocketMessage message;
             private boolean registered;
-            private int id = -1;
 
             List<SocketObjectListener> listeners;
 
@@ -569,13 +572,23 @@ public class HostServer {
         }
     }
 
-    public void addHostServerListener(HostServerListener listener){
-        hostServerListeners.add(listener);
-    }
-
     private interface SocketObjectListener{
         public void onRegister(SocketOrganizer.SocketObject socketObject);
         public void onInputMessage(SocketOrganizer.SocketObject socketObject);
         public void onCloseSocket(SocketOrganizer.SocketObject socketObject);
     }
+
+    public void addHostServerListener(HostServerListener listener){
+        hostServerListeners.add(listener);
+    }
+
+    public interface HostServerListener{
+        public void onPrinterAvailable(SocketOrganizer.SocketObject soc);
+        public void onPrinterMessage(SocketOrganizer.SocketObject soc);
+        public void onTerminalMessage(SocketOrganizer.SocketObject soc);
+        public void onDisplayAvailable(SocketOrganizer.SocketObject soc);
+        public void onDisplayMessage(SocketOrganizer.SocketObject soc);
+    }
+
+
 }

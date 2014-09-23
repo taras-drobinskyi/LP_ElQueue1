@@ -93,7 +93,7 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
                 Point p = e.getPoint();
                 if(snapped && !slidingINInProgress && !rootPane.getVisibleRect().contains(p)){
                     int x = p.x;
-                    if (x <= formWidth && state != SocketMessage.ACCEPT_CLIENT) {
+                    if (x <= formWidth && state != TerminalMessage.ACCEPT_CLIENT) {
                         mouseEntered = false;
                         minimized = true;
                         System.out.println("MOUSE EXITED!");
@@ -107,13 +107,13 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
             @Override
             public void actionPerformed(ActionEvent e) {
                 switch (state){
-                    case SocketMessage.REQUEST_CLIENT:
-                        clientServer.message.operation = SocketMessage.REQUEST_CLIENT;
+                    case TerminalMessage.REQUEST_CLIENT:
+                        clientServer.message.operation = TerminalMessage.REQUEST_CLIENT;
                         clientServer.message.received = false;
                         clientServer.send();
                         break;
-                    case SocketMessage.ACCEPT_CLIENT:
-                        clientServer.message.operation = SocketMessage.ACCEPT_CLIENT;
+                    case TerminalMessage.ACCEPT_CLIENT:
+                        clientServer.message.operation = TerminalMessage.ACCEPT_CLIENT;
                         clientServer.message.received = false;
                         clientServer.send();
                         break;
@@ -145,7 +145,7 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
     }
 
     private void startClientServer(){
-        clientServer = new ClientServer(APP.IP, APP.PORT, 4);
+        clientServer = new ClientServer(APP.IP, APP.PORT, SocketMessage.TERMINAL, 4);
         clientServer.addClientServerListener(this);
         clientServer.startClient();
     }
@@ -275,7 +275,7 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (state == SocketMessage.ACCEPT_CLIENT) {
+            if (state == TerminalMessage.ACCEPT_CLIENT) {
                 l_client.setVisible(!l_client.isVisible());
             }else{
                 ((Timer)e.getSource()).stop();
@@ -309,10 +309,10 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
 
     private synchronized void submitInputMessage(){
         switch (clientServer.message.operation){
-            case SocketMessage.ACCEPT_CLIENT:
+            case TerminalMessage.ACCEPT_CLIENT:
                 if (clientServer.message.received){
                     l_client.setText("0");
-                    state = SocketMessage.REQUEST_CLIENT;
+                    state = TerminalMessage.REQUEST_CLIENT;
                     if (requestIsStopped) {
                         b_next.setEnabled(false);
                         b_next.setText(WAIT);
@@ -321,11 +321,11 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
                     }
                 }
                 break;
-            case SocketMessage.REQUEST_CLIENT:
+            case TerminalMessage.REQUEST_CLIENT:
                 if (clientServer.message.received){
                     l_client.setText(String.valueOf(clientServer.message.value));
                     b_next.setText(ACCEPT);
-                    state = SocketMessage.ACCEPT_CLIENT;
+                    state = TerminalMessage.ACCEPT_CLIENT;
                     new Timer(500, new BlinkTimerListener()).start();
                     if (minimized){
                         minimized = false;
@@ -333,17 +333,17 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
                         doSlideIN();
                     }
                 }
-            case SocketMessage.HOLD_TERMINAL:
+            case TerminalMessage.HOLD_TERMINAL:
                 System.out.println("TERMINAL onHOLD value = " + clientServer.message.value);
                 if (clientServer.message.value == 1){
                     requestIsStopped = true;
-                    if (state == SocketMessage.REQUEST_CLIENT) {
+                    if (state == TerminalMessage.REQUEST_CLIENT) {
                         b_next.setEnabled(false);
                         b_next.setText(WAIT);
                     }
                 }else{
                     requestIsStopped = false;
-                    if (state == SocketMessage.REQUEST_CLIENT) {
+                    if (state == TerminalMessage.REQUEST_CLIENT) {
                         b_next.setEnabled(true);
                         b_next.setText(NEXT);
                     }
@@ -365,7 +365,7 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
         }else{*/
             b_next.setText(NEXT);
         //}
-        state = SocketMessage.REQUEST_CLIENT;
+        state = TerminalMessage.REQUEST_CLIENT;
         l_client.setText("0");
     }
 

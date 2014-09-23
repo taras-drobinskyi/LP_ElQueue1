@@ -10,13 +10,13 @@ public class APP {
     public final static int LEVEL_QUANTITY = 3;
 
     //System Commands:
-    public final static int RESET_SYSTEM = 112;//F1
-    public final static int PRINTER_ERROR_ON = 113;//F2
-    public final static int PRINTER_ERROR_OFF = 114;//F3
-    public final static int STOP_SERVICE = 115;//F4
-    public final static int RESET_SERVICE = 116;//F5
-    public final static int TRIGGER_SERVICE = 117;//F6
-    public final static int PRINT_TICKET = 36;//HOME
+    public final static int RESET_SYSTEM = 0;
+    public final static int PRINTER_ERROR_ON = 1;
+    public final static int PRINTER_ERROR_OFF = 2;
+    public final static int STOP_SERVICE = 3;
+    public final static int RESET_SERVICE = 4;
+    public final static int TRIGGER_SERVICE = 5;
+    public final static int PRINT_TICKET = 6;
 
     /*
     Server stuff
