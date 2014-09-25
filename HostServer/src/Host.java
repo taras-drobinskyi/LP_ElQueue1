@@ -203,10 +203,10 @@ public class Host implements HostServer.HostServerListener {
             resettingSystem = flags[0];
         }
         if (turnOn){
-            sendToDisplay(APP.STOP_SERVICE, resettingSystem ? terminalRows : null);
+            sendToDisplay(APP.STOP_SERVICE, null);
 
         }else{
-            sendToDisplay(APP.RESET_SERVICE, null);
+            sendToDisplay(APP.RESET_SERVICE, resettingSystem ? terminalRows : null);
             if (!PRINTER_ERROR){
                 if (TICKET_TAKEN || resettingSystem) {
                     printTicket();
