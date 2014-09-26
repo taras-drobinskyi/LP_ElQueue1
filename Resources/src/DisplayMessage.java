@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
- */
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -9,7 +5,7 @@ import java.util.List;
 /**
  * Created by forando on 11.09.14.
  */
-public class DisplayMessage extends SocketMessage{
+public class DisplayMessage extends SocketMessage {
 
     public static final int INIT_ROWS = 200;
     public static final int DELETE_ROW = 201;

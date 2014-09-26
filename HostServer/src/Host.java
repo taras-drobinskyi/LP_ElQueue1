@@ -1,3 +1,5 @@
+import display.TerminalData;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -9,7 +11,8 @@ import java.util.List;
  */
 public class Host implements HostServer.HostServerListener {
 
-    List<HashMap<String, Integer>> terminalRows;
+    //List<HashMap<String, Integer>> terminalRows;
+    List<Terminal>terminals;
 
     static int standardBlinkRate;
     static int clicksToChangeBattery;
@@ -29,7 +32,7 @@ public class Host implements HostServer.HostServerListener {
 
     XMLVARIABLES variables;
     private int total = 0;
-    int[] clientValues;
+    //int[] clientValues;
     private int restOfClients;
     private final HostServer server;
 
@@ -86,14 +89,15 @@ public class Host implements HostServer.HostServerListener {
         variables.setLastClient(variables.getLastClient() + 1);
         lastClient = variables.getLastClient();
 
-        clientValues = new int[APP.TERMINAL_QUANTITY];
+        //clientValues = new int[APP.TERMINAL_QUANTITY];
 
-        terminalRows = new ArrayList<>();
+        //terminalRows = new ArrayList<>();
+        terminals = new ArrayList<>();
 
         for (int i=0; i<APP.TERMINAL_QUANTITY; i++){
-            HashMap<String, Integer> terminalRowData = variables.getTerminalRowData(i);
-            terminalRows.add(terminalRowData);
-            clientValues[i] = terminalRowData.get("clientnumber");
+            Terminal terminal = new Terminal(variables.getTerminalRowData(i));
+            terminals.add(terminal);
+            //clientValues[i] = terminalRowData.get("clientnumber");
         }
 
         nextClient = variables.getNextClient();
@@ -129,9 +133,10 @@ public class Host implements HostServer.HostServerListener {
                 lastClient = 0;
                 nextClient = 0;
                 for (int i=0; i< APP.TERMINAL_QUANTITY; i++){
-                    clientValues[i] = 0;
+                    /*clientValues[i] = 0;
                     final HashMap<String, Integer> terminalData = terminalRows.get(i);
-                    terminalData.put("clientnumber", 0);
+                    terminalData.put("clientnumber", 0);*/
+                    terminals.get(i).clientNumber = 0;
                 }
 
                 variables.setLastClient(lastClient);
@@ -206,7 +211,7 @@ public class Host implements HostServer.HostServerListener {
             sendToDisplay(APP.STOP_SERVICE, null);
 
         }else{
-            sendToDisplay(APP.RESET_SERVICE, resettingSystem ? terminalRows : null);
+            sendToDisplay(APP.RESET_SERVICE, resettingSystem ? getTerminalsDataHashMapList() : null);
             if (!PRINTER_ERROR){
                 if (TICKET_TAKEN || resettingSystem) {
                     printTicket();
@@ -220,9 +225,102 @@ public class Host implements HostServer.HostServerListener {
                 new PrinterMessage(0, PrinterMessage.PRINT_TICKET, total, new Date(), true));
     }
 
+    private List<HashMap<String, Integer>> getTerminalsDataHashMapList(){
+        List<HashMap<String, Integer>> terminalRows = new ArrayList<>();
+        for (int i=0; i< APP.TERMINAL_QUANTITY; i++){
+            HashMap<String, Integer>terminalData = new HashMap<>();
+            Terminal t = terminals.get(i);
+            terminalData.put("levelindex", t.levelIndex);
+            terminalData.put("clientnumber", t.clientNumber);
+            terminalData.put("terminalnumber", t.terminalNumber);
+            terminalData.put("visible", t.visible ? 1 : 0);
+            terminalData.put("state", t.state);
+
+            terminalRows.add(terminalData);
+        }
+        return terminalRows;
+    }
+
     private void sendToDisplay(int operation, List<HashMap<String, Integer>>dataList){
         server.socketOrganizer.sendDisplays(new int[]{0},
                 new DisplayMessage(0, operation, dataList, new Date(), true));
+    }
+
+    private void assignTerminal(int terminalIndex) {
+
+        Terminal terminal = terminals.get(terminalIndex);
+        System.out.println("assignTerminal index = " + terminalIndex);
+
+        if (terminal.state == TerminalData.ACCEPTED) {
+            if (nextClient > 0) {
+                //clientValues[terminalIndex] = nextClient;
+                terminal.clientNumber = nextClient;
+                if (nextClient < lastClient) {
+                    nextClient++;
+                } else {
+                    nextClient = 0;
+                }
+                terminal.saveToXML();
+                terminal.resetFromXML();
+                /*relocateTerminalRows();
+                row.performAnimation();
+                relocateBottomComponents();
+                notificationSound.Play();*/
+                List<HashMap<String, Integer>> terminalRows = new ArrayList<>();
+                terminalRows.add(terminal.getTerminalHashMap());
+                sendToDisplay(DisplayMessage.ADD_ROW, terminalRows);
+                variables.setNextClient(nextClient);
+            }
+        }else if (terminal.state == TerminalData.WAITING){
+            //row.performAnimation();
+            List<HashMap<String, Integer>> terminalRows = new ArrayList<>();
+            terminalRows.add(terminal.getTerminalHashMap());
+            sendToDisplay(DisplayMessage.DELETE_ROW, terminalRows);
+        }
+        buttonClicked++;
+        variables.setButtonClicked(buttonClicked);
+    }
+
+    private class Terminal extends TerminalData{
+
+        public Terminal(HashMap<String, Integer> terminalData) {
+            super(terminalData.get("levelindex"), terminalData.get("clientnumber")
+                    , terminalData.get("terminalnumber"), terminalData.get("visible"), terminalData.get("state"));
+        }
+
+        private void saveToXML(){
+            HashMap<String, Integer> terminalRowData = new HashMap<>();
+            terminalRowData.put("levelindex", levelIndex);
+            terminalRowData.put("terminalnumber", terminalNumber);
+            terminalRowData.put("clientnumber", clientNumber);
+            if (visible){
+                terminalRowData.put("visible", 1);
+            }else {
+                terminalRowData.put("visible", 0);
+            }
+            terminalRowData.put("state", state);
+            variables.setTerminalRowData(terminalNumber, terminalRowData);
+        }
+
+        private void resetFromXML(){
+            HashMap<String, Integer> terminalRowData = variables.getTerminalRowData(terminalNumber);
+            this.levelIndex = terminalRowData.get("levelindex");
+            this.clientNumber = terminalRowData.get("clientnumber");
+            this.terminalNumber = terminalRowData.get("terminalnumber");
+            int visibility = terminalRowData.get("visible");
+            this.visible = visibility == 1;
+            this.state = terminalRowData.get("state");
+        }
+
+        private HashMap<String, Integer>  getTerminalHashMap(){
+            HashMap<String, Integer>terminalData = new HashMap<>();
+            terminalData.put("levelindex", levelIndex);
+            terminalData.put("clientnumber", clientNumber);
+            terminalData.put("terminalnumber", terminalNumber);
+            terminalData.put("visible", visible ? 1 : 0);
+            terminalData.put("state", state);
+            return terminalData;
+        }
     }
 
     @Override
@@ -247,7 +345,7 @@ public class Host implements HostServer.HostServerListener {
     @Override
     public void onDisplayAvailable(HostServer.SocketOrganizer.SocketObject soc) {
         DisplayMessage message = new DisplayMessage(soc.id, DisplayMessage.INIT_ROWS,
-                terminalRows, new Date(), true);
+                getTerminalsDataHashMapList(), new Date(), true);
         soc.send(message);
     }
 

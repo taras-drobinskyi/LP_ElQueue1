@@ -2,6 +2,7 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import display.TerminalData;
 import interfaces.ClientMessageFormListener;
 import interfaces.SystemMessageFormListener;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
@@ -366,7 +367,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         }
     }
 
-    private void assignTerminal(int keyCode) {
+    /*private void assignTerminal(int keyCode) {
 
         int terminalIndex = keyCode;
         MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalIndex);
@@ -394,6 +395,36 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         }
         buttonClicked++;
         variables.setButtonClicked(buttonClicked);
+    }*/
+
+    private void addRow(HashMap<String, Integer> terminalRowData){
+        int terminalIndex = terminalRowData.get("terminalnumber");
+        MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalIndex);
+        if (row.state != MainUIPanel.TerminalRow.ACCEPTED){
+            row.state = MainUIPanel.TerminalRow.ACCEPTED;
+            System.err.println("TerminalRow with terminalNumber=" + row.terminalNumber +
+                    "was asked to perform SlideUp animation. But its state was not equal to: ACCEPTED. " +
+                    "We've set this value manually" );
+
+        }
+        row.clientNumber = terminalRowData.get("clientnumber");
+        relocateTerminalRows();
+        row.performAnimation();
+        relocateBottomComponents();
+        notificationSound.Play();
+    }
+
+    private void deleteRow(HashMap<String, Integer> terminalRowData){
+        int terminalIndex = terminalRowData.get("terminalnumber");
+        MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalIndex);
+        if (row.state != MainUIPanel.TerminalRow.WAITING){
+            row.state = MainUIPanel.TerminalRow.WAITING;
+            System.err.println("TerminalRow with terminalNumber=" + row.terminalNumber +
+                    "was asked to perform SlideAside animation. But its state was not equal to: WAITING. " +
+                    "We've set this value manually" );
+
+        }
+        row.performAnimation();
     }
 /*
     private void triggerService (boolean turnOn, boolean... flags){
@@ -1073,34 +1104,26 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             }
         }
 
-        private class TerminalRow implements Comparable{
+        private class TerminalRow extends TerminalData{
 
-            private static final int ACCEPTED = 0;
-            private static final int CALLING = 1;
-            private static final int WAITING = 2;
-            private static final int ACCEPTING = 3;
-
-            protected int levelIndex;
-            protected int clientNumber;
-            protected int terminalNumber;
             protected boolean partlyVisible;
-            protected boolean visible;
-            protected int state;
             protected int ypos;
             protected int[] xpos;
             private Timer timerBlinking;
 
             private TerminalRow(HashMap<String, Integer> terminalData) {
+                super(terminalData.get("levelindex"), terminalData.get("clientnumber")
+                        , terminalData.get("terminalnumber"), terminalData.get("visible"), terminalData.get("state"));
                 //this.terminalNumber = terminalNumber;
                 //XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
                 //HashMap<String, Integer> terminalRowData = variables.getTerminalRowData(terminalNumber);
-                this.levelIndex = terminalData.get("levelindex");
+                /*this.levelIndex = terminalData.get("levelindex");
                 this.clientNumber = terminalData.get("clientnumber");
                 this.terminalNumber = terminalData.get("terminalnumber");
                 int visibility = terminalData.get("visible");
                 this.visible = visibility == 1;
-                this.state = terminalData.get("state");
+                this.state = terminalData.get("state");*/
                 this.xpos = new int[3];
                 this.xpos[0] = 0;
                 this.xpos[1] = 0;
@@ -1108,42 +1131,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 this.ypos = 0;
                 //todo: write functionality to store standardBlinkRate locally
                 timerBlinking = new Timer(500, new BlinkingTimerListener());
-            }
-
-            public void saveToXML(){
-                HashMap<String, Integer> terminalRowData = new HashMap<>();
-                terminalRowData.put("levelindex", levelIndex);
-                terminalRowData.put("terminalnumber", terminalNumber);
-                terminalRowData.put("clientnumber", clientNumber);
-                if (visible){
-                    terminalRowData.put("visible", 1);
-                }else {
-                    terminalRowData.put("visible", 0);
-                }
-                terminalRowData.put("state", state);
-                variables.setTerminalRowData(terminalNumber, terminalRowData);
-            }
-
-            public void resetFromXML(){
-                HashMap<String, Integer> terminalRowData = variables.getTerminalRowData(terminalNumber);
-                this.levelIndex = terminalRowData.get("levelindex");
-                this.clientNumber = terminalRowData.get("clientnumber");
-                this.terminalNumber = terminalRowData.get("terminalnumber");
-                int visibility = terminalRowData.get("visible");
-                this.visible = visibility == 1;
-                this.state = terminalRowData.get("state");
-            }
-
-            @Override
-            public int compareTo(Object obj) {
-                TerminalRow rowToCompare = (TerminalRow)obj;
-                int retVal=0;
-                if (levelIndex<rowToCompare.levelIndex){
-                    retVal = -1;
-                }else if (levelIndex>rowToCompare.levelIndex){
-                    retVal = 1;
-                }
-                return retVal;
             }
 
             List<TerminalRowListener> listeners = new ArrayList<>();
