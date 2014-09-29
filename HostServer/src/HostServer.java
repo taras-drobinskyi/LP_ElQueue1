@@ -2,12 +2,15 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import display.TerminalData;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -215,7 +218,8 @@ public class HostServer {
                 for (int i=0; i<itemsInArray; i++) {
                     SocketObject soc = terminals.get(i);
                     if (soc.id == terminal) {
-                        soc.send(message);
+                        //todo:
+                        //soc.send(message);
                         i = itemsInArray;//exiting the loop
                     }
                 }
@@ -243,7 +247,8 @@ public class HostServer {
                 for (int i=0; i<itemsInArray; i++) {
                     SocketObject soc = displays.get(i);
                     if (soc.id == terminal) {
-                        soc.send(message);
+                        //todo:
+                        //soc.send(message);
                         i = itemsInArray;//exiting the loop
                     }
                 }
@@ -262,7 +267,8 @@ public class HostServer {
                 for (int i=0; i<itemsInArray; i++) {
                     SocketObject soc = printers.get(i);
                     if (soc.id == terminal) {
-                        soc.send(message);
+                        //todo:
+                        //soc.send(message);
                         i = itemsInArray;//exiting the loop
                     }
                 }
@@ -277,7 +283,8 @@ public class HostServer {
             while (it.hasNext()) {
                 SocketObject socketObj = (SocketObject) it.next();
                 try {
-                    socketObj.send(object);
+                    //todo:
+                    //socketObj.send(object);
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -310,6 +317,7 @@ public class HostServer {
             public int id = -1;
 
             private Socket socket;
+            //private InputStream iStream;
             //private ObjectOutputStream out;
             private ObjectInputStream in;
             //public SocketMessage message;
@@ -325,6 +333,7 @@ public class HostServer {
             private SocketObject(Socket socket) {
                 try {
                     this.socket = socket;
+                    //this.iStream = socket.getInputStream();
                     this.registered = false;
                     validator = new Validator();
                     listeners = new ArrayList<>();
@@ -358,14 +367,12 @@ public class HostServer {
             }
 
             /**
-             * This method registers the current object with an <b>ID</b>.
-             * After that, the object becomes valid to {@link HostServer.SocketOrganizer}.
-             * @param clientTalksWithObject Can be <b>1</b> - if a client talks to this socket
-             *                         using {@link SocketMessage} object, or <b>0</b> - if it doesn't.
-             * @param type The client type (see {@link HostServer.SocketOrganizer.SocketObject#type}).
-             * @param id An ID to register this object with. If it's == -1, than id must be provided by server.
+             * This method notifies the {@link Host} that the socket is now available.<br>
+             *     It also inits input listener for the socket
+             * @param clientTalksWithObject Can be <b>1</b> - if a client talks to this
+             *                              socket using {@link SocketMessage} object, or <b>0</b> - if it doesn't.
              */
-            private void validate(byte clientTalksWithObject, byte type, byte id){
+            private void validate(byte clientTalksWithObject){
                 /*switch (clientTalksWithObject){
                     case 0x01:
                         message = new SocketMessage(id,SocketMessage.REGISTER_SOCKET,0, new Date(),true);
@@ -374,25 +381,12 @@ public class HostServer {
                         message = new SocketMessage(id,SocketMessage.REGISTER_SOCKET,0, new Date(),false);
                         break;
                 }*/
-                this.type = type;
-                if (id>=0){
-                    this.id = id;
-                }
-                register();
-                /*outputWriter = new OutputWriter();
-                message.received = true;
-                System.out.println("validate isOnHoldTerminals = " + isOnHoldTerminals);
-                if (isOnHoldTerminals){
-                    message.operation = SocketMessage.HOLD_TERMINAL;
-                    message.value = 1;
-                }
-                outputWriter.start();*/
-            }
 
-            private void initStreams(){
                 try {
-                    //this.out = new ObjectOutputStream(socket.getOutputStream());
                     //this.in = new ObjectInputStream(socket.getInputStream());
+                    for (HostServerListener l : hostServerListeners){
+                        l.onDisplayAvailable(this);
+                    }
                     ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
                     this.in = new ObjectInputStream(Channels.newInputStream(channel));
                     inputListener = new InputListener();
@@ -400,10 +394,26 @@ public class HostServer {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+                /*System.out.println("validate isOnHoldTerminals = " + isOnHoldTerminals);
+                if (isOnHoldTerminals){
+                    message.operation = SocketMessage.HOLD_TERMINAL;
+                    message.value = 1;
+                }*/
             }
 
-            private void register(){
+            /**
+             * This method registers the current object with an <b>ID</b>.
+             * After that, the object becomes valid to {@link HostServer.SocketOrganizer}.
+             * @param type The client type (see {@link HostServer.SocketOrganizer.SocketObject#type}).
+             * @param id An ID to register this object with. If it's == -1, than id must be provided by server.
+             */
+            private void register(byte type, byte id){
 
+                this.type = type;
+                if (id>=0){
+                    this.id = id;
+                }
                 for (SocketObjectListener l : listeners){
                     l.onRegister(this);
                 }
@@ -416,9 +426,9 @@ public class HostServer {
                 }
             }
 
-            public synchronized void send(Object object){
-                outputWriter.stopThread();
-                outputWriter = new OutputWriter(object);
+            public synchronized void send(Object messageObject){
+                if (outputWriter != null) outputWriter.stopThread();
+                outputWriter = new OutputWriter(messageObject);
                 outputWriter.start();
             }
 
@@ -462,17 +472,20 @@ public class HostServer {
                     }
                     try {
                         byte[] b = new byte[3];
+                        //ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
                         ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
                         ObjectInputStream input = new ObjectInputStream(Channels.newInputStream(channel));
                         int val = input.read(b);
                         //int val = socket.getInputStream().read(b);
                         if (val > 0){
-                            validate(b[0], b[1], b[2]);
+                            register(b[1], b[2]);
                             byte[] buffer = {0x01, (byte)id};
+                            //byte[] buffer = {0x01, 0x00};
                             ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
                             output.write(buffer);
                             output.flush();
-                            initStreams();
+
+                            validate(b[0]);
                         }else{
                             close();
                         }
@@ -509,7 +522,7 @@ public class HostServer {
                         while (true) {
                             //get object from server, will block until object arrives.
                             message = (SocketMessage) in.readObject();
-                            System.out.println("server: received a message. Socket ID = " + id);
+                            System.out.println("HostServer: onInputMessage. Socket id = " + id);
                             transferMessage();
 
                             Thread.yield(); // let another thread have some time perhaps to stop this one.
@@ -527,11 +540,11 @@ public class HostServer {
 
             private class OutputWriter extends Thread{
                 private volatile Thread myThread;
-                private Object object;
+                private Object messageObject;
 
-                public OutputWriter(Object object){
+                public OutputWriter(Object messageObject){
                     myThread = this;
-                    this.object = object;
+                    this.messageObject = messageObject;
                 }
 
                 public void stopThread() {
@@ -561,8 +574,9 @@ public class HostServer {
                         return; // stopped before started.
                     }
                     try {
+                        System.out.println("Server: onSendMessage!!!");
                         ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                        out.writeUnshared(this.object);
+                        out.writeUnshared(messageObject);
                         out.flush();
                     }catch (Exception ex){
                         ex.printStackTrace();

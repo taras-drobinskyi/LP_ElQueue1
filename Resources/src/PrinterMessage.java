@@ -2,12 +2,13 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Created by forando on 21.09.14.
  */
-public class PrinterMessage extends SocketMessage {
+public class PrinterMessage extends SocketMessage implements Serializable {
     public static final int PRINT_TICKET = 0;
 
 

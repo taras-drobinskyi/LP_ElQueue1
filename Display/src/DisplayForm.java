@@ -4,7 +4,6 @@
 
 import display.TerminalData;
 import interfaces.ClientMessageFormListener;
-import interfaces.SystemMessageFormListener;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import uk.co.caprica.vlcj.player.embedded.videosurface.CanvasVideoSurface;
@@ -25,6 +24,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
     final static int[] terminalHeightOffsets = {27, 44, 61, 78, 95};
     final static int[] widthOffsets = {30, 60, 85};
+    private int standardBlinkRate;
+    private int takeTicketBlinkRate;
 
     HashMap<String, String> currentVideo;
 
@@ -84,11 +85,16 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     private int h_percent_uiPanel;
     private Point hor_line1_p1 = new Point(100, 100);
     private Point hor_line1_p2 = new Point(200, 200);
-    
-    public DisplayForm() {
 
+    public DisplayForm(){
         //Form Title
         super("Продукт Компании \"ВЕРСИЯ\"");
+        startClientServer();
+    }
+
+    public void initForm() {
+
+
 
         setContentPane(rootPanel);
         //setUndecorated(true);
@@ -109,6 +115,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         //initVariables();
         List<DisplayForm.MainUIPanel.TerminalRow> table = mainUIPanel.getTable();
         XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
+        standardBlinkRate = variables.getStandardBlinkRate();
+        takeTicketBlinkRate = variables.getTakeTicketBlinkRate();
         tickerMessages = variables.getMessages();
         currentVideo = variables.getCurrentVieoData();
         initObjects();
@@ -193,7 +201,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             @Override
             public void windowOpened(WindowEvent e) {
                 super.windowOpened(e);
-                batteryCheck();
+                //batteryCheck();
             }
         });
 
@@ -222,7 +230,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         mediaPlayer.playMedia(currentVideo.get("path"));
 
         setVisible(true);
-
     }
 
     private void startClientServer(){
@@ -248,7 +255,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         if(keyCode>=0 && keyCode<=APP.MAX_TERMINAL_QUANTITY){
             int terminalNumber = keyCode - TERMINAL_BASE + 1;
             if (terminalNumber <= APP.TERMINAL_QUANTITY) {
-                assignTerminal(keyCode);
+                //assignTerminal(keyCode);
             }
         }else if((keyCode>=112 && keyCode<=123) || keyCode == 36){
             int command = -1;
@@ -397,9 +404,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         variables.setButtonClicked(buttonClicked);
     }*/
 
-    private void addRow(HashMap<String, Integer> terminalRowData){
-        int terminalIndex = terminalRowData.get("terminalnumber");
-        MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalIndex);
+    private void addRow(TerminalData terminalRowData){
+        MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalRowData.terminalNumber);
         if (row.state != MainUIPanel.TerminalRow.ACCEPTED){
             row.state = MainUIPanel.TerminalRow.ACCEPTED;
             System.err.println("TerminalRow with terminalNumber=" + row.terminalNumber +
@@ -407,16 +413,15 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                     "We've set this value manually" );
 
         }
-        row.clientNumber = terminalRowData.get("clientnumber");
+        row.clientNumber = terminalRowData.clientNumber;
         relocateTerminalRows();
         row.performAnimation();
         relocateBottomComponents();
         notificationSound.Play();
     }
 
-    private void deleteRow(HashMap<String, Integer> terminalRowData){
-        int terminalIndex = terminalRowData.get("terminalnumber");
-        MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalIndex);
+    private void deleteRow(TerminalData terminalRowData){
+        MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalRowData.terminalNumber);
         if (row.state != MainUIPanel.TerminalRow.WAITING){
             row.state = MainUIPanel.TerminalRow.WAITING;
             System.err.println("TerminalRow with terminalNumber=" + row.terminalNumber +
@@ -474,40 +479,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         }
     }
 
-    private void batteryCheck() {
-        if (buttonClicked > clicksToChangeBattery) {
-            errorSound.Play();
-            //The next code will be invoked after main form is finally resized.
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    int width = mediaContentPanel.getSize().width;
-                    int height = mediaContentPanel.getSize().height;
-                    SystemMessageForm f = new SystemMessageForm(width, height);
-                    f.addMessageFormListener(new SystemMessageFormListener() {
-                        @Override
-                        public void onReset() {
-                            buttonClicked = 0;
-                            variables.setButtonClicked(buttonClicked);
-                            redrawLines();
-                        }
-
-                        @Override
-                        public void onClose() {
-                            redrawLines();
-                        }
-
-                        @Override
-                        public void onPrintTicket() {
-                            printTicket();
-                        }
-                    });
-                }
-            });
-        }
-    }
-
-    private void printTicket(){
+    /*private void printTicket(){
         if (!PRINTER_ERROR) {
             if (TICKET_TAKEN){
                 TICKET_IS_PRINTING = true;
@@ -532,7 +504,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 }
             }
         }
-    }
+    }*/
 
     private void initObjects() {
 
@@ -651,8 +623,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         l_totalTitle.setLocation(w_loc, h_loc);
         l_totalTitle.setSize(totalTitle_stringWidth, totalDataHeight + h_percent * 3);
 
-        setRestOfClients();
-        l_total.setText(String.valueOf(restOfClients));
+        l_total.setText(String.valueOf(mainUIPanel.restOfClients));
         l_total.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
         labelText = l_total.getText();
         stringWidth = l_total.getFontMetrics(l_total.getFont()).stringWidth(labelText);
@@ -755,11 +726,11 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                     this.label1 = l_takeTicket;
                     this.label2 = l_serviceStopped;
                     break;
-                case 5: //ticket is printing
+                /*case 5: //ticket is printing
                     //no neccessity to init something (we do it just to escape an error):
                     this.label1 = l_takeTicket;
                     this.label2 = l_serviceStopped;
-                    break;
+                    break;*/
                 default:
                     break;
             }
@@ -772,7 +743,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 case 0:
                     if (!option1) {
                         label3.setText("");
-                        label1.setText(String.valueOf(restOfClients));
+                        label1.setText(String.valueOf(mainUIPanel.restOfClients));
                         label2.setText("ВСЕГО  В  ОЧЕРЕДИ:");
                     } else {
                         label1.setText("");
@@ -799,10 +770,10 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                     }
                     option1 = !option1;
                     break;
-                case 5://ticket has been printed
+                /*case 5://ticket has been printed
                     TICKET_IS_PRINTING = false;
                     timerPrinter.stop();
-                    break;
+                    break;*/
                 default:
                     break;
             }
@@ -850,8 +821,10 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     public class MainUIPanel extends JPanel{
         private List<TerminalRow> table;
 
-        private int USEDLevels;
-        private int levelsToBeUSED;
+        private int USEDLevels = 0;
+        private int levelsToBeUSED = 0;
+
+        private int restOfClients = 0;
 
         private boolean isRowsSliding = false;
         private boolean isOnHoldTerminals = false;
@@ -862,21 +835,20 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             initClients();
         }*/
 
-        private void initClients(List<HashMap<String, Integer>> terminalRows){
+        private void initClients(List<TerminalData> terminalRows){
             //XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
-            //todo: assign USEDLevels not from stored value but figuring out from id nodes
             //USEDLevels = variables.getUSEDlevels();
             table = new ArrayList<>();
 
             for(int i=0; i< APP.TERMINAL_QUANTITY; i++){
-                HashMap<String, Integer> terminalData = terminalRows.get(i);
+                TerminalData terminalData = terminalRows.get(i);
                 TerminalRow terminalRow = new TerminalRow(terminalData);
                 terminalRow.addTerminalRowListener(new TerminalRowListener() {
                     @Override
                     public void onTransitionCompleted(TerminalRow row) {
                         (new RowsSlideUPRunner(row)).start();
-                        for (MainFormListener l : mainFormListeners){
+                        for (DisplayFormListener l : displayFormListeners){
                             l.onAcceptClient(row.terminalNumber, row.clientNumber);
                             System.out.println("MainFormListener onAcceptClient");
                         }
@@ -909,7 +881,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                         }else {
                             form.addMessage(row.clientNumber, row.terminalNumber + 1);
                         }
-                        for (MainFormListener l : mainFormListeners){
+                        for (DisplayFormListener l : displayFormListeners){
                             l.onAssignClient(row.terminalNumber, row.clientNumber);
                             System.out.println("MainFormListener onAssignClient");
                         }
@@ -923,18 +895,20 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                     }
                 });
                 table.add(terminalRow);
+                if (terminalRow.levelIndex>=0) USEDLevels++;
             }
+            initialTerminalAssignmentCheck();
         }
 
-        public void reAssignTerminals(List<HashMap<String, Integer>> terminalRows){
+        public void reAssignTerminals(List<TerminalData> terminalRows){
             for (TerminalRow row : table){
                 int terminal = row.terminalNumber;
-                HashMap<String, Integer> terminalData = terminalRows.get(terminal);
-                row.levelIndex = terminalData.get("levelindex");
-                row.clientNumber = terminalData.get("clientnumber");
-                row.terminalNumber = terminalData.get("terminalnumber");
-                row.visible = terminalData.get("visible") == 1;
-                row.state = terminalData.get("state");
+                TerminalData terminalData = terminalRows.get(terminal);
+                row.levelIndex = terminalData.levelIndex;
+                row.clientNumber = terminalData.clientNumber;
+                row.terminalNumber = terminalData.terminalNumber;
+                row.visible = terminalData.visible;
+                row.state = terminalData.state;
             }
         }
 
@@ -947,14 +921,14 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             return null;
         }
 
-        /*public synchronized void setUSEDLevels(int val){
+        public synchronized void setUSEDLevels(int val){
             USEDLevels = val;
-            variables.setUSEDlevels(val);
+            //variables.setUSEDlevels(val);
         }
 
         public synchronized int getUSEDLevels(){
             return USEDLevels;
-        }*/
+        }
 
         public void initialTerminalAssignmentCheck(){
             if (USEDLevels >= APP.LEVEL_QUANTITY){
@@ -988,20 +962,25 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         }
 
         private void sendOnHoldTerminals(int val){
-            List<Integer> list = new ArrayList<>();
+            List<TerminalData> listToSend = new ArrayList<>();
             for (TerminalRow row : table){
                 if (row.state != TerminalRow.CALLING && row.state != TerminalRow.WAITING){
-                    list.add(row.terminalNumber);
+                    listToSend.add(row);
                 }
             }
-            int[] terminals = new int[list.size()];
+            //int[] terminals = new int[list.size()];
             System.out.println("sendOnHoldTerminals table.size() = " + table.size());
-            System.out.println("sendOnHoldTerminals list.size() = " + list.size());
-            for (int i=0; i<list.size(); i++){
+            System.out.println("sendOnHoldTerminals list.size() = " + listToSend.size());
+            /*for (int i=0; i<list.size(); i++){
                 terminals[i] = list.get(i);
-            }
-            for (MainFormListener l : mainFormListeners){
+            }*/
+            /*for (MainFormListener l : mainFormListeners){
                 l.onHoldTerminals(terminals, val);
+            }*/
+            if (val ==1) {
+                clientServer.send(new DisplayMessage(0, SocketMessage.HOLD_CLIENT, listToSend, 0, new Date(), true));
+            }else{
+                clientServer.send(new DisplayMessage(0, SocketMessage.RELEASE_CLIENT, listToSend, 0, new Date(), true));
             }
         }
 
@@ -1047,7 +1026,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             g2.draw(h_lin1);
 
             g.setFont(TABLE_FONT);
-            for (TerminalRow row : table){
+            /*for (TerminalRow row : table){
                 if (row.visible) {
                     int[] xoffsets = row.xpos;
                     if (!row.partlyVisible) {
@@ -1062,7 +1041,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                             RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
                     g.drawString(String.valueOf(row.terminalNumber + 1), xoffsets[2], row.ypos);
                 }
-            }
+            }*/
         }
 
         private class RowsSlideUPRunner extends Thread {
@@ -1097,23 +1076,23 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                     (new Timer(10, new SlidingUPRowsTimerListener(slideUPRows, row))).start();
                 }else{
                     row.levelIndex = -1;
-                    setUSEDLevels(getUSEDLevels() - 1);
-                    row.saveToXML();
+                    /*setUSEDLevels(getUSEDLevels() - 1);
+                    row.saveToXML();*/
                     releaseSlidingRequest();
                 }
             }
         }
 
-        private class TerminalRow extends TerminalData{
+        private class TerminalRow extends TerminalData implements Comparable{
 
             protected boolean partlyVisible;
             protected int ypos;
             protected int[] xpos;
             private Timer timerBlinking;
 
-            private TerminalRow(HashMap<String, Integer> terminalData) {
-                super(terminalData.get("levelindex"), terminalData.get("clientnumber")
-                        , terminalData.get("terminalnumber"), terminalData.get("visible"), terminalData.get("state"));
+            private TerminalRow(TerminalData terminalData) {
+                super(terminalData.levelIndex, terminalData.clientNumber
+                        , terminalData.terminalNumber, terminalData.visible ? 1:0, terminalData.state);
                 //this.terminalNumber = terminalNumber;
                 //XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
@@ -1161,12 +1140,24 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                     state = CALLING;
                     visible = true;
                     checkForTerminalsOnHoldSet();
-                    (new Timer(10, new SlidingUPTimerListener(USEDLevels))).start();
+                    (new Timer(10, new SlidingUPTimerListener(getUSEDLevels()))).start();
                 }else if (state == WAITING){
                     state = ACCEPTING;
                     checkForTerminalsOnHoldRelease();
                     (new Timer(10, new SlidingAsideTimerListener(xpos))).start();
                 }
+            }
+
+            @Override
+            public int compareTo(Object obj) {
+                TerminalData dataToCompare = (TerminalData)obj;
+                int retVal=0;
+                if (levelIndex<dataToCompare.levelIndex){
+                    retVal = -1;
+                }else if (levelIndex>dataToCompare.levelIndex){
+                    retVal = 1;
+                }
+                return retVal;
             }
 
             private class BlinkingTimerListener implements ActionListener{
@@ -1193,7 +1184,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                         partlyVisible = false;
                         ((Timer)e.getSource()).stop();
                         state = WAITING;
-                        saveToXML();
+                        //saveToXML();
                         clientMessageFormIsShown = false;
                         disposeMessageForm();
                     }
@@ -1281,11 +1272,11 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                         int level = row.levelIndex;
                         row.ypos = h_percent_uiPanel * terminalHeightOffsets[level - 1];
                         row.levelIndex = level - 1;
-                        row.saveToXML();
+                        //row.saveToXML();
                     }
                     rowThatGone.levelIndex = -1;
                     setUSEDLevels(getUSEDLevels() - 1);
-                    rowThatGone.saveToXML();
+                    //rowThatGone.saveToXML();
                     releaseSlidingRequest();
                 }
                 repaint();
@@ -1298,13 +1289,13 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         public void onDisposeMessageForm(MainUIPanel.TerminalRow row);
     }
 
-    private List<MainFormListener> mainFormListeners = new ArrayList<>();
+    private List<DisplayFormListener> displayFormListeners = new ArrayList<>();
 
-    public void addMainFormListener(MainFormListener listener){
-        mainFormListeners.add(listener);
+    public void addDisplayFormListener(DisplayFormListener listener){
+        displayFormListeners.add(listener);
     }
 
-    public interface MainFormListener{
+    public interface DisplayFormListener {
         public void onAssignClient(int terminalIndex, int client);
         public void onAcceptClient(int terminalIndex, int client);
         public void onHoldTerminals(int[] terminals, int val);
@@ -1320,11 +1311,20 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         DisplayMessage message = (DisplayMessage)objMessage;
         switch (message.operation){
             case DisplayMessage.INIT_ROWS:
-                mainUIPanel.initClients(message.dataList);
+                System.out.println("INIT_ROWS!!!");
+                initForm();
+                mainUIPanel.restOfClients = message.restOfClients;
+                mainUIPanel.initClients(message.terminals);
+                message.received = true;
+                clientServer.send(message);
                 break;
             case DisplayMessage.ADD_ROW:
+                mainUIPanel.restOfClients = message.restOfClients;
+                addRow(message.terminals.get(0));
                 break;
             case DisplayMessage.DELETE_ROW:
+                mainUIPanel.restOfClients = message.restOfClients;
+                deleteRow(message.terminals.get(0));
                 break;
             /*case APP.RESET_SYSTEM:
                 break;*/
@@ -1335,8 +1335,9 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             case APP.STOP_SERVICE:
                 break;
             case APP.RESET_SERVICE:
-                if (message.dataList != null){
-                    mainUIPanel.reAssignTerminals(message.dataList);
+                if (message.terminals != null){
+                    mainUIPanel.restOfClients = message.restOfClients;
+                    mainUIPanel.reAssignTerminals(message.terminals);
                     //todo: reassign also bottom line
                 }else{
                     executeSystemCommand(APP.RESET_SERVICE);

@@ -4,12 +4,13 @@
 
 package display;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
 /**
  * Created by forando on 26.09.14.
  */
-public class TerminalData implements Comparable {
+public class TerminalData implements Serializable {
     public static final int ACCEPTED = 0;
     public static final int CALLING = 1;
     public static final int WAITING = 2;
@@ -27,17 +28,5 @@ public class TerminalData implements Comparable {
         this.terminalNumber = terminalNumber;
         this.visible = visibility == 1;
         this.state = state;
-    }
-
-    @Override
-    public int compareTo(Object obj) {
-        TerminalData dataToCompare = (TerminalData)obj;
-        int retVal=0;
-        if (levelIndex<dataToCompare.levelIndex){
-            retVal = -1;
-        }else if (levelIndex>dataToCompare.levelIndex){
-            retVal = 1;
-        }
-        return retVal;
     }
 }

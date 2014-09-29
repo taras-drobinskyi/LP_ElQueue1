@@ -1,11 +1,13 @@
+import display.TerminalData;
+
+import java.io.Serializable;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 /**
  * Created by forando on 11.09.14.
  */
-public class DisplayMessage extends SocketMessage {
+public class DisplayMessage extends SocketMessage implements Serializable {
 
     public static final int INIT_ROWS = 200;
     public static final int DELETE_ROW = 201;
@@ -18,7 +20,8 @@ public class DisplayMessage extends SocketMessage {
     public static final int RESET_SERVICE = 214;
     public static final int TRIGGER_SERVICE = 215;*/
 
-    List<HashMap<String, Integer>> dataList;
+    List<TerminalData> terminals;
+    int restOfClients;
 
     /**
      * @param id           The id index
@@ -26,9 +29,10 @@ public class DisplayMessage extends SocketMessage {
      * @param date         Current time stamp
      * @param transferable See {@link #transferable}
      */
-    public DisplayMessage(int id, int operation, List<HashMap<String, Integer>> dataList,
-                          Date date, boolean transferable) {
+    public DisplayMessage(int id, int operation, List<TerminalData> terminals,
+                          int restOfClients, Date date, boolean transferable) {
         super(id, operation, date, transferable);
-        this.dataList = dataList;
+        this.terminals = terminals;
+        this.restOfClients = restOfClients;
     }
 }

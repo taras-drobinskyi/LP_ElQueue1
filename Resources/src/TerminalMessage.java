@@ -2,12 +2,13 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Created by forando on 18.09.14.
  */
-public class TerminalMessage extends SocketMessage {
+public class TerminalMessage extends SocketMessage implements Serializable {
     public final static int REQUEST_CLIENT = 100;
     public final static int ACCEPT_CLIENT = 101;
     /**

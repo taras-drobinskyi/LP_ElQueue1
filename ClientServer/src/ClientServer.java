@@ -36,7 +36,7 @@ public class ClientServer {
     private List<ClientServerListener> listeners;
 
     public static void main(String[] args) {
-        new ClientServer(APP.IP, APP.PORT, 0, 2).startClient();
+        new ClientServer(APP.IP, APP.PORT, SocketMessage.DISPLAY, 0).startClient();
     }
 
     public void addClientServerListener(ClientServerListener listener){
@@ -143,7 +143,7 @@ public class ClientServer {
                 ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
                 ObjectInputStream input = new ObjectInputStream(Channels.newInputStream(channel));
 
-                byte[] inputBuffer = new byte[10];
+                byte[] inputBuffer = new byte[2];
                 int val = input.read(inputBuffer);
                 if (val > 0 && inputBuffer[0]==0x01 && inputBuffer[1]>=0){
                     validate(inputBuffer[1]);
@@ -190,6 +190,7 @@ public class ClientServer {
                 while (true) {
                     //get object from server, will block until object arrives.
                     Object object = in.readObject();
+                    System.out.println("ClientServer: onInputMessage. Socket id = " + id);
                     transferMessage(object);
 
                     Thread.yield(); // let another thread have some time perhaps to stop this one.
@@ -206,7 +207,7 @@ public class ClientServer {
     }
 
     public synchronized void send(Object object){
-        outputWriter.stopThread();
+        if (outputWriter != null) outputWriter.stopThread();
         outputWriter = new OutputWriter(object);
         outputWriter.start();
     }

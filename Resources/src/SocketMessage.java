@@ -2,8 +2,12 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import display.TerminalData;
+
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by forando on 26.08.14.
@@ -11,14 +15,17 @@ import java.util.Date;
  * The contained int and Date objects are both Serializable, otherwise
  * the serialization would fail.
  */
-public abstract class SocketMessage implements Serializable {
-    public final static int REGISTER_SOCKET = 0;
-    public final static int CLOSE_SOCKET = 1;
+public class SocketMessage implements Serializable {
+    public final static int REGISTER_SOCKET = 30;
+    public final static int CLOSE_SOCKET = 31;
+    public final static int HOLD_CLIENT = 32;
+    public final static int RELEASE_CLIENT = 33;
 
     //The types of clients:
     public static final int PRINTER = 0;
     public static final int TERMINAL = 1;
     public static final int DISPLAY = 2;
+
 
     public int id;
     /**

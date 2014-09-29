@@ -160,7 +160,7 @@ public class XMLVARIABLES {
         NodeList terminals_List = rootElement.getElementsByTagName("terminals");
         Element terminals_Node = (Element) terminals_List.item(0);
 
-        NodeList terminal_List = terminals_Node.getElementsByTagName("id");
+        NodeList terminal_List = terminals_Node.getElementsByTagName("terminal");
         return (Element) terminal_List.item(position);
     }
 

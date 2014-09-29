@@ -1,5 +1,7 @@
 import display.TerminalData;
 
+import javax.swing.*;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -33,7 +35,8 @@ public class Host implements HostServer.HostServerListener {
     XMLVARIABLES variables;
     private int total = 0;
     //int[] clientValues;
-    private int restOfClients;
+    private int usedLevels;
+
     private final HostServer server;
 
     public static void main(String[] args) {
@@ -80,6 +83,7 @@ public class Host implements HostServer.HostServerListener {
 
     public Host(){
         server = new HostServer();
+        server.addHostServerListener(this);
         server.start();
         initVariables();
     }
@@ -93,10 +97,12 @@ public class Host implements HostServer.HostServerListener {
 
         //terminalRows = new ArrayList<>();
         terminals = new ArrayList<>();
-
+        usedLevels = 0;
         for (int i=0; i<APP.TERMINAL_QUANTITY; i++){
-            Terminal terminal = new Terminal(variables.getTerminalRowData(i));
+            HashMap<String, Integer> terminalData = variables.getTerminalRowData(i);
+            Terminal terminal = new Terminal(terminalData);
             terminals.add(terminal);
+            if (terminal.visible) usedLevels++;
             //clientValues[i] = terminalRowData.get("clientnumber");
         }
 
@@ -115,15 +121,17 @@ public class Host implements HostServer.HostServerListener {
 
         variables.setNextClient(nextClient);
 
-        setRestOfClients();
+        //setRestOfClients();
     }
 
-    private void setRestOfClients() {
+    private int getRestOfClients() {
+        int restOfClients;
         if (nextClient > 0) {
             restOfClients = lastClient - nextClient + 1;
         } else {
             restOfClients = 0;
         }
+        return restOfClients;
     }
 
     private void executeSystemCommand(int command) {
@@ -211,7 +219,7 @@ public class Host implements HostServer.HostServerListener {
             sendToDisplay(APP.STOP_SERVICE, null);
 
         }else{
-            sendToDisplay(APP.RESET_SERVICE, resettingSystem ? getTerminalsDataHashMapList() : null);
+            sendToDisplay(APP.RESET_SERVICE, resettingSystem ? terminals : null);
             if (!PRINTER_ERROR){
                 if (TICKET_TAKEN || resettingSystem) {
                     printTicket();
@@ -221,8 +229,32 @@ public class Host implements HostServer.HostServerListener {
     }
 
     private void printTicket(){
-        server.socketOrganizer.sendPrinters(new int[]{0},
-                new PrinterMessage(0, PrinterMessage.PRINT_TICKET, total, new Date(), true));
+        if (!PRINTER_ERROR) {
+            if (TICKET_TAKEN){
+                TICKET_IS_PRINTING = true;
+                /*//1 sec deley that prevents to print something new
+                timerPrinter.start();*/
+                server.socketOrganizer.sendPrinters(new int[]{0},
+                        new PrinterMessage(0, PrinterMessage.PRINT_TICKET, total, new Date(), true));
+
+                ticketsPrinted++;
+                variables.setTicketsPrinted(ticketsPrinted);
+                TICKET_TAKEN = false;
+            }else {
+                if (!SERVICE_STOPPED) {
+
+                    TICKET_IS_PRINTING = true;
+                    /*//1 sec deley that prevents to print something new
+                    timerPrinter.start();*/
+                    server.socketOrganizer.sendPrinters(new int[]{0},
+                            new PrinterMessage(0, PrinterMessage.PRINT_TICKET, total, new Date(), true));
+                    ticketsPrinted++;
+                    variables.setTicketsPrinted(ticketsPrinted);
+                } else {
+                    TICKET_TAKEN = true;
+                }
+            }
+        }
     }
 
     private List<HashMap<String, Integer>> getTerminalsDataHashMapList(){
@@ -241,9 +273,19 @@ public class Host implements HostServer.HostServerListener {
         return terminalRows;
     }
 
-    private void sendToDisplay(int operation, List<HashMap<String, Integer>>dataList){
-        server.socketOrganizer.sendDisplays(new int[]{0},
-                new DisplayMessage(0, operation, dataList, new Date(), true));
+    private void sendToDisplay(int operation, List<Terminal>dataList){
+        if (dataList != null){
+            List<TerminalData>listToSend = new ArrayList<>();
+            for (Terminal t: dataList){
+                listToSend.add(t);
+            }
+            server.socketOrganizer.sendDisplays(new int[]{0},
+                    new DisplayMessage(0, operation, listToSend, getRestOfClients(), new Date(), true));
+        }else{
+            server.socketOrganizer.sendDisplays(new int[]{0},
+                    new DisplayMessage(0, operation, null, getRestOfClients(), new Date(), true));
+        }
+
     }
 
     private void assignTerminal(int terminalIndex) {
@@ -266,22 +308,37 @@ public class Host implements HostServer.HostServerListener {
                 row.performAnimation();
                 relocateBottomComponents();
                 notificationSound.Play();*/
-                List<HashMap<String, Integer>> terminalRows = new ArrayList<>();
-                terminalRows.add(terminal.getTerminalHashMap());
-                sendToDisplay(DisplayMessage.ADD_ROW, terminalRows);
+                List<Terminal> terminalsToSend = new ArrayList<>();
+                terminalsToSend.add(terminal);
+                sendToDisplay(DisplayMessage.ADD_ROW, terminalsToSend);
+                terminal.state = TerminalData.WAITING;
+                terminal.levelIndex = usedLevels;
+                usedLevels++;
+                terminal.saveToXML();
                 variables.setNextClient(nextClient);
             }
         }else if (terminal.state == TerminalData.WAITING){
             //row.performAnimation();
-            List<HashMap<String, Integer>> terminalRows = new ArrayList<>();
-            terminalRows.add(terminal.getTerminalHashMap());
-            sendToDisplay(DisplayMessage.DELETE_ROW, terminalRows);
+            List<Terminal> terminalsToSend = new ArrayList<>();
+            terminalsToSend.add(terminal);
+            sendToDisplay(DisplayMessage.DELETE_ROW, terminalsToSend);
+
+            for (Terminal r : terminals){
+                if (r.levelIndex > terminal.levelIndex){
+                    r.levelIndex--;
+                    r.saveToXML();
+                }
+            }
+            terminal.state = TerminalData.ACCEPTED;
+            terminal.levelIndex = -1;
+            usedLevels--;
+            terminal.saveToXML();
         }
         buttonClicked++;
         variables.setButtonClicked(buttonClicked);
     }
 
-    private class Terminal extends TerminalData{
+    private class Terminal extends TerminalData implements Serializable{
 
         public Terminal(HashMap<String, Integer> terminalData) {
             super(terminalData.get("levelindex"), terminalData.get("clientnumber")
@@ -323,13 +380,47 @@ public class Host implements HostServer.HostServerListener {
         }
     }
 
+    /*private void batteryCheck() {
+        if (buttonClicked > clicksToChangeBattery) {
+            errorSound.Play();
+            //The next code will be invoked after main form is finally resized.
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    int width = mediaContentPanel.getSize().width;
+                    int height = mediaContentPanel.getSize().height;
+                    SystemMessageForm f = new SystemMessageForm(width, height);
+                    f.addMessageFormListener(new SystemMessageFormListener() {
+                        @Override
+                        public void onReset() {
+                            buttonClicked = 0;
+                            variables.setButtonClicked(buttonClicked);
+                            redrawLines();
+                        }
+
+                        @Override
+                        public void onClose() {
+                            redrawLines();
+                        }
+
+                        @Override
+                        public void onPrintTicket() {
+                            printTicket();
+                        }
+                    });
+                }
+            });
+        }
+    }*/
+
     @Override
     public void onPrinterAvailable(HostServer.SocketOrganizer.SocketObject soc) {
         //Print first ticket
         total = lastClient + 1;
         PrinterMessage message = new PrinterMessage(soc.id, PrinterMessage.PRINT_TICKET,
                 total, new Date(), true);
-        soc.send(message);
+        //todo:
+        //soc.send(message);
     }
 
     @Override
@@ -344,13 +435,48 @@ public class Host implements HostServer.HostServerListener {
 
     @Override
     public void onDisplayAvailable(HostServer.SocketOrganizer.SocketObject soc) {
+        List<TerminalData>listToSend = new ArrayList<>();
+        for (Terminal t: terminals){
+            listToSend.add(new TerminalData(t.levelIndex,t.clientNumber,t.terminalNumber,t.visible?1:0,t.state));
+        }
+        System.out.println("Host: onSendMessage!!!");
         DisplayMessage message = new DisplayMessage(soc.id, DisplayMessage.INIT_ROWS,
-                getTerminalsDataHashMapList(), new Date(), true);
+                listToSend, getRestOfClients(), new Date(), true);
+
+        //----test-------------
+        /*List<TerminalData>dataList = new ArrayList<>();
+        dataList.add(new TerminalData(0,1,1,1,0));
+        DisplayMessage m = new DisplayMessage(soc.id, 200, listToSend, 1, new Date(), true);
+        Object obj = m;*/
+        //----test------------
+
         soc.send(message);
     }
 
     @Override
     public void onDisplayMessage(HostServer.SocketOrganizer.SocketObject soc) {
-
+        DisplayMessage message = (DisplayMessage)soc.message;
+        switch (message.operation){
+            case SocketMessage.HOLD_CLIENT:
+                break;
+            case DisplayMessage.INIT_ROWS:
+                break;
+            case DisplayMessage.ADD_ROW:
+                break;
+            case DisplayMessage.DELETE_ROW:
+                break;
+            /*case APP.RESET_SYSTEM:
+                break;*/
+            case APP.PRINTER_ERROR_ON:
+                break;
+            case APP.PRINTER_ERROR_OFF:
+                break;
+            case APP.STOP_SERVICE:
+                break;
+            case APP.RESET_SERVICE:
+                break;
+            default:
+                break;
+        }
     }
 }

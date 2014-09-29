@@ -26,7 +26,7 @@ public class APP {
 
 
     public static final String IP = "localhost";
-    public static final int PORT = 8000;
+    public static final int PORT = 8001;
 
 
 }
