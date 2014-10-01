@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -22,10 +23,14 @@ public class ClientServer {
     private Validator validator;
     private Socket socket;
     private ObjectInputStream in;
-    //private ObjectOutputStream out;
+    private ObjectOutputStream out;
 
-    InputListener inputListener;
-    OutputWriter outputWriter;
+    /*InputListener input;
+    OutputWriter output;*/
+    InPut inPut;
+    OutPut output;
+
+    int counter = 0;
 
     //public SocketMessage message;
 
@@ -67,8 +72,8 @@ public class ClientServer {
 
     private void close(){
         if (registered) {
-            inputListener.stopThread();
-            outputWriter.stopThread();
+            inPut.stopThread();
+            output.stopThread();
         }else{
             validator.stopThread();
         }
@@ -86,7 +91,7 @@ public class ClientServer {
     }
 
 
-    public void validate(int id){
+    public void register(int id){
         registered = true;
         if (this.id != id){
             this.id = id;
@@ -96,14 +101,26 @@ public class ClientServer {
         }
     }
 
-    private void initStreams(Socket soc){
+    private void validate(Socket soc){
         this.socket = soc;
         try {
-            ReadableByteChannel channel = Channels.newChannel(this.socket.getInputStream());
-            this.in = new ObjectInputStream(Channels.newInputStream(channel));
-            inputListener = new InputListener();
-            inputListener.start();
-        } catch (IOException e) {
+            /*ReadableByteChannel channel = Channels.newChannel(this.socket.getInputStream());
+            this.in = new ObjectInputStream(Channels.newInputStream(channel));*/
+            inPut = new InPut(socket, id);
+            inPut.addInputListener(new InPut.InputListener() {
+                @Override
+                public void onMessage(Object messageObject) {
+                    transferMessage(messageObject);
+                }
+
+                @Override
+                public void onClose() {
+                    close();
+                }
+            });
+            inPut.start();
+            out = new ObjectOutputStream(socket.getOutputStream());
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -146,9 +163,9 @@ public class ClientServer {
                 byte[] inputBuffer = new byte[2];
                 int val = input.read(inputBuffer);
                 if (val > 0 && inputBuffer[0]==0x01 && inputBuffer[1]>=0){
-                    validate(inputBuffer[1]);
+                    register(inputBuffer[1]);
                     System.out.println("Validator: client registered with ID = " + inputBuffer[1]);
-                    initStreams(socket);
+                    validate(socket);
                 }else{
                     close();
                 }
@@ -162,6 +179,13 @@ public class ClientServer {
 
         for (ClientServerListener l : listeners){
             l.onInputMessage(object);
+        }
+    }
+
+    private synchronized void transferMessage1(Object object){
+        counter++;
+        if (counter<10) {
+            send(new DisplayMessage(0, 201, null, 0, new Date(), true));
         }
     }
 
@@ -190,7 +214,8 @@ public class ClientServer {
                 while (true) {
                     //get object from server, will block until object arrives.
                     Object object = in.readObject();
-                    System.out.println("ClientServer: onInputMessage. Socket id = " + id);
+                    System.out.println("ClientServer: onInputMessage socketID = " + id +
+                            " operation = " + ((SocketMessage) object).operation);
                     transferMessage(object);
 
                     Thread.yield(); // let another thread have some time perhaps to stop this one.
@@ -206,10 +231,13 @@ public class ClientServer {
         }
     }
 
-    public synchronized void send(Object object){
-        if (outputWriter != null) outputWriter.stopThread();
-        outputWriter = new OutputWriter(object);
-        outputWriter.start();
+    public synchronized void send(Object messageObject){
+        if (output != null){
+            output.stopThread();
+            output = null;
+        }
+        output = new OutPut(out, id, messageObject);
+        output.start();
     }
 
     private class OutputWriter extends Thread{
@@ -235,6 +263,8 @@ public class ClientServer {
                 return; // stopped before started.
             }
             try {
+                System.out.println("ClientServer: onSendMessage socketID = " + id +
+                        " operation = " + ((SocketMessage) object).operation);
                 ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
                 out.writeUnshared(this.object);
                 out.flush();

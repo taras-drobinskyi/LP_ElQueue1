@@ -22,6 +22,8 @@ import java.util.List;
  */
 public class DisplayForm extends JFrame implements ClientServer.ClientServerListener {
 
+    private int id = -1;
+
     final static int[] terminalHeightOffsets = {27, 44, 61, 78, 95};
     final static int[] widthOffsets = {30, 60, 85};
     private int standardBlinkRate;
@@ -92,7 +94,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         startClientServer();
     }
 
-    public void initForm() {
+    public void initForm(List<TerminalData> terminals, int restOfClients) {
 
 
 
@@ -229,11 +231,14 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         mediaPlayer.setVideoSurface(videoSurface);
         mediaPlayer.playMedia(currentVideo.get("path"));
 
+        mainUIPanel.restOfClients = restOfClients;
+        mainUIPanel.initClients(terminals);
+
         setVisible(true);
     }
 
     private void startClientServer(){
-        clientServer = new ClientServer(APP.IP, APP.PORT, SocketMessage.DISPLAY, 4);
+        clientServer = new ClientServer(APP.IP, APP.PORT, SocketMessage.DISPLAY, id);
         clientServer.addClientServerListener(this);
         clientServer.startClient();
     }
@@ -241,7 +246,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     private void restartClientServer(){
         clientServer.stopClient();
         clientServer = null;
-        clientServer = new ClientServer(APP.IP, APP.PORT, SocketMessage.DISPLAY, 4);
+        clientServer = new ClientServer(APP.IP, APP.PORT, SocketMessage.DISPLAY, id);
         clientServer.addClientServerListener(this);
         clientServer.startClient();
     }
@@ -255,7 +260,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         if(keyCode>=0 && keyCode<=APP.MAX_TERMINAL_QUANTITY){
             int terminalNumber = keyCode - TERMINAL_BASE + 1;
             if (terminalNumber <= APP.TERMINAL_QUANTITY) {
-                //assignTerminal(keyCode);
+                assignTerminal(keyCode);
             }
         }else if((keyCode>=112 && keyCode<=123) || keyCode == 36){
             int command = -1;
@@ -374,14 +379,20 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         }
     }
 
-    /*private void assignTerminal(int keyCode) {
+    private void assignTerminal(int keyCode) {
+
 
         int terminalIndex = keyCode;
         MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalIndex);
         System.out.println("assignTerminal keyCode = " + keyCode);
 
         if (row.state == MainUIPanel.TerminalRow.ACCEPTED) {
-            if (nextClient > 0) {
+            List<TerminalData> terminals = new ArrayList<>();
+            terminals.add(new TerminalData(row.levelIndex, row.clientNumber,
+                    row.terminalNumber, row.visible, row.state));
+            clientServer.send(new DisplayMessage(this.id, DisplayMessage.ADD_ROW,
+                    null, 0, new Date(), true));
+            /*if (nextClient > 0) {
                 clientValues[terminalIndex] = nextClient;
                 if (nextClient < lastClient) {
                     nextClient++;
@@ -396,13 +407,13 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 relocateBottomComponents();
                 notificationSound.Play();
                 variables.setNextClient(nextClient);
-            }
+            }*/
         }else if (row.state == MainUIPanel.TerminalRow.WAITING){
-            row.performAnimation();
+            //row.performAnimation();
         }
-        buttonClicked++;
-        variables.setButtonClicked(buttonClicked);
-    }*/
+        /*buttonClicked++;
+        variables.setButtonClicked(buttonClicked);*/
+    }
 
     private void addRow(TerminalData terminalRowData){
         MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalRowData.terminalNumber);
@@ -690,6 +701,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
      */
     private void createUIComponents() {
         mainUIPanel = new MainUIPanel();
+        System.out.println("createUIComponents!!!");
 
         tickerPanel = new JPanel(){
             @Override
@@ -820,6 +832,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
     public class MainUIPanel extends JPanel{
         private List<TerminalRow> table;
+        private boolean tableIsValid = false;
 
         private int USEDLevels = 0;
         private int levelsToBeUSED = 0;
@@ -898,6 +911,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 if (terminalRow.levelIndex>=0) USEDLevels++;
             }
             initialTerminalAssignmentCheck();
+            tableIsValid = true;
         }
 
         public void reAssignTerminals(List<TerminalData> terminalRows){
@@ -1025,23 +1039,26 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             Line2D h_lin1 = new Line2D.Float(hor_line1_p1.x, hor_line1_p1.y, hor_line1_p2.x, hor_line1_p2.y);
             g2.draw(h_lin1);
 
-            g.setFont(TABLE_FONT);
-            /*for (TerminalRow row : table){
-                if (row.visible) {
-                    int[] xoffsets = row.xpos;
-                    if (!row.partlyVisible) {
-                        g.setColor(Color.YELLOW);
+
+            if (tableIsValid) {
+                g.setFont(TABLE_FONT);
+                for (TerminalRow row : table) {
+                    if (row.visible) {
+                        int[] xoffsets = row.xpos;
+                        if (!row.partlyVisible) {
+                            g.setColor(Color.YELLOW);
+                            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                                    RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                            g.drawString(String.valueOf(row.clientNumber), xoffsets[0], row.ypos);
+                            g.drawString(">", xoffsets[1], row.ypos);
+                        }
+                        g.setColor(Color.WHITE);
                         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                                 RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                        g.drawString(String.valueOf(row.clientNumber), xoffsets[0], row.ypos);
-                        g.drawString(">", xoffsets[1], row.ypos);
+                        g.drawString(String.valueOf(row.terminalNumber + 1), xoffsets[2], row.ypos);
                     }
-                    g.setColor(Color.WHITE);
-                    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-                            RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                    g.drawString(String.valueOf(row.terminalNumber + 1), xoffsets[2], row.ypos);
                 }
-            }*/
+            }
         }
 
         private class RowsSlideUPRunner extends Thread {
@@ -1092,7 +1109,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
             private TerminalRow(TerminalData terminalData) {
                 super(terminalData.levelIndex, terminalData.clientNumber
-                        , terminalData.terminalNumber, terminalData.visible ? 1:0, terminalData.state);
+                        , terminalData.terminalNumber, terminalData.visible, terminalData.state);
                 //this.terminalNumber = terminalNumber;
                 //XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
@@ -1303,7 +1320,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
     @Override
     public void onRegister(int id) {
-
+        this.id = id;
     }
 
     @Override
@@ -1312,11 +1329,14 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         switch (message.operation){
             case DisplayMessage.INIT_ROWS:
                 System.out.println("INIT_ROWS!!!");
-                initForm();
-                mainUIPanel.restOfClients = message.restOfClients;
-                mainUIPanel.initClients(message.terminals);
+                initForm(message.terminals, message.restOfClients);
                 message.received = true;
-                clientServer.send(message);
+                List<TerminalData> terminals = new ArrayList<>();
+                terminals.add(new TerminalData(-1, 500,
+                        2, false, 0));
+                clientServer.send(new DisplayMessage(this.id, DisplayMessage.ADD_ROW,
+                        terminals, 0, new Date(), true));
+                //clientServer.send(message);
                 break;
             case DisplayMessage.ADD_ROW:
                 mainUIPanel.restOfClients = message.restOfClients;

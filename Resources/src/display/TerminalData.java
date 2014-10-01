@@ -22,11 +22,11 @@ public class TerminalData implements Serializable {
     public boolean visible;
     public int state;
 
-    public TerminalData(int levelIndex, int clientNumber, int terminalNumber, int visibility, int state) {
+    public TerminalData(int levelIndex, int clientNumber, int terminalNumber, boolean visible, int state) {
         this.levelIndex = levelIndex;
         this.clientNumber = clientNumber;
         this.terminalNumber = terminalNumber;
-        this.visible = visibility == 1;
+        this.visible = visible;
         this.state = state;
     }
 }

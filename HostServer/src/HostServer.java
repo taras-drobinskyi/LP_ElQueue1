@@ -2,8 +2,6 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
-import display.TerminalData;
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -165,6 +163,9 @@ public class HostServer {
         private void transferMessage(SocketObject soc){
             switch (soc.type){
                 case SocketMessage.DISPLAY:
+                    for (HostServerListener l : hostServerListeners){
+                                l.onDisplayMessage(soc);
+                    }
                     break;
                 case SocketMessage.TERMINAL:
                             /*for (HostServerListener l : hostServerListeners){
@@ -248,7 +249,7 @@ public class HostServer {
                     SocketObject soc = displays.get(i);
                     if (soc.id == terminal) {
                         //todo:
-                        //soc.send(message);
+                        soc.send(message);
                         i = itemsInArray;//exiting the loop
                     }
                 }
@@ -302,6 +303,19 @@ public class HostServer {
             }
         }
 
+        public int[] getDisplaysIDs(){
+            int[] idList;
+            if(displays != null && displays.size()>0){
+                idList = new int[displays.size()];
+                for (int i=0; i<displays.size(); i++){
+                    idList[i] = displays.get(i).id;
+                }
+                return idList;
+            }else {
+                return null;
+            }
+        }
+
         public class SocketObject{
 
             /**
@@ -318,7 +332,7 @@ public class HostServer {
 
             private Socket socket;
             //private InputStream iStream;
-            //private ObjectOutputStream out;
+            private ObjectOutputStream out;
             private ObjectInputStream in;
             //public SocketMessage message;
             private boolean registered;
@@ -326,8 +340,11 @@ public class HostServer {
             List<SocketObjectListener> listeners;
 
             private Validator validator;
-            private InputListener inputListener;
-            private OutputWriter outputWriter;
+            //private InputListener input;
+            private InPut inPut;
+            //private OutputWriter outputWriter;
+            private OutPut output;
+            int counter = 0;
 
 
             private SocketObject(Socket socket) {
@@ -344,8 +361,8 @@ public class HostServer {
 
             private void close(){
                 if (registered) {
-                    inputListener.stopThread();
-                    outputWriter.stopThread();
+                    inPut.stopThread();
+                    output.stopThread();
                 }else{
                     validator.stopThread();
                 }
@@ -384,14 +401,28 @@ public class HostServer {
 
                 try {
                     //this.in = new ObjectInputStream(socket.getInputStream());
+                    /*input = new InputListener(this.socket);
+                    input.start();*/
+                    inPut = new InPut(socket, id);
+                    inPut.addInputListener(new InPut.InputListener() {
+                        @Override
+                        public void onMessage(Object messageObject) {
+                            message = messageObject;
+                            transferMessage();
+                        }
+
+                        @Override
+                        public void onClose() {
+                            close();
+                        }
+                    });
+                    inPut.start();
+                    out = new ObjectOutputStream(socket.getOutputStream());
                     for (HostServerListener l : hostServerListeners){
                         l.onDisplayAvailable(this);
                     }
-                    ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
-                    this.in = new ObjectInputStream(Channels.newInputStream(channel));
-                    inputListener = new InputListener();
-                    inputListener.start();
-                } catch (IOException e) {
+                    //send(new DisplayMessage(0, 202, null, 0, new Date(), true));
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 
@@ -426,10 +457,19 @@ public class HostServer {
                 }
             }
 
+            private synchronized void transferMessage1(){
+                counter++;
+                if (counter<10) {
+                    send(new DisplayMessage(0, 202, null, 0, new Date(), true));
+                }
+            }
+
             public synchronized void send(Object messageObject){
-                if (outputWriter != null) outputWriter.stopThread();
-                outputWriter = new OutputWriter(messageObject);
-                outputWriter.start();
+                if (output != null){
+                    output.stopThread();
+                }
+                output = new OutPut(out, id, messageObject);
+                output.start();
             }
 
             @Override
@@ -500,9 +540,12 @@ public class HostServer {
 
             private class InputListener extends Thread{
                 private volatile Thread myThread;
+                private Socket socket;
+                private ObjectInputStream in;
 
-                public InputListener(){
+                public InputListener(Socket socket) {
                     myThread = this;
+                    this.socket = socket;
                 }
 
                 public void stopThread() {
@@ -519,10 +562,14 @@ public class HostServer {
                         return; // stopped before started.
                     }
                     try {
+                        //this.in = new ObjectInputStream(this.socket.getInputStream());
+                        ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
+                        this.in = new ObjectInputStream(Channels.newInputStream(channel));
                         while (true) {
                             //get object from server, will block until object arrives.
-                            message = (SocketMessage) in.readObject();
-                            System.out.println("HostServer: onInputMessage. Socket id = " + id);
+                            message = in.readObject();
+                            System.out.println("HostServer: onInputMessage socketID = " + id +
+                                    " operation = " + ((SocketMessage) message).operation);
                             transferMessage();
 
                             Thread.yield(); // let another thread have some time perhaps to stop this one.
@@ -574,7 +621,8 @@ public class HostServer {
                         return; // stopped before started.
                     }
                     try {
-                        System.out.println("Server: onSendMessage!!!");
+                        System.out.println("HostServer: onSendMessage socketID = " + id +
+                                " operation = " + ((SocketMessage) messageObject).operation);
                         ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
                         out.writeUnshared(messageObject);
                         out.flush();

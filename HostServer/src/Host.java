@@ -277,12 +277,12 @@ public class Host implements HostServer.HostServerListener {
         if (dataList != null){
             List<TerminalData>listToSend = new ArrayList<>();
             for (Terminal t: dataList){
-                listToSend.add(t);
+                listToSend.add(new TerminalData(t.levelIndex, t.clientNumber, t.terminalNumber, t.visible,t.state));
             }
-            server.socketOrganizer.sendDisplays(new int[]{0},
+            server.socketOrganizer.sendDisplays(server.socketOrganizer.getDisplaysIDs(),
                     new DisplayMessage(0, operation, listToSend, getRestOfClients(), new Date(), true));
         }else{
-            server.socketOrganizer.sendDisplays(new int[]{0},
+            server.socketOrganizer.sendDisplays(server.socketOrganizer.getDisplaysIDs(),
                     new DisplayMessage(0, operation, null, getRestOfClients(), new Date(), true));
         }
 
@@ -313,6 +313,7 @@ public class Host implements HostServer.HostServerListener {
                 sendToDisplay(DisplayMessage.ADD_ROW, terminalsToSend);
                 terminal.state = TerminalData.WAITING;
                 terminal.levelIndex = usedLevels;
+                terminal.visible = true;
                 usedLevels++;
                 terminal.saveToXML();
                 variables.setNextClient(nextClient);
@@ -341,8 +342,9 @@ public class Host implements HostServer.HostServerListener {
     private class Terminal extends TerminalData implements Serializable{
 
         public Terminal(HashMap<String, Integer> terminalData) {
-            super(terminalData.get("levelindex"), terminalData.get("clientnumber")
-                    , terminalData.get("terminalnumber"), terminalData.get("visible"), terminalData.get("state"));
+            super(terminalData.get("levelindex"), terminalData.get("clientnumber"),
+                    terminalData.get("terminalnumber"), terminalData.get("visible")==1? true:false,
+                    terminalData.get("state"));
         }
 
         private void saveToXML(){
@@ -437,9 +439,8 @@ public class Host implements HostServer.HostServerListener {
     public void onDisplayAvailable(HostServer.SocketOrganizer.SocketObject soc) {
         List<TerminalData>listToSend = new ArrayList<>();
         for (Terminal t: terminals){
-            listToSend.add(new TerminalData(t.levelIndex,t.clientNumber,t.terminalNumber,t.visible?1:0,t.state));
+            listToSend.add(new TerminalData(t.levelIndex,t.clientNumber,t.terminalNumber,t.visible,t.state));
         }
-        System.out.println("Host: onSendMessage!!!");
         DisplayMessage message = new DisplayMessage(soc.id, DisplayMessage.INIT_ROWS,
                 listToSend, getRestOfClients(), new Date(), true);
 
@@ -462,6 +463,7 @@ public class Host implements HostServer.HostServerListener {
             case DisplayMessage.INIT_ROWS:
                 break;
             case DisplayMessage.ADD_ROW:
+                assignTerminal(message.terminals.get(0).terminalNumber);
                 break;
             case DisplayMessage.DELETE_ROW:
                 break;
