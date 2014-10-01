@@ -35,7 +35,7 @@ public class OutPut  extends Thread {
             return; // stopped before started.
         }
         try {
-            System.out.println("HostServer: onSendMessage socketID = " + id +
+            System.out.println("Socket: onSendMessage socketID = " + id +
                     " operation = " + ((SocketMessage) messageObject).operation);
             out.writeUnshared(messageObject);
             out.flush();

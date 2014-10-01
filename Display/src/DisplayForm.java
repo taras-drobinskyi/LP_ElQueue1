@@ -410,6 +410,11 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             }*/
         }else if (row.state == MainUIPanel.TerminalRow.WAITING){
             //row.performAnimation();
+            List<TerminalData> terminals = new ArrayList<>();
+            terminals.add(new TerminalData(row.levelIndex, row.clientNumber,
+                    row.terminalNumber, row.visible, row.state));
+            clientServer.send(new DisplayMessage(this.id, DisplayMessage.DELETE_ROW,
+                    terminals, 0, new Date(), true));
         }
         /*buttonClicked++;
         variables.setButtonClicked(buttonClicked);*/
@@ -912,6 +917,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             }
             initialTerminalAssignmentCheck();
             tableIsValid = true;
+            System.out.println("USED LEVELS = " + getUSEDLevels());
         }
 
         public void reAssignTerminals(List<TerminalData> terminalRows){
@@ -979,7 +985,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             List<TerminalData> listToSend = new ArrayList<>();
             for (TerminalRow row : table){
                 if (row.state != TerminalRow.CALLING && row.state != TerminalRow.WAITING){
-                    listToSend.add(row);
+                    listToSend.add(new TerminalData(row.levelIndex, row.clientNumber,
+                            row.terminalNumber, row.visible, row.state));
                 }
             }
             //int[] terminals = new int[list.size()];
@@ -1016,6 +1023,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
          */
         public void releaseSlidingRequest(){
             isRowsSliding = false;
+            System.out.println("USED LEVELS = " + getUSEDLevels());
         }
 
         @Override
@@ -1093,8 +1101,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                     (new Timer(10, new SlidingUPRowsTimerListener(slideUPRows, row))).start();
                 }else{
                     row.levelIndex = -1;
-                    /*setUSEDLevels(getUSEDLevels() - 1);
-                    row.saveToXML();*/
+                    setUSEDLevels(getUSEDLevels() - 1);
                     releaseSlidingRequest();
                 }
             }
@@ -1157,11 +1164,13 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                     state = CALLING;
                     visible = true;
                     checkForTerminalsOnHoldSet();
-                    (new Timer(10, new SlidingUPTimerListener(getUSEDLevels()))).start();
+                    int usedLevels = getUSEDLevels();
+                    (new Timer(10, new SlidingUPTimerListener(usedLevels))).start();
                 }else if (state == WAITING){
                     state = ACCEPTING;
                     checkForTerminalsOnHoldRelease();
                     (new Timer(10, new SlidingAsideTimerListener(xpos))).start();
+                    //setUSEDLevels(usedLevels - 1) is done in SlidingUPRowsTimerListener
                 }
             }
 

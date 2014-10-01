@@ -326,17 +326,18 @@ public class Host implements HostServer.HostServerListener {
 
             for (Terminal r : terminals){
                 if (r.levelIndex > terminal.levelIndex){
-                    r.levelIndex--;
+                    r.levelIndex --;
                     r.saveToXML();
                 }
             }
             terminal.state = TerminalData.ACCEPTED;
             terminal.levelIndex = -1;
+            terminal.visible = false;
             usedLevels--;
             terminal.saveToXML();
         }
-        buttonClicked++;
-        variables.setButtonClicked(buttonClicked);
+        /*buttonClicked++;
+        variables.setButtonClicked(buttonClicked);*/
     }
 
     private class Terminal extends TerminalData implements Serializable{
@@ -466,6 +467,7 @@ public class Host implements HostServer.HostServerListener {
                 assignTerminal(message.terminals.get(0).terminalNumber);
                 break;
             case DisplayMessage.DELETE_ROW:
+                assignTerminal(message.terminals.get(0).terminalNumber);
                 break;
             /*case APP.RESET_SYSTEM:
                 break;*/

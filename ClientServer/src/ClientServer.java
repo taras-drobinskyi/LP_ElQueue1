@@ -76,7 +76,7 @@ public class ClientServer {
         }
         try {
             in.close();
-            //out.close();
+            out.close();
             socket.close();
             System.out.println("Socket with ID = " + id + " has been closed");
             for (ClientServerListener l : listeners) {

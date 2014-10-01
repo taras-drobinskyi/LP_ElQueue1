@@ -47,7 +47,7 @@ public class InPut extends Thread {
             while (true) {
                 //get object from server, will block until object arrives.
                 Object messageObject = in.readObject();
-                System.out.println("HostServer: onInputMessage socketID = " + id +
+                System.out.println("Socket: onInputMessage socketID = " + id +
                         " operation = " + ((SocketMessage) messageObject).operation);
                 for (InputListener l : listeners){
                     l.onMessage(messageObject);
@@ -55,7 +55,7 @@ public class InPut extends Thread {
 
                 Thread.yield(); // let another thread have some time perhaps to stop this one.
                 if (Thread.currentThread().isInterrupted()) {
-                    throw new InterruptedException("Stopped by ifInterruptedStop()");
+                    throw new InterruptedException("Socket: Stopped by ifInterruptedStop()");
                 }
             }
         }catch (Exception ex){
