@@ -391,7 +391,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             terminals.add(new TerminalData(row.levelIndex, row.clientNumber,
                     row.terminalNumber, row.visible, row.state));
             clientServer.send(new DisplayMessage(this.id, DisplayMessage.ADD_ROW,
-                    null, 0, new Date(), true));
+                    terminals, 0, new Date(), true));
             /*if (nextClient > 0) {
                 clientValues[terminalIndex] = nextClient;
                 if (nextClient < lastClient) {
@@ -1331,12 +1331,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 System.out.println("INIT_ROWS!!!");
                 initForm(message.terminals, message.restOfClients);
                 message.received = true;
-                List<TerminalData> terminals = new ArrayList<>();
-                terminals.add(new TerminalData(-1, 500,
-                        2, false, 0));
-                clientServer.send(new DisplayMessage(this.id, DisplayMessage.ADD_ROW,
-                        terminals, 0, new Date(), true));
-                //clientServer.send(message);
+                clientServer.send(message);
                 break;
             case DisplayMessage.ADD_ROW:
                 mainUIPanel.restOfClients = message.restOfClients;
