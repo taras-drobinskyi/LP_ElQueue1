@@ -24,9 +24,6 @@ public class ClientServer {
     private Socket socket;
     private ObjectInputStream in;
     private ObjectOutputStream out;
-
-    /*InputListener input;
-    OutputWriter output;*/
     InPut inPut;
     OutPut output;
 
@@ -189,48 +186,6 @@ public class ClientServer {
         }
     }
 
-
-    private class InputListener extends Thread{
-        private volatile Thread myThread;
-
-        public InputListener(){
-            myThread = this;
-        }
-
-        public void stopThread() {
-            Thread tmpThread = myThread;
-            myThread = null;
-            if (tmpThread != null) {
-                tmpThread.interrupt();
-            }
-        }
-
-        @Override
-        public void run() {
-            if (myThread == null) {
-                return; // stopped before started.
-            }
-            try {
-                while (true) {
-                    //get object from server, will block until object arrives.
-                    Object object = in.readObject();
-                    System.out.println("ClientServer: onInputMessage socketID = " + id +
-                            " operation = " + ((SocketMessage) object).operation);
-                    transferMessage(object);
-
-                    Thread.yield(); // let another thread have some time perhaps to stop this one.
-                    if (Thread.currentThread().isInterrupted()) {
-                        throw new InterruptedException("Stopped by ifInterruptedStop()");
-                    }
-                }
-            }catch (Exception ex){
-                ex.printStackTrace();
-                close();
-
-            }
-        }
-    }
-
     public synchronized void send(Object messageObject){
         if (output != null){
             output.stopThread();
@@ -238,40 +193,6 @@ public class ClientServer {
         }
         output = new OutPut(out, id, messageObject);
         output.start();
-    }
-
-    private class OutputWriter extends Thread{
-        private volatile Thread myThread;
-        private Object object;
-
-        public OutputWriter(Object object){
-            myThread = this;
-            this.object = object;
-        }
-
-        public void stopThread() {
-            Thread tmpThread = myThread;
-            myThread = null;
-            if (tmpThread != null) {
-                tmpThread.interrupt();
-            }
-        }
-
-        @Override
-        public void run() {
-            if (myThread == null) {
-                return; // stopped before started.
-            }
-            try {
-                System.out.println("ClientServer: onSendMessage socketID = " + id +
-                        " operation = " + ((SocketMessage) object).operation);
-                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                out.writeUnshared(this.object);
-                out.flush();
-            }catch (Exception ex){
-                ex.printStackTrace();
-            }
-        }
     }
 
     public interface ClientServerListener {

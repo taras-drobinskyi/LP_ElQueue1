@@ -340,9 +340,7 @@ public class HostServer {
             List<SocketObjectListener> listeners;
 
             private Validator validator;
-            //private InputListener input;
             private InPut inPut;
-            //private OutputWriter outputWriter;
             private OutPut output;
             int counter = 0;
 
@@ -534,100 +532,6 @@ public class HostServer {
                         ex.printStackTrace();
                         close();
 
-                    }
-                }
-            }
-
-            private class InputListener extends Thread{
-                private volatile Thread myThread;
-                private Socket socket;
-                private ObjectInputStream in;
-
-                public InputListener(Socket socket) {
-                    myThread = this;
-                    this.socket = socket;
-                }
-
-                public void stopThread() {
-                    Thread tmpThread = myThread;
-                    myThread = null;
-                    if (tmpThread != null) {
-                        tmpThread.interrupt();
-                    }
-                }
-
-                @Override
-                public void run() {
-                    if (myThread == null) {
-                        return; // stopped before started.
-                    }
-                    try {
-                        //this.in = new ObjectInputStream(this.socket.getInputStream());
-                        ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
-                        this.in = new ObjectInputStream(Channels.newInputStream(channel));
-                        while (true) {
-                            //get object from server, will block until object arrives.
-                            message = in.readObject();
-                            System.out.println("HostServer: onInputMessage socketID = " + id +
-                                    " operation = " + ((SocketMessage) message).operation);
-                            transferMessage();
-
-                            Thread.yield(); // let another thread have some time perhaps to stop this one.
-                            if (Thread.currentThread().isInterrupted()) {
-                                throw new InterruptedException("Stopped by ifInterruptedStop()");
-                            }
-                        }
-                    }catch (Exception ex){
-                        ex.printStackTrace();
-                        close();
-
-                    }
-                }
-            }
-
-            private class OutputWriter extends Thread{
-                private volatile Thread myThread;
-                private Object messageObject;
-
-                public OutputWriter(Object messageObject){
-                    myThread = this;
-                    this.messageObject = messageObject;
-                }
-
-                public void stopThread() {
-                    Thread tmpThread = myThread;
-                    myThread = null;
-                    if (tmpThread != null) {
-                        tmpThread.interrupt();
-                    }
-                }
-
-                /*private byte[] convertToByteArray(){
-                    byte[] rawMessage = new byte[4];
-                    rawMessage[0] = (byte)message.id;
-                    rawMessage[1] = (byte)message.operation;
-                    rawMessage[2] = (byte)message.value;
-                    if(message.received){
-                        rawMessage[3] = 0x01;
-                    }else {
-                        rawMessage[3] = 0;
-                    }
-                    return rawMessage;
-                }*/
-
-                @Override
-                public void run() {
-                    if (myThread == null) {
-                        return; // stopped before started.
-                    }
-                    try {
-                        System.out.println("HostServer: onSendMessage socketID = " + id +
-                                " operation = " + ((SocketMessage) messageObject).operation);
-                        ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                        out.writeUnshared(messageObject);
-                        out.flush();
-                    }catch (Exception ex){
-                        ex.printStackTrace();
                     }
                 }
             }
