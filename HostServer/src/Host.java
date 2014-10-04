@@ -1,6 +1,8 @@
 import display.TerminalData;
+import sockets.DisplayMessage;
+import sockets.PrinterMessage;
+import sockets.SocketMessage;
 
-import javax.swing.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -56,19 +58,19 @@ public class Host implements HostServer.HostServerListener {
             @Override
             public void onAssignClient(int terminalIndex, int client) {
                 int[] terminals = {terminalIndex};
-                server.socketOrganizer.sendTerminals(terminals, SocketMessage.REQUEST_CLIENT, client);
+                server.socketOrganizer.sendTerminals(terminals, sockets.SocketMessage.REQUEST_CLIENT, client);
             }
 
             @Override
             public void onAcceptClient(int terminalIndex, int client) {
                 int[] terminals = {terminalIndex};
-                server.socketOrganizer.sendTerminals(terminals, SocketMessage.ACCEPT_CLIENT, client);
+                server.socketOrganizer.sendTerminals(terminals, sockets.SocketMessage.ACCEPT_CLIENT, client);
             }
 
             @Override
             public void onHoldTerminals(int[] terminals, int val) {
                 System.out.println("onHoldTerminals val = " + val);
-                server.socketOrganizer.sendTerminals(terminals, SocketMessage.HOLD_TERMINAL, val);
+                server.socketOrganizer.sendTerminals(terminals, sockets.SocketMessage.HOLD_TERMINAL, val);
             }
         });
         form.mainUIPanel.initialTerminalAssignmentCheck();*/
@@ -422,8 +424,7 @@ public class Host implements HostServer.HostServerListener {
         total = lastClient + 1;
         PrinterMessage message = new PrinterMessage(soc.id, PrinterMessage.PRINT_TICKET,
                 total, new Date(), true);
-        //todo:
-        //soc.send(message);
+       soc.send(message);
     }
 
     @Override
@@ -448,7 +449,7 @@ public class Host implements HostServer.HostServerListener {
         //----test-------------
         /*List<TerminalData>dataList = new ArrayList<>();
         dataList.add(new TerminalData(0,1,1,1,0));
-        DisplayMessage m = new DisplayMessage(soc.id, 200, listToSend, 1, new Date(), true);
+        sockets.DisplayMessage m = new sockets.DisplayMessage(soc.id, 200, listToSend, 1, new Date(), true);
         Object obj = m;*/
         //----test------------
 
@@ -459,10 +460,21 @@ public class Host implements HostServer.HostServerListener {
     public void onDisplayMessage(HostServer.SocketOrganizer.SocketObject soc) {
         DisplayMessage message = (DisplayMessage)soc.message;
         switch (message.operation){
+            case SocketMessage.SOCKET_READY:
+                List<TerminalData>listToSend = new ArrayList<>();
+                for (Terminal t: terminals){
+                    listToSend.add(new TerminalData(t.levelIndex,t.clientNumber,t.terminalNumber,t.visible,t.state));
+                }
+                message.operation = DisplayMessage.INIT_ROWS;
+                message.terminals = listToSend;
+                message.restOfClients = getRestOfClients();
+                message.date = new Date();
+                soc.send(message);
+                break;
             case SocketMessage.HOLD_CLIENT:
                 break;
-            case DisplayMessage.INIT_ROWS:
-                break;
+            /*case DisplayMessage.INIT_ROWS:
+                break;*/
             case DisplayMessage.ADD_ROW:
                 assignTerminal(message.terminals.get(0).terminalNumber);
                 break;

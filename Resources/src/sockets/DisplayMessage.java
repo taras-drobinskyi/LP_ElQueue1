@@ -1,3 +1,5 @@
+package sockets;
+
 import display.TerminalData;
 
 import java.io.Serializable;
@@ -20,8 +22,8 @@ public class DisplayMessage extends SocketMessage implements Serializable {
     public static final int RESET_SERVICE = 214;
     public static final int TRIGGER_SERVICE = 215;*/
 
-    List<TerminalData> terminals;
-    int restOfClients;
+    public List<TerminalData> terminals;
+    public int restOfClients;
 
     /**
      * @param id           The id index

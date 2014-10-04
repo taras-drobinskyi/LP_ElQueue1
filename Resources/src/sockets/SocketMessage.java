@@ -1,4 +1,4 @@
-/*
+package sockets;/*
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
@@ -18,8 +18,9 @@ import java.util.List;
 public class SocketMessage implements Serializable {
     public final static int REGISTER_SOCKET = 30;
     public final static int CLOSE_SOCKET = 31;
-    public final static int HOLD_CLIENT = 32;
-    public final static int RELEASE_CLIENT = 33;
+    public static final int SOCKET_READY = 32;
+    public final static int HOLD_CLIENT = 33;
+    public final static int RELEASE_CLIENT = 34;
 
     //The types of clients:
     public static final int PRINTER = 0;

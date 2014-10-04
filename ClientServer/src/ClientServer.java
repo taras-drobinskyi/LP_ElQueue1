@@ -2,6 +2,11 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import sockets.DisplayMessage;
+import sockets.InPut;
+import sockets.OutPut;
+import sockets.SocketMessage;
+
 import java.io.*;
 import java.net.Socket;
 import java.nio.channels.Channels;
@@ -15,9 +20,10 @@ import java.util.List;
  */
 public class ClientServer {
 
+    public int id;
+
     private final String hostName;
     private final int port;
-    private int id;
     private int type;
 
     private Validator validator;
@@ -29,7 +35,7 @@ public class ClientServer {
 
     int counter = 0;
 
-    //public SocketMessage message;
+    //public sockets.SocketMessage message;
 
     //public Object object;
 
@@ -43,6 +49,10 @@ public class ClientServer {
 
     public void addClientServerListener(ClientServerListener listener){
         listeners.add(listener);
+    }
+
+    public void removeClientServerListener(ClientServerListener listener){
+        listeners.remove(listener);
     }
 
     public ClientServer(String hostName, int port, int type, int id){
@@ -64,7 +74,30 @@ public class ClientServer {
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
-        close();
+        closeSocketStreams();
+    }
+
+    void closeSocketStreams(){
+        try {
+            if (in != null) {
+                in.close();
+            }
+            if (out != null) {
+                out.close();
+            }
+            if (socket != null) {
+                socket.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void closeServer(){
+        System.out.println("Socket with ID = " + id + " has been closed");
+        for (ClientServerListener l : listeners) {
+            l.onCloseSocket();
+        }
     }
 
     private void close(){
@@ -78,12 +111,10 @@ public class ClientServer {
             in.close();
             out.close();
             socket.close();
-            System.out.println("Socket with ID = " + id + " has been closed");
-            for (ClientServerListener l : listeners) {
-                l.onCloseSocket();
-            }
         } catch (IOException e) {
             e.printStackTrace();
+        }finally {
+            closeServer();
         }
     }
 
@@ -92,9 +123,6 @@ public class ClientServer {
         registered = true;
         if (this.id != id){
             this.id = id;
-        }
-        for (ClientServerListener l : listeners) {
-            l.onRegister(id);
         }
     }
 
@@ -117,6 +145,9 @@ public class ClientServer {
             });
             inPut.start();
             out = new ObjectOutputStream(socket.getOutputStream());
+            for (ClientServerListener l : listeners) {
+                l.onRegister(id);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -168,6 +199,7 @@ public class ClientServer {
                 }
             }catch (Exception ex){
                 ex.printStackTrace();
+                closeServer();
             }
         }
     }

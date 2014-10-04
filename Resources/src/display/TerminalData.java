@@ -5,10 +5,10 @@
 package display;
 
 import java.io.Serializable;
-import java.util.HashMap;
 
 /**
  * Created by forando on 26.09.14.
+ * Base class to be instantiated both on Display and Server sides
  */
 public class TerminalData implements Serializable {
     public static final int ACCEPTED = 0;

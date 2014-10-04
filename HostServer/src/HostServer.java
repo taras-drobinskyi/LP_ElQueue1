@@ -2,6 +2,11 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import sockets.DisplayMessage;
+import sockets.InPut;
+import sockets.OutPut;
+import sockets.SocketMessage;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -225,7 +230,7 @@ public class HostServer {
                     }
                 }
             }
-            /*if (operation==SocketMessage.HOLD_TERMINAL){
+            /*if (operation==sockets.SocketMessage.HOLD_TERMINAL){
                 if (val == 1) {
                     isOnHoldTerminals = true;
                     System.out.println("server isOnHoldTerminals = " + isOnHoldTerminals);
@@ -248,7 +253,6 @@ public class HostServer {
                 for (int i=0; i<itemsInArray; i++) {
                     SocketObject soc = displays.get(i);
                     if (soc.id == terminal) {
-                        //todo:
                         soc.send(message);
                         i = itemsInArray;//exiting the loop
                     }
@@ -323,7 +327,7 @@ public class HostServer {
              *     can be: <ul>
              *         <li>{@link SocketMessage#DISPLAY}</li>
              *         <li>{@link SocketMessage#TERMINAL}</li>
-             *         <li>{@link SocketMessage#PRINTER}</li>
+             *         <li>{@link sockets.SocketMessage#PRINTER}</li>
              *     </ul>
              */
             public int type;
@@ -334,7 +338,7 @@ public class HostServer {
             //private InputStream iStream;
             private ObjectOutputStream out;
             private ObjectInputStream in;
-            //public SocketMessage message;
+            //public sockets.SocketMessage message;
             private boolean registered;
 
             List<SocketObjectListener> listeners;
@@ -390,10 +394,10 @@ public class HostServer {
             private void validate(byte clientTalksWithObject){
                 /*switch (clientTalksWithObject){
                     case 0x01:
-                        message = new SocketMessage(id,SocketMessage.REGISTER_SOCKET,0, new Date(),true);
+                        message = new sockets.SocketMessage(id,sockets.SocketMessage.REGISTER_SOCKET,0, new Date(),true);
                         break;
                     default:
-                        message = new SocketMessage(id,SocketMessage.REGISTER_SOCKET,0, new Date(),false);
+                        message = new sockets.SocketMessage(id,sockets.SocketMessage.REGISTER_SOCKET,0, new Date(),false);
                         break;
                 }*/
 
@@ -416,17 +420,17 @@ public class HostServer {
                     });
                     inPut.start();
                     out = new ObjectOutputStream(socket.getOutputStream());
-                    for (HostServerListener l : hostServerListeners){
+                    /*for (HostServerListener l : hostServerListeners){
                         l.onDisplayAvailable(this);
-                    }
-                    //send(new DisplayMessage(0, 202, null, 0, new Date(), true));
+                    }*/
+                    //send(new sockets.DisplayMessage(0, 202, null, 0, new Date(), true));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
                 /*System.out.println("validate isOnHoldTerminals = " + isOnHoldTerminals);
                 if (isOnHoldTerminals){
-                    message.operation = SocketMessage.HOLD_TERMINAL;
+                    message.operation = sockets.SocketMessage.HOLD_TERMINAL;
                     message.value = 1;
                 }*/
             }

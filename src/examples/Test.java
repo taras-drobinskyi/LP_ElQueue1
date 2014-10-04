@@ -9,10 +9,18 @@ package examples;
  */
 public class Test {
     public static void main(String[] args) {
-        //int hex = 0x0a;
-        //byte b = (byte) -1;
-        byte b = -0x01;
-        //System.out.println(hex);
-        System.out.println(b);
+        int delay = 500;
+        delay = delay*2;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(1000);
+                    System.out.println("Iteration!!!");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).run();
     }
 }

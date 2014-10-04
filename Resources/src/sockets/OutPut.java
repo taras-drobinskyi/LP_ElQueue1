@@ -1,9 +1,8 @@
-/*
+package sockets;/*
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
 import java.io.ObjectOutputStream;
-import java.net.Socket;
 
 /**
  * Created by forando on 01.10.14.

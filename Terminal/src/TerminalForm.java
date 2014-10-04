@@ -2,6 +2,9 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import sockets.SocketMessage;
+import sockets.TerminalMessage;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -356,7 +359,7 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
 
     @Override
     public void onRegister(int id) {
-        /*if (clientServer.message.operation == SocketMessage.HOLD_TERMINAL &&
+        /*if (clientServer.message.operation == sockets.SocketMessage.HOLD_TERMINAL &&
                 clientServer.message.value == 1){
             System.out.println("TERMINAL onHOLD value = " + clientServer.message.value);
             requestIsStopped = true;
