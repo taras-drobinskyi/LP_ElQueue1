@@ -25,10 +25,6 @@ import java.util.List;
 public class DisplayForm extends JFrame implements ClientServer.ClientServerListener {
 
     private int id = -1;
-    //ClientConnector clientConnector;
-    /**
-     * The quantity restarts attemps after socket closed event.
-     */
 
     final static int[] terminalHeightOffsets = {27, 44, 61, 78, 95};
     final static int[] widthOffsets = {30, 60, 85};
@@ -69,7 +65,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     private JLabel l_totalTitle;
     private JLabel l_total;
     private JLabel l_takeTicket;
-    public MainUIPanel mainUIPanel;
+    //public MainUIPanel mainUIPanel;
+    public TablePanel mainUIPanel;
     private JLabel l_serviceStopped;
     private JPanel bottomPanel;
     private JPanel mediaContentPanel;
@@ -93,13 +90,13 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     private Point hor_line1_p1 = new Point(100, 100);
     private Point hor_line1_p2 = new Point(200, 200);
 
-    ClientServer.ClientServerListener myListeners;
+    ClientServer.ClientServerListener clientServerListeners;
 
     public DisplayForm(){
         //Form Title
         super("Продукт Компании \"ВЕРСИЯ\"");
         startClientServer();
-        this.myListeners = this;
+        this.clientServerListeners = this;
         initForm();
 
     }
@@ -122,9 +119,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         //on these panels we locating components pragmatically
         mainUIPanel.setLayout(null);
         bottomPanel.setLayout(null);
-        //tickerPanel.setLayout(null);
+        tickerPanel.setLayout(null);
 
-        List<DisplayForm.MainUIPanel.TerminalRow> table = mainUIPanel.getTable();
         XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
         standardBlinkRate = variables.getStandardBlinkRate();
         takeTicketBlinkRate = variables.getTakeTicketBlinkRate();
@@ -138,8 +134,10 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 Rectangle r = e.getComponent().getBounds();
                 uiPanelWidth = (int) r.getWidth();
                 uiPanelHeight = (int) r.getHeight();
+                System.out.println("THE REAL uiPanelHeight = " + uiPanelHeight);
                 w_percent_uiPanel = uiPanelWidth / 100;
                 h_percent_uiPanel = uiPanelHeight / 100;
+                mainUIPanel.
 
                 relocateTitles();
                 relocateResizedTerminalRorws();
@@ -233,26 +231,16 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     private void assignClientServer(ClientServer client){
         this.clientServer = client;
         this.id = client.id;
-        /*List<TerminalData> terminals = new ArrayList<>();
-        terminals.add(new TerminalData(-1, -1, -1, false, 0));*/
         this.clientServer.send(new DisplayMessage(id, DisplayMessage.SOCKET_READY, null, 0, new Date(), true));
     }
 
-    int restartsQuant = 0;
-    int delay = 500;
-
     private void startClientServer(){
-        /*System.out.println(restartsQuant + " Attempt to get connected to the Server!!!");
-        ClientServer client = new ClientServer(APP.IP, APP.PORT, SocketMessage.DISPLAY, id);
-        client.addClientServerListener(this);
-        //client.addClientServerListener(clientListener);
-        client.startClient();*/
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ClientConnector clientConnector = new ClientConnector(myListeners, SocketMessage.DISPLAY, id);
+                ClientConnectorProvider clientConnectorProvider = new ClientConnectorProvider(clientServerListeners, SocketMessage.DISPLAY, id);
                 try {
-                    clientConnector.addClientConnectorListener(new ClientConnector.ClientConnectorListener() {
+                    clientConnectorProvider.addClientConnectorListener(new ClientConnectorProvider.ClientConnectorListener() {
                         @Override
                         public void onClientConnected(ClientServer client) {
                             assignClientServer(client);
@@ -265,22 +253,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             }
         }).start();
     }
-
-    /*private void restartClientServer(){
-        restartsQuant++;
-        delay = delay*2;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(delay);
-                    startClientServer();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).run();
-    }*/
 
     private void stopClientServer(){
         if (clientServer != null) {
@@ -381,16 +353,16 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
     private void assignTerminal(int keyCode) {
         int terminalIndex = keyCode;
-        MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalIndex);
+        TerminalRow row = mainUIPanel.getTerminalRow(terminalIndex);
         System.out.println("assignTerminal keyCode = " + keyCode);
 
-        if (row.state == MainUIPanel.TerminalRow.ACCEPTED) {
+        if (row.state == TerminalRow.ACCEPTED) {
             List<TerminalData> terminals = new ArrayList<>();
             terminals.add(new TerminalData(row.levelIndex, row.clientNumber,
                     row.terminalNumber, row.visible, row.state));
             clientServer.send(new DisplayMessage(this.id, DisplayMessage.ADD_ROW,
                     terminals, 0, new Date(), true));
-        }else if (row.state == MainUIPanel.TerminalRow.WAITING){
+        }else if (row.state == TerminalRow.WAITING){
             List<TerminalData> terminals = new ArrayList<>();
             terminals.add(new TerminalData(row.levelIndex, row.clientNumber,
                     row.terminalNumber, row.visible, row.state));
@@ -400,9 +372,9 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     }
 
     private void addRow(TerminalData terminalRowData){
-        MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalRowData.terminalNumber);
-        if (row.state != MainUIPanel.TerminalRow.ACCEPTED){
-            row.state = MainUIPanel.TerminalRow.ACCEPTED;
+        TerminalRow row = mainUIPanel.getTerminalRow(terminalRowData.terminalNumber);
+        if (row.state != TerminalRow.ACCEPTED){
+            row.state = TerminalRow.ACCEPTED;
             System.err.println("TerminalRow with terminalNumber=" + row.terminalNumber +
                     "was asked to perform SlideUp animation. But its state was not equal to: ACCEPTED. " +
                     "We've set this value manually" );
@@ -410,21 +382,21 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         }
         row.clientNumber = terminalRowData.clientNumber;
         relocateTerminalRows();
-        row.performAnimation();
+        row.performAnimation(uiPanelWidth, uiPanelHeight, h_percent_uiPanel);
         relocateBottomComponents();
         notificationSound.Play();
     }
 
     private void deleteRow(TerminalData terminalRowData){
-        MainUIPanel.TerminalRow row = mainUIPanel.getTerminalRow(terminalRowData.terminalNumber);
-        if (row.state != MainUIPanel.TerminalRow.WAITING){
-            row.state = MainUIPanel.TerminalRow.WAITING;
+        TerminalRow row = mainUIPanel.getTerminalRow(terminalRowData.terminalNumber);
+        if (row.state != TerminalRow.WAITING){
+            row.state = TerminalRow.WAITING;
             System.err.println("TerminalRow with terminalNumber=" + row.terminalNumber +
                     "was asked to perform SlideAside animation. But its state was not equal to: WAITING. " +
                     "We've set this value manually" );
 
         }
-        row.performAnimation();
+        row.performAnimation(uiPanelWidth, uiPanelHeight, h_percent_uiPanel);
     }
 /*
     private void triggerService (boolean turnOn, boolean... flags){
@@ -531,7 +503,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
         FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
 
-        for (MainUIPanel.TerminalRow r : mainUIPanel.getTable()){
+        for (TerminalRow r : mainUIPanel.getTable()){
             int[] xpos = new int[3];
             int stringWidth = fontMetrics.stringWidth(String.valueOf(r.clientNumber));
             xpos[0] = (w_percent_uiPanel * widthOffsets[0]) - (stringWidth / 2);
@@ -550,7 +522,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
         FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
 
-        for (MainUIPanel.TerminalRow r : mainUIPanel.getTable()){
+        for (TerminalRow r : mainUIPanel.getTable()){
             if (r.visible) {
                 int h_offset = terminalHeightOffsets[r.levelIndex];
                 r.ypos = h_percent_uiPanel * h_offset;
@@ -650,7 +622,13 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         hor_line1_p1 = new Point(left, correction + l_clientTitle.getHeight());
         hor_line1_p2 = new Point(right, correction + l_clientTitle.getHeight());
 
+        mainUIPanel.reassignLines(hor_line1_p1, hor_line1_p2);
+
         mainUIPanel.repaint();
+    }
+
+    private void sendToHostServer(DisplayMessage message){
+        clientServer.send(message);
     }
 
     /**
@@ -659,7 +637,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
      * (If you want to override component instantiation, than do it here)
      */
     private void createUIComponents() {
-        mainUIPanel = new MainUIPanel();
+        //mainUIPanel = new MainUIPanel();
+        mainUIPanel = new TablePanel(terminalHeightOffsets,TABLE_FONT);
         System.out.println("createUIComponents!!!");
 
         tickerPanel = new JPanel(){
@@ -804,8 +783,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             USEDLevels = 0;
             for(int i=0; i< APP.TERMINAL_QUANTITY; i++){
                 TerminalData terminalData = terminalRows.get(i);
-                TerminalRow terminalRow = new TerminalRow(terminalData);
-                terminalRow.addTerminalRowListener(new TerminalRowListener() {
+                TerminalRow terminalRow = new TerminalRow(terminalData, terminalHeightOffsets);
+                terminalRow.addTerminalRowListener(new TerminalRow.TerminalRowListener() {
                     @Override
                     public void onTransitionCompleted(TerminalRow row) {
                         (new RowsSlideUPRunner(row)).start();
@@ -853,6 +832,31 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                         if (form != null) {
                             form.removeMessage(row.terminalNumber + 1);
                         }
+                    }
+
+                    @Override
+                    public void check_ForTerminalsOnHoldSet() {
+                        checkForTerminalsOnHoldSet();
+                    }
+
+                    @Override
+                    public int getUsedLevels() {
+                        return getUSEDLevels();
+                    }
+
+                    @Override
+                    public void check_ForTerminalsOnHoldRelease() {
+                        checkForTerminalsOnHoldRelease();
+                    }
+
+                    @Override
+                    public void redrawComponents() {
+                        redrawMyComponents();
+                    }
+
+                    @Override
+                    public void setUsedLevels(int levels) {
+                        setUSEDLevels(levels);
                     }
                 });
                 table.add(terminalRow);
@@ -904,24 +908,24 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
         private synchronized void checkForTerminalsOnHoldSet(){
             levelsToBeUSED++;
-            System.out.println("checkForTerminalsOnHoldSet levelsToBeUSED = " + levelsToBeUSED +
+            System.out.println("check_ForTerminalsOnHoldSet levelsToBeUSED = " + levelsToBeUSED +
                     " LEVEL_QUANTITY = " + APP.LEVEL_QUANTITY);
             System.out.println("isOnHoldTerminals = " + isOnHoldTerminals);
             if (levelsToBeUSED >= APP.LEVEL_QUANTITY && !isOnHoldTerminals) {
                 isOnHoldTerminals = true;
-                System.out.println("checkForTerminalsOnHoldSet sendOnHoldTerminals val = " + 1);
+                System.out.println("check_ForTerminalsOnHoldSet sendOnHoldTerminals val = " + 1);
                 sendOnHoldTerminals(1);
             }
         }
 
         public synchronized void checkForTerminalsOnHoldRelease(){
             levelsToBeUSED--;
-            System.out.println("checkForTerminalsOnHoldRelease levelsToBeUSED = " + levelsToBeUSED +
+            System.out.println("check_ForTerminalsOnHoldRelease levelsToBeUSED = " + levelsToBeUSED +
             " LEVEL_QUANTITY = " + APP.LEVEL_QUANTITY);
             System.out.println("isOnHoldTerminals = " + isOnHoldTerminals);
             if (levelsToBeUSED < APP.LEVEL_QUANTITY && isOnHoldTerminals) {
                 isOnHoldTerminals = false;
-                System.out.println("checkForTerminalsOnHoldRelease sendOnHoldTerminals val = " + 0);
+                System.out.println("check_ForTerminalsOnHoldRelease sendOnHoldTerminals val = " + 0);
                 sendOnHoldTerminals(0);
             }
         }
@@ -1052,7 +1056,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             }
         }
 
-        private class TerminalRow extends TerminalData implements Comparable{
+        /*private class TerminalRow extends TerminalData implements Comparable{
 
             protected boolean partlyVisible;
             protected int ypos;
@@ -1066,12 +1070,12 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 //XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
                 //HashMap<String, Integer> terminalRowData = variables.getTerminalRowData(terminalNumber);
-                /*this.levelIndex = terminalData.get("levelindex");
+                *//*this.levelIndex = terminalData.get("levelindex");
                 this.clientNumber = terminalData.get("clientnumber");
                 this.terminalNumber = terminalData.get("terminalnumber");
                 int visibility = terminalData.get("visible");
                 this.visible = visibility == 1;
-                this.state = terminalData.get("state");*/
+                this.state = terminalData.get("state");*//*
                 this.xpos = new int[3];
                 this.xpos[0] = 0;
                 this.xpos[1] = 0;
@@ -1108,14 +1112,14 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 if (state == ACCEPTED) {
                     state = CALLING;
                     visible = true;
-                    checkForTerminalsOnHoldSet();
-                    int usedLevels = getUSEDLevels();
+                    check_ForTerminalsOnHoldSet();
+                    int usedLevels = getUsedLevels();
                     (new Timer(10, new SlidingUPTimerListener(usedLevels))).start();
                 }else if (state == WAITING){
                     state = ACCEPTING;
-                    checkForTerminalsOnHoldRelease();
+                    check_ForTerminalsOnHoldRelease();
                     (new Timer(10, new SlidingAsideTimerListener(xpos))).start();
-                    //setUSEDLevels(usedLevels - 1) is done in SlidingUPRowsTimerListener
+                    //setUsedLevels(usedLevels - 1) is done in SlidingUPRowsTimerListener
                 }
             }
 
@@ -1159,7 +1163,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                         clientMessageFormIsShown = false;
                         disposeMessageForm();
                     }
-                    redrawMyComponents();
+                    redrawComponents();
                 }
             }
 
@@ -1183,7 +1187,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                         xpos[1] += 10;
                         xpos[2] += 10;
                     }
-                    redrawMyComponents();
+                    redrawComponents();
                 }
             }
 
@@ -1193,7 +1197,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 private SlidingUPTimerListener(int levelDestination) {
                     ypos = uiPanelHeight + 40;
                     levelIndex = levelDestination;
-                    setUSEDLevels(levelIndex + 1);
+                    setUsedLevels(levelIndex + 1);
                     System.out.println("Destination Level = " + levelDestination);
                     this.Ydestination = h_percent_uiPanel * terminalHeightOffsets[levelDestination];
                     System.out.println("levelIndex = " + levelIndex);
@@ -1206,15 +1210,15 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                     if (ypos < Ydestination + 20){
                         ypos = Ydestination;
                         //levelIndex = levelDestination;
-                        //setUSEDLevels(levelIndex + 1);
-                        System.out.println("USED levels" + getUSEDLevels());
+                        //setUsedLevels(levelIndex + 1);
+                        System.out.println("USED levels" + getUsedLevels());
                         ((Timer) e.getSource()).stop();
                         timerBlinking.start();
                     }
-                    redrawMyComponents();
+                    redrawComponents();
                 }
             }
-        }
+        }*/
 
         private class SlidingUPRowsTimerListener implements ActionListener{
             List<TerminalRow> slideUPRows;
@@ -1254,11 +1258,11 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             }
         }
     }
-    private interface TerminalRowListener{
+    /*private interface TerminalRowListener{
         public void onTransitionCompleted(MainUIPanel.TerminalRow row);
         public void onShowMessageForm(MainUIPanel.TerminalRow row);
         public void onDisposeMessageForm(MainUIPanel.TerminalRow row);
-    }
+    }*/
 
     private List<DisplayFormListener> displayFormListeners = new ArrayList<>();
 
@@ -1273,7 +1277,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     }
 
     /**
-     * This callback is implemented in {@link ClientConnector}. Here it's never used.
+     * This callback is implemented in {@link ClientConnectorProvider}. Here it's never used.
      * @param id An ID of the client.
      */
     @Override

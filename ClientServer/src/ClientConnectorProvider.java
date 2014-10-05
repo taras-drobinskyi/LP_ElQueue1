@@ -2,18 +2,11 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
-import sockets.SocketMessage;
-
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by forando on 03.10.14.
+ * The class provides an app with a {@link ClientServer} object to be able to talk to HostServer
  */
-public class ClientConnector implements ClientServer.ClientServerListener {
+public class ClientConnectorProvider implements ClientServer.ClientServerListener {
     ClientServer client;
 
     private volatile Thread myThread;
@@ -22,34 +15,35 @@ public class ClientConnector implements ClientServer.ClientServerListener {
     int type;
     int id;
     ClientConnectorListener listener;
-
+    /**
+     * The quantity of restart attempts after socket closed event.
+     */
     private int restartsQuant = 0;
-    private int delay = 500;
-    private Timer restartTimer;
+    /**
+     * delay between two separate attempts to to obtain {@link ClientServer} object
+     */
+    private int delay = 2000;
 
 
-    public ClientConnector(ClientServer.ClientServerListener clientListener, int type, int id) {
+    public ClientConnectorProvider(ClientServer.ClientServerListener clientListener, int type, int id) {
         this.clientListener = clientListener;
         this.type = type;
         this.id = id;
-        //this.myThread = this;
         this.myListener = this;
         startClientServer();
         restartsQuant++;
     }
 
     private void startClientServer(){
-        //if (client != null) client = null;
         System.out.println(restartsQuant + " Attempt to get connected to the Server!!!");
         client = new ClientServer(APP.IP, APP.PORT, type, id);
         client.addClientServerListener(myListener);
-        //client.addClientServerListener(clientListener);
         client.startClient();
     }
 
     private void restartClientServer(){
         restartsQuant++;
-        delay = delay*2;
+        //delay = delay*2;
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -70,15 +64,6 @@ public class ClientConnector implements ClientServer.ClientServerListener {
             tmpThread.interrupt();
         }
     }
-
-    /*@Override
-    public void run() {
-        if (myThread == null) {
-            return; // stopped before started.
-        }
-        startClientServer();
-        restartsQuant++;
-    }*/
 
     @Override
     public void onRegister(int id) {
