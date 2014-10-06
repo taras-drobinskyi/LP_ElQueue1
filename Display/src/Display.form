@@ -120,7 +120,7 @@
           </grid>
         </children>
       </grid>
-      <grid id="f2ef7" class="DisplayForm$MainUIPanel" binding="mainUIPanel" custom-create="true" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+      <grid id="f2ef7" class="TablePanel" binding="tablePanel" custom-create="true" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="0" left="0" bottom="0" right="0"/>
         <constraints border-constraint="Center"/>
         <properties>

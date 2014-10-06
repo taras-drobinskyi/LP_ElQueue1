@@ -65,8 +65,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     private JLabel l_totalTitle;
     private JLabel l_total;
     private JLabel l_takeTicket;
-    //public MainUIPanel mainUIPanel;
-    public TablePanel mainUIPanel;
+    //public MainUIPanel tablePanel;
+    public TablePanel tablePanel;
     private JLabel l_serviceStopped;
     private JPanel bottomPanel;
     private JPanel mediaContentPanel;
@@ -117,7 +117,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         //examples.MyLayoutManager mgr = new examples.MyLayoutManager();
 
         //on these panels we locating components pragmatically
-        mainUIPanel.setLayout(null);
+        tablePanel.setLayout(null);
         bottomPanel.setLayout(null);
         tickerPanel.setLayout(null);
 
@@ -128,7 +128,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         currentVideo = variables.getCurrentVieoData();
         initObjects();
 
-        mainUIPanel.addComponentListener(new ComponentAdapter() {
+        /*tablePanel.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 Rectangle r = e.getComponent().getBounds();
@@ -137,12 +137,12 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 System.out.println("THE REAL uiPanelHeight = " + uiPanelHeight);
                 w_percent_uiPanel = uiPanelWidth / 100;
                 h_percent_uiPanel = uiPanelHeight / 100;
-                mainUIPanel.
+                tablePanel.
 
                 relocateTitles();
                 relocateResizedTerminalRorws();
             }
-        });
+        });*/
 
         mediaContentPanel.addComponentListener(new ComponentAdapter() {
             @Override
@@ -265,7 +265,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         if(keyCode>=0 && keyCode<=APP.MAX_TERMINAL_QUANTITY){
             int terminalNumber = keyCode - TERMINAL_BASE + 1;
             if (terminalNumber <= APP.TERMINAL_QUANTITY) {
-                assignTerminal(keyCode);
+                tablePanel.assignTerminal(keyCode);
             }
         }else if((keyCode>=112 && keyCode<=123) || keyCode == 36){
             int command = -1;
@@ -340,7 +340,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                     if (nextClient == 0) {
                         nextClient = lastClient;
                     }
-                    relocateBottomComponents();
+                    relocateBottomPanelChildren();
                     variables.setLastClient(lastClient);
                     variables.setNextClient(nextClient);
                     printTicket();
@@ -351,9 +351,9 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         }
     }
 
-    private void assignTerminal(int keyCode) {
+    /*private void assignTerminal(int keyCode) {
         int terminalIndex = keyCode;
-        TerminalRow row = mainUIPanel.getTerminalRow(terminalIndex);
+        TerminalRow row = tablePanel.getTerminalRow(terminalIndex);
         System.out.println("assignTerminal keyCode = " + keyCode);
 
         if (row.state == TerminalRow.ACCEPTED) {
@@ -369,10 +369,10 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             clientServer.send(new DisplayMessage(this.id, DisplayMessage.DELETE_ROW,
                     terminals, 0, new Date(), true));
         }
-    }
+    }*/
 
-    private void addRow(TerminalData terminalRowData){
-        TerminalRow row = mainUIPanel.getTerminalRow(terminalRowData.terminalNumber);
+    /*private void addRow(TerminalData terminalRowData){
+        TerminalRow row = tablePanel.getTerminalRow(terminalRowData.terminalNumber);
         if (row.state != TerminalRow.ACCEPTED){
             row.state = TerminalRow.ACCEPTED;
             System.err.println("TerminalRow with terminalNumber=" + row.terminalNumber +
@@ -388,7 +388,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     }
 
     private void deleteRow(TerminalData terminalRowData){
-        TerminalRow row = mainUIPanel.getTerminalRow(terminalRowData.terminalNumber);
+        TerminalRow row = tablePanel.getTerminalRow(terminalRowData.terminalNumber);
         if (row.state != TerminalRow.WAITING){
             row.state = TerminalRow.WAITING;
             System.err.println("TerminalRow with terminalNumber=" + row.terminalNumber +
@@ -397,7 +397,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
         }
         row.performAnimation(uiPanelWidth, uiPanelHeight, h_percent_uiPanel);
-    }
+    }*/
 /*
     private void triggerService (boolean turnOn, boolean... flags){
         boolean resettingSystem = false;
@@ -410,11 +410,11 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             }else {
                 timerBottomLine.stop();
             }
-            relocateBottomComponents();
+            relocateBottomPanelChildren();
             timerServiceStopped.start();
         }else{
             timerServiceStopped.stop();
-            relocateBottomComponents();
+            relocateBottomPanelChildren();
             if (PRINTER_ERROR){
                 timerError.start();
             }*//*else {
@@ -466,7 +466,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         notificationSound = new Audio("/files/chimes.wav");
     }
 
-    private void relocateTitles() {
+    /*private void relocateTitles() {
 
         int titleHeight = h_percent_uiPanel * 8;
 
@@ -494,16 +494,16 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         l_terminalTitle.setLocation(w_loc, h_loc);
         l_terminalTitle.setSize(stringWidth, titleHeight - h_percent_uiPanel * 2);
         redrawLines();
-    }
+    }*/
 
-    private void relocateTerminalRows(){
+    /*private void relocateTerminalRows(){
 
         int fontHeight = h_percent_uiPanel * 16;
 
         TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
         FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
 
-        for (TerminalRow r : mainUIPanel.getTable()){
+        for (TerminalRow r : tablePanel.getTable()){
             int[] xpos = new int[3];
             int stringWidth = fontMetrics.stringWidth(String.valueOf(r.clientNumber));
             xpos[0] = (w_percent_uiPanel * widthOffsets[0]) - (stringWidth / 2);
@@ -513,7 +513,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             xpos[2] = (w_percent_uiPanel * widthOffsets[2]) - (stringWidth / 2);
             r.xpos = xpos;
         }
-        mainUIPanel.repaint();
+        tablePanel.repaint();
     }
 
     private void relocateResizedTerminalRorws(){
@@ -522,7 +522,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
         FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
 
-        for (TerminalRow r : mainUIPanel.getTable()){
+        for (TerminalRow r : tablePanel.getTable()){
             if (r.visible) {
                 int h_offset = terminalHeightOffsets[r.levelIndex];
                 r.ypos = h_percent_uiPanel * h_offset;
@@ -536,8 +536,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             xpos[2] = (w_percent_uiPanel * widthOffsets[2]) - (stringWidth / 2);
             r.xpos = xpos;
         }
-        mainUIPanel.repaint();
-    }
+        tablePanel.repaint();
+    }*/
 
     private void relocateBottomComponents() {
 
@@ -565,7 +565,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         l_totalTitle.setLocation(w_loc, h_loc);
         l_totalTitle.setSize(totalTitle_stringWidth, totalDataHeight + h_percent * 3);
 
-        l_total.setText(String.valueOf(mainUIPanel.restOfClients));
+        l_total.setText(String.valueOf(tablePanel.restOfClients));
         l_total.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
         labelText = l_total.getText();
         stringWidth = l_total.getFontMetrics(l_total.getFont()).stringWidth(labelText);
@@ -613,7 +613,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         l_serviceStopped.setText("");
     }
 
-    private void redrawLines() {
+    /*private void redrawLines() {
         int left = 25;
         int right = uiPanelWidth -25;
 
@@ -622,10 +622,10 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         hor_line1_p1 = new Point(left, correction + l_clientTitle.getHeight());
         hor_line1_p2 = new Point(right, correction + l_clientTitle.getHeight());
 
-        mainUIPanel.reassignLines(hor_line1_p1, hor_line1_p2);
+        tablePanel.reassignLines(hor_line1_p1, hor_line1_p2);
 
-        mainUIPanel.repaint();
-    }
+        tablePanel.repaint();
+    }*/
 
     private void sendToHostServer(DisplayMessage message){
         clientServer.send(message);
@@ -637,9 +637,43 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
      * (If you want to override component instantiation, than do it here)
      */
     private void createUIComponents() {
-        //mainUIPanel = new MainUIPanel();
-        mainUIPanel = new TablePanel(terminalHeightOffsets,TABLE_FONT);
-        System.out.println("createUIComponents!!!");
+        //tablePanel = new MainUIPanel();
+        tablePanel = new TablePanel(this.id, this.terminalHeightOffsets, this.widthOffsets,
+                TABLE_FONT);
+        tablePanel.addTablePanelListener(new TablePanel.TablePanelListener() {
+            @Override
+            public void relocateBottomPanelChildren() {
+                relocateBottomComponents();
+            }
+
+            @Override
+            public void sendToServer(DisplayMessage message) {
+                sendToHostServer(message);
+            }
+
+            @Override
+            public Dimension getMediaContentPanelSize() {
+                return mediaContentPanel.getSize();
+            }
+
+            @Override
+            public void submitAction(int keyCode) {
+                submitEvent(keyCode);
+            }
+
+            @Override
+            public void playNotificationSound() {
+                notificationSound.Play();
+            }
+
+            @Override
+            public List<JLabel> getTableTitleLabels() {
+                List<JLabel>tableTitleLabels = new ArrayList<>();
+                tableTitleLabels.add(l_terminalTitle);
+                tableTitleLabels.add(l_clientTitle);
+                return tableTitleLabels;
+            }
+        });
 
         tickerPanel = new JPanel(){
             @Override
@@ -688,7 +722,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 case 0:
                     if (!option1) {
                         label3.setText("");
-                        label1.setText(String.valueOf(mainUIPanel.restOfClients));
+                        label1.setText(String.valueOf(tablePanel.restOfClients));
                         label2.setText("ВСЕГО  В  ОЧЕРЕДИ:");
                     } else {
                         label1.setText("");
@@ -865,7 +899,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             initialTerminalAssignmentCheck();
             tableIsValid = true;
             System.out.println("USED LEVELS = " + getUSEDLevels());
-            relocateResizedTerminalRorws();
+            tablePanel.relocateResizedTerminalRorws();
             //relocateTerminalRows();
             relocateBottomComponents();
         }
@@ -1289,17 +1323,17 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         switch (message.operation){
             case DisplayMessage.INIT_ROWS:
                 System.out.println("INIT_ROWS!!!");
-                mainUIPanel.initTable(message.terminals, message.restOfClients);
+                tablePanel.initTable(message.terminals, message.restOfClients);
                 message.received = true;
                 clientServer.send(message);
                 break;
             case DisplayMessage.ADD_ROW:
-                mainUIPanel.restOfClients = message.restOfClients;
-                addRow(message.terminals.get(0));
+                tablePanel.restOfClients = message.restOfClients;
+                tablePanel.addRow(message.terminals.get(0));
                 break;
             case DisplayMessage.DELETE_ROW:
-                mainUIPanel.restOfClients = message.restOfClients;
-                deleteRow(message.terminals.get(0));
+                tablePanel.restOfClients = message.restOfClients;
+                tablePanel.deleteRow(message.terminals.get(0));
                 break;
             /*case APP.RESET_SYSTEM:
                 break;*/
@@ -1312,8 +1346,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 break;
             case APP.RESET_SERVICE:
                 if (message.terminals != null){
-                    mainUIPanel.restOfClients = message.restOfClients;
-                    mainUIPanel.reAssignTerminals(message.terminals);
+                    tablePanel.restOfClients = message.restOfClients;
+                    tablePanel.reAssignTerminals(message.terminals);
                     //todo: reassign also bottom line
                 }else{
                     resetService();

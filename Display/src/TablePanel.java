@@ -11,6 +11,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,34 +23,60 @@ import java.util.List;
  * Created by forando on 05.10.14.
  */
 public class TablePanel extends JPanel {
+    private int id;
+
     private List<TerminalRow> table;
     private boolean tableIsValid = false;
 
     private int USEDLevels;
     private int levelsToBeUSED = 0;
 
-    private int restOfClients = 0;
+    public int restOfClients = 0;
 
     private int h_percent_uiPanel;
 
     private int[] terminalHeightOffsets;
+    private int[] widthOffsets;
 
     private boolean isRowsSliding = false;
     private boolean isOnHoldTerminals = false;
 
     Font TABLE_FONT;
 
+    /*private JLabel l_clientTitle;
+    private JLabel l_terminalTitle;*/
+
     private Point hor_line1_p1 = new Point(100, 100);
     private Point hor_line1_p2 = new Point(200, 200);
 
+    private int uiPanelWidth;
+    private int uiPanelHeight;
+    private int w_percent_uiPanel;
+
     private ClientMessageForm form;
 
-    public TablePanel(int[] terminalHeightOffsets, Font tableFont){
+    public TablePanel(int id, int[] terminalHeightOffsets, int[] widthOffsets, Font tableFont){
+        this.id = id;
         this.terminalHeightOffsets = terminalHeightOffsets;
+        this.widthOffsets = widthOffsets;
         this.TABLE_FONT = tableFont;
+
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                Rectangle r = e.getComponent().getBounds();
+                uiPanelWidth = (int) r.getWidth();
+                uiPanelHeight = (int) r.getHeight();
+                System.out.println("THE REAL uiPanelHeight = " + uiPanelHeight);
+                w_percent_uiPanel = uiPanelWidth / 100;
+                h_percent_uiPanel = uiPanelHeight / 100;
+                relocateTitles(listener.getTableTitleLabels());
+                relocateResizedTerminalRorws();
+            }
+        });
     }
 
-    private void initTable(List<TerminalData> terminalRows, int restOfClients){
+    protected void initTable(List<TerminalData> terminalRows, int restOfClients){
         this.restOfClients = restOfClients;
         initClients(terminalRows);
     }
@@ -141,8 +169,56 @@ public class TablePanel extends JPanel {
         initialTerminalAssignmentCheck();
         tableIsValid = true;
         System.out.println("USED LEVELS = " + getUSEDLevels());
-        this.listener.relocateResizedTerminalRorws();
-        this.listener.relocateBottomComponents();
+        relocateResizedTerminalRorws();
+        this.listener.relocateBottomPanelChildren();
+    }
+
+    protected void addRow(TerminalData terminalRowData){
+        TerminalRow row = getTerminalRow(terminalRowData.terminalNumber);
+        if (row.state != TerminalRow.ACCEPTED){
+            row.state = TerminalRow.ACCEPTED;
+            System.err.println("TerminalRow with terminalNumber=" + row.terminalNumber +
+                    "was asked to perform SlideUp animation. But its state was not equal to: ACCEPTED. " +
+                    "We've set this value manually" );
+
+        }
+        row.clientNumber = terminalRowData.clientNumber;
+        relocateTerminalRows();
+        row.performAnimation(uiPanelWidth, uiPanelHeight, h_percent_uiPanel);
+        this.listener.relocateBottomPanelChildren();
+        this.listener.playNotificationSound();
+    }
+
+    protected void deleteRow(TerminalData terminalRowData){
+        TerminalRow row = getTerminalRow(terminalRowData.terminalNumber);
+        if (row.state != TerminalRow.WAITING){
+            row.state = TerminalRow.WAITING;
+            System.err.println("TerminalRow with terminalNumber=" + row.terminalNumber +
+                    "was asked to perform SlideAside animation. But its state was not equal to: WAITING. " +
+                    "We've set this value manually" );
+
+        }
+        row.performAnimation(uiPanelWidth, uiPanelHeight, h_percent_uiPanel);
+    }
+
+    public void assignTerminal(int keyCode) {
+        int terminalIndex = keyCode;
+        TerminalRow row = getTerminalRow(terminalIndex);
+        System.out.println("assignTerminal keyCode = " + keyCode);
+
+        if (row.state == TerminalRow.ACCEPTED) {
+            List<TerminalData> terminals = new ArrayList<>();
+            terminals.add(new TerminalData(row.levelIndex, row.clientNumber,
+                    row.terminalNumber, row.visible, row.state));
+            this.listener.sendToServer(new DisplayMessage(this.id, DisplayMessage.ADD_ROW,
+                    terminals, 0, new Date(), true));
+        }else if (row.state == TerminalRow.WAITING){
+            List<TerminalData> terminals = new ArrayList<>();
+            terminals.add(new TerminalData(row.levelIndex, row.clientNumber,
+                    row.terminalNumber, row.visible, row.state));
+            this.listener.sendToServer(new DisplayMessage(this.id, DisplayMessage.DELETE_ROW,
+                    terminals, 0, new Date(), true));
+        }
     }
 
     public void reAssignTerminals(List<TerminalData> terminalRows){
@@ -155,6 +231,49 @@ public class TablePanel extends JPanel {
             row.visible = terminalData.visible;
             row.state = terminalData.state;
         }
+    }
+
+    private void relocateTerminalRows(){
+
+        int fontHeight = h_percent_uiPanel * 16;
+
+        TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
+        FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
+
+        for (TerminalRow r : getTable()){
+            int[] xpos = new int[3];
+            int stringWidth = fontMetrics.stringWidth(String.valueOf(r.clientNumber));
+            xpos[0] = (w_percent_uiPanel * widthOffsets[0]) - (stringWidth / 2);
+            stringWidth = fontMetrics.stringWidth(">");
+            xpos[1] = (w_percent_uiPanel * widthOffsets[1]) - (stringWidth / 2);
+            stringWidth = fontMetrics.stringWidth(String.valueOf(r.terminalNumber));
+            xpos[2] = (w_percent_uiPanel * widthOffsets[2]) - (stringWidth / 2);
+            r.xpos = xpos;
+        }
+        repaint();
+    }
+
+    protected void relocateResizedTerminalRorws(){
+        int fontHeight = h_percent_uiPanel * 16;
+
+        TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
+        FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
+
+        for (TerminalRow r : getTable()){
+            if (r.visible) {
+                int h_offset = terminalHeightOffsets[r.levelIndex];
+                r.ypos = h_percent_uiPanel * h_offset;
+            }
+            int[] xpos = new int[3];
+            int stringWidth = fontMetrics.stringWidth(String.valueOf(r.clientNumber));
+            xpos[0] = (w_percent_uiPanel * widthOffsets[0]) - (stringWidth / 2);
+            stringWidth = fontMetrics.stringWidth(">");
+            xpos[1] = (w_percent_uiPanel * widthOffsets[1]) - (stringWidth / 2);
+            stringWidth = fontMetrics.stringWidth(String.valueOf(r.terminalNumber));
+            xpos[2] = (w_percent_uiPanel * widthOffsets[2]) - (stringWidth / 2);
+            r.xpos = xpos;
+        }
+        repaint();
     }
 
     public List<TerminalRow> getTable(){return table;}
@@ -223,10 +342,10 @@ public class TablePanel extends JPanel {
                 l.onHoldTerminals(terminals, val);
             }*/
         if (val ==1) {
-            this.listener.sendToServer(new DisplayMessage(0, SocketMessage.HOLD_CLIENT,
+            this.listener.sendToServer(new DisplayMessage(this.id, SocketMessage.HOLD_CLIENT,
                     listToSend, 0, new Date(), true));
         }else{
-            this.listener.sendToServer(new DisplayMessage(0, SocketMessage.RELEASE_CLIENT,
+            this.listener.sendToServer(new DisplayMessage(this.id, SocketMessage.RELEASE_CLIENT,
                     listToSend, 0, new Date(), true));
         }
     }
@@ -298,6 +417,53 @@ public class TablePanel extends JPanel {
     public void reassignLines(Point hor_line1_p1, Point hor_line1_p2){
         this.hor_line1_p1 = hor_line1_p1;
         this.hor_line1_p2 = hor_line1_p2;
+    }
+
+    private void redrawLines(int titleHeight) {
+        int left = 25;
+        int right = uiPanelWidth -25;
+
+        int correction = 40;
+
+        hor_line1_p1 = new Point(left, correction + titleHeight);
+        hor_line1_p2 = new Point(right, correction + titleHeight);
+
+        reassignLines(hor_line1_p1, hor_line1_p2);
+
+        repaint();
+    }
+
+    private void relocateTitles(List<JLabel> tableTitleLabels) {
+
+        JLabel l_terminalTitle = tableTitleLabels.get(0);
+        JLabel l_clientTitle = tableTitleLabels.get(1);
+
+        int titleHeight = h_percent_uiPanel * 8;
+
+        int w_loc;
+        int h_loc;
+
+        String labelText;
+        int stringWidth;
+        String fontName = l_clientTitle.getFont().getName();
+
+
+        l_clientTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
+        labelText = l_clientTitle.getText();
+        stringWidth = l_clientTitle.getFontMetrics(l_clientTitle.getFont()).stringWidth(labelText);
+        w_loc = (w_percent_uiPanel * widthOffsets[0]) - (stringWidth / 2);
+        h_loc = h_percent_uiPanel;
+        l_clientTitle.setLocation(w_loc, h_loc);
+        l_clientTitle.setSize(stringWidth, titleHeight - h_percent_uiPanel * 2);
+
+        l_terminalTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
+        labelText = l_terminalTitle.getText();
+        stringWidth = l_terminalTitle.getFontMetrics(l_terminalTitle.getFont()).stringWidth(labelText);
+        w_loc = (w_percent_uiPanel * widthOffsets[2]) - (stringWidth / 2);
+        h_loc = h_percent_uiPanel;
+        l_terminalTitle.setLocation(w_loc, h_loc);
+        l_terminalTitle.setSize(stringWidth, titleHeight - h_percent_uiPanel * 2);
+        redrawLines(l_clientTitle.getHeight());
     }
 
     public void reassign_h_percent_uiPanel(int h_percent_uiPanel){
@@ -385,7 +551,7 @@ public class TablePanel extends JPanel {
     }
 
     private void submitEvent(int keyCode){
-        this.listener.submitEvent(keyCode);
+        this.listener.submitAction(keyCode);
     }
 
     TablePanelListener listener;
@@ -395,10 +561,11 @@ public class TablePanel extends JPanel {
     }
 
     public interface TablePanelListener{
-        public void relocateResizedTerminalRorws();
-        public void relocateBottomComponents();
+        public void relocateBottomPanelChildren();
         public void sendToServer(DisplayMessage message);
         public Dimension getMediaContentPanelSize();
-        public void submitEvent(int keyCode);
+        public void submitAction(int keyCode);
+        public void playNotificationSound();
+        public List<JLabel> getTableTitleLabels();
     }
 }
