@@ -26,50 +26,44 @@ public class TablePanel extends JPanel {
     private int id;
 
     private List<TerminalRow> table;
-    private boolean tableIsValid = false;
 
     private int USEDLevels;
     private int levelsToBeUSED = 0;
 
     public int restOfClients = 0;
 
-    private int h_percent_uiPanel;
-
-    private int[] terminalHeightOffsets;
-    private int[] widthOffsets;
-
-    private boolean isRowsSliding = false;
-    private boolean isOnHoldTerminals = false;
-
-    Font TABLE_FONT;
-
-    /*private JLabel l_clientTitle;
-    private JLabel l_terminalTitle;*/
+    private final static int[] terminalHeightOffsets = {27, 44, 61, 78, 95};
+    private final static int[] widthOffsets = {30, 60, 85};
 
     private Point hor_line1_p1 = new Point(100, 100);
     private Point hor_line1_p2 = new Point(200, 200);
 
-    private int uiPanelWidth;
-    private int uiPanelHeight;
-    private int w_percent_uiPanel;
+    private Font TABLE_FONT = new Font(Font.DIALOG,
+            Font.PLAIN, 42);
+
+    private boolean tableIsValid = false;
+    private boolean isRowsSliding = false;
+    private boolean isOnHoldTerminals = false;
+
+    private int panelWidth;
+    private int panelHeight;
+    private int onePercentWidth;
+    private int onePercentHeight;
 
     private ClientMessageForm form;
 
-    public TablePanel(int id, int[] terminalHeightOffsets, int[] widthOffsets, Font tableFont){
+    public TablePanel(int id){
         this.id = id;
-        this.terminalHeightOffsets = terminalHeightOffsets;
-        this.widthOffsets = widthOffsets;
-        this.TABLE_FONT = tableFont;
 
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 Rectangle r = e.getComponent().getBounds();
-                uiPanelWidth = (int) r.getWidth();
-                uiPanelHeight = (int) r.getHeight();
-                System.out.println("THE REAL uiPanelHeight = " + uiPanelHeight);
-                w_percent_uiPanel = uiPanelWidth / 100;
-                h_percent_uiPanel = uiPanelHeight / 100;
+                panelWidth = (int) r.getWidth();
+                panelHeight = (int) r.getHeight();
+                System.out.println("THE REAL panelHeight = " + panelHeight);
+                onePercentWidth = panelWidth / 100;
+                onePercentHeight = panelHeight / 100;
                 relocateTitles(listener.getTableTitleLabels());
                 relocateResizedTerminalRorws();
             }
@@ -91,10 +85,6 @@ public class TablePanel extends JPanel {
                 @Override
                 public void onTransitionCompleted(TerminalRow row) {
                     (new RowsSlideUPRunner(row)).start();
-                    /*for (DisplayForm.DisplayFormListener l : displayFormListeners){
-                        l.onAcceptClient(row.terminalNumber, row.clientNumber);
-                        System.out.println("MainFormListener onAcceptClient");
-                    }*/
                 }
 
                 @Override
@@ -125,10 +115,6 @@ public class TablePanel extends JPanel {
                     }else {
                         form.addMessage(row.clientNumber, row.terminalNumber + 1);
                     }
-                    /*for (DisplayForm.DisplayFormListener l : displayFormListeners){
-                        l.onAssignClient(row.terminalNumber, row.clientNumber);
-                        System.out.println("MainFormListener onAssignClient");
-                    }*/
                 }
 
                 @Override
@@ -184,7 +170,7 @@ public class TablePanel extends JPanel {
         }
         row.clientNumber = terminalRowData.clientNumber;
         relocateTerminalRows();
-        row.performAnimation(uiPanelWidth, uiPanelHeight, h_percent_uiPanel);
+        row.performAnimation(panelWidth, panelHeight, onePercentHeight);
         this.listener.relocateBottomPanelChildren();
         this.listener.playNotificationSound();
     }
@@ -198,7 +184,7 @@ public class TablePanel extends JPanel {
                     "We've set this value manually" );
 
         }
-        row.performAnimation(uiPanelWidth, uiPanelHeight, h_percent_uiPanel);
+        row.performAnimation(panelWidth, panelHeight, onePercentHeight);
     }
 
     public void assignTerminal(int keyCode) {
@@ -235,7 +221,7 @@ public class TablePanel extends JPanel {
 
     private void relocateTerminalRows(){
 
-        int fontHeight = h_percent_uiPanel * 16;
+        int fontHeight = onePercentHeight * 16;
 
         TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
         FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
@@ -243,18 +229,18 @@ public class TablePanel extends JPanel {
         for (TerminalRow r : getTable()){
             int[] xpos = new int[3];
             int stringWidth = fontMetrics.stringWidth(String.valueOf(r.clientNumber));
-            xpos[0] = (w_percent_uiPanel * widthOffsets[0]) - (stringWidth / 2);
+            xpos[0] = (onePercentWidth * widthOffsets[0]) - (stringWidth / 2);
             stringWidth = fontMetrics.stringWidth(">");
-            xpos[1] = (w_percent_uiPanel * widthOffsets[1]) - (stringWidth / 2);
+            xpos[1] = (onePercentWidth * widthOffsets[1]) - (stringWidth / 2);
             stringWidth = fontMetrics.stringWidth(String.valueOf(r.terminalNumber));
-            xpos[2] = (w_percent_uiPanel * widthOffsets[2]) - (stringWidth / 2);
+            xpos[2] = (onePercentWidth * widthOffsets[2]) - (stringWidth / 2);
             r.xpos = xpos;
         }
         repaint();
     }
 
     protected void relocateResizedTerminalRorws(){
-        int fontHeight = h_percent_uiPanel * 16;
+        int fontHeight = onePercentHeight * 16;
 
         TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
         FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
@@ -262,15 +248,15 @@ public class TablePanel extends JPanel {
         for (TerminalRow r : getTable()){
             if (r.visible) {
                 int h_offset = terminalHeightOffsets[r.levelIndex];
-                r.ypos = h_percent_uiPanel * h_offset;
+                r.ypos = onePercentHeight * h_offset;
             }
             int[] xpos = new int[3];
             int stringWidth = fontMetrics.stringWidth(String.valueOf(r.clientNumber));
-            xpos[0] = (w_percent_uiPanel * widthOffsets[0]) - (stringWidth / 2);
+            xpos[0] = (onePercentWidth * widthOffsets[0]) - (stringWidth / 2);
             stringWidth = fontMetrics.stringWidth(">");
-            xpos[1] = (w_percent_uiPanel * widthOffsets[1]) - (stringWidth / 2);
+            xpos[1] = (onePercentWidth * widthOffsets[1]) - (stringWidth / 2);
             stringWidth = fontMetrics.stringWidth(String.valueOf(r.terminalNumber));
-            xpos[2] = (w_percent_uiPanel * widthOffsets[2]) - (stringWidth / 2);
+            xpos[2] = (onePercentWidth * widthOffsets[2]) - (stringWidth / 2);
             r.xpos = xpos;
         }
         repaint();
@@ -421,7 +407,7 @@ public class TablePanel extends JPanel {
 
     private void redrawLines(int titleHeight) {
         int left = 25;
-        int right = uiPanelWidth -25;
+        int right = panelWidth -25;
 
         int correction = 40;
 
@@ -438,7 +424,7 @@ public class TablePanel extends JPanel {
         JLabel l_terminalTitle = tableTitleLabels.get(0);
         JLabel l_clientTitle = tableTitleLabels.get(1);
 
-        int titleHeight = h_percent_uiPanel * 8;
+        int titleHeight = onePercentHeight * 8;
 
         int w_loc;
         int h_loc;
@@ -451,23 +437,23 @@ public class TablePanel extends JPanel {
         l_clientTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
         labelText = l_clientTitle.getText();
         stringWidth = l_clientTitle.getFontMetrics(l_clientTitle.getFont()).stringWidth(labelText);
-        w_loc = (w_percent_uiPanel * widthOffsets[0]) - (stringWidth / 2);
-        h_loc = h_percent_uiPanel;
+        w_loc = (onePercentWidth * widthOffsets[0]) - (stringWidth / 2);
+        h_loc = onePercentHeight;
         l_clientTitle.setLocation(w_loc, h_loc);
-        l_clientTitle.setSize(stringWidth, titleHeight - h_percent_uiPanel * 2);
+        l_clientTitle.setSize(stringWidth, titleHeight - onePercentHeight * 2);
 
         l_terminalTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
         labelText = l_terminalTitle.getText();
         stringWidth = l_terminalTitle.getFontMetrics(l_terminalTitle.getFont()).stringWidth(labelText);
-        w_loc = (w_percent_uiPanel * widthOffsets[2]) - (stringWidth / 2);
-        h_loc = h_percent_uiPanel;
+        w_loc = (onePercentWidth * widthOffsets[2]) - (stringWidth / 2);
+        h_loc = onePercentHeight;
         l_terminalTitle.setLocation(w_loc, h_loc);
-        l_terminalTitle.setSize(stringWidth, titleHeight - h_percent_uiPanel * 2);
+        l_terminalTitle.setSize(stringWidth, titleHeight - onePercentHeight * 2);
         redrawLines(l_clientTitle.getHeight());
     }
 
     public void reassign_h_percent_uiPanel(int h_percent_uiPanel){
-        this.h_percent_uiPanel = h_percent_uiPanel;
+        this.onePercentHeight = h_percent_uiPanel;
     }
 
     private class RowsSlideUPRunner extends Thread {
@@ -533,7 +519,7 @@ public class TablePanel extends JPanel {
                 ((Timer) e.getSource()).stop();
                 for (TerminalRow row : slideUPRows) {
                     int level = row.levelIndex;
-                    row.ypos = h_percent_uiPanel * terminalHeightOffsets[level - 1];
+                    row.ypos = onePercentHeight * terminalHeightOffsets[level - 1];
                     row.levelIndex = level - 1;
                     //row.saveToXML();
                 }
