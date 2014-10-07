@@ -44,10 +44,10 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     private int bgStringY;
 
     Timer timerTicker;
-    Timer timerBottomLine;
+    /*Timer timerBottomLine;
     Timer timerError;
     Timer timerServiceStopped;
-    Timer timerPrinter;
+    Timer timerPrinter;*/
     Audio notificationSound;
     Audio errorSound;
 
@@ -63,7 +63,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     //public MainUIPanel tablePanel;
     public TablePanel tablePanel;
     private JLabel l_serviceStopped;
-    private JPanel bottomPanel;
+    //private JPanel bottomPanel;
+    private BottomPanel bottomPanel;
     private JPanel mediaContentPanel;
     private JPanel videoPanel;
     private JPanel tickerPanel;
@@ -74,8 +75,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     List<String> tickerMessages;
     int tickerMessagesItem = 0;
 
-    private int bottomPanelWidth;
-    private int bottomPanelHeight;
+    /*private int bottomPanelWidth;
+    private int bottomPanelHeight;*/
     private int tickerPanelWidth;
     private int tickerPanelHeight;
 
@@ -148,7 +149,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             }
         });
 
-        bottomPanel.addComponentListener(new ComponentAdapter() {
+        /*bottomPanel.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 Rectangle r = e.getComponent().getBounds();
@@ -156,7 +157,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 bottomPanelHeight = (int)r.getHeight();
                 relocateBottomComponents();
             }
-        });
+        });*/
 
         rootPanel.addKeyListener(new KeyAdapter() {
             @Override
@@ -178,7 +179,12 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             @Override
             public void run() {
                 //start blinking bottom line
-                timerBottomLine.start();
+                //timerBottomLine.start();
+                List<JLabel>labels = new ArrayList<>();
+                labels.add(l_totalTitle);
+                labels.add(l_total);
+                labels.add(l_takeTicket);
+                bottomPanel.startDefaultBlinker(labels);
             }
         });
 
@@ -276,9 +282,10 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             case APP.PRINTER_ERROR_ON:
                 if (!SERVICE_STOPPED) {
                     PRINTER_ERROR = true;
-                    relocateBottomComponents();
+                    /*bottomPanel.relocateBottomComponents();
                     timerBottomLine.stop();
-                    timerError.start();
+                    timerError.start();*/
+                    bottomPanel.startPrinterErrorBlinker(l_takeTicket);
                     notificationSound.Stop();
                     errorSound.Play();
                     notificationSound.Reset();
@@ -286,10 +293,15 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 break;
             case APP.PRINTER_ERROR_OFF:
                 if (!SERVICE_STOPPED) {
-                    timerError.stop();
-                    timerBottomLine.start();
                     PRINTER_ERROR = false;
-                    relocateBottomComponents();
+                    /*timerError.stop();
+                    timerBottomLine.start();
+                    bottomPanel.relocateBottomComponents();*/
+                    List<JLabel>labels = new ArrayList<>();
+                    labels.add(l_totalTitle);
+                    labels.add(l_total);
+                    labels.add(l_takeTicket);
+                    bottomPanel.startDefaultBlinker(labels);
                 }
                 break;
             case APP.STOP_SERVICE:
@@ -353,36 +365,46 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
     private void stopService(){
         SERVICE_STOPPED = true;
-        if (PRINTER_ERROR){
+        /*if (PRINTER_ERROR){
             timerError.stop();
         }else {
             timerBottomLine.stop();
         }
-        relocateBottomComponents();
-        timerServiceStopped.start();
+        bottomPanel.relocateBottomComponents();
+        timerServiceStopped.start();*/
+        List<JLabel>labels = new ArrayList<>();
+        labels.add(l_takeTicket);
+        labels.add(l_serviceStopped);
+        bottomPanel.startStopServiceBlinker(labels);
     }
 
     private void resetService(){
         SERVICE_STOPPED = false;
-        timerServiceStopped.stop();
-        relocateBottomComponents();
+        /*timerServiceStopped.stop();
+        bottomPanel.relocateBottomComponents();*/
         if (PRINTER_ERROR){
-            timerError.start();
+            //timerError.start();
+            bottomPanel.startPrinterErrorBlinker(l_takeTicket);
         }else{
-            timerBottomLine.start();
+            //timerBottomLine.start();
+            List<JLabel>labels = new ArrayList<>();
+            labels.add(l_totalTitle);
+            labels.add(l_total);
+            labels.add(l_takeTicket);
+            bottomPanel.startDefaultBlinker(labels);
         }
     }
 
     private void initObjects() {
 
-        timerBottomLine = new Timer(takeTicketBlinkRate, new SystemTimerListener(0));
+        /*timerBottomLine = new Timer(takeTicketBlinkRate, new SystemTimerListener(0));
         timerBottomLine.setInitialDelay(0);
         timerError = new Timer(standardBlinkRate, new SystemTimerListener(3));
         timerError.setInitialDelay(0);
         timerServiceStopped = new Timer(takeTicketBlinkRate, new SystemTimerListener(4));
         timerServiceStopped.setInitialDelay(0);
         timerPrinter = new Timer(1000, new SystemTimerListener(5));
-        timerPrinter.setInitialDelay(1000);
+        timerPrinter.setInitialDelay(1000);*/
 
         timerTicker = new Timer(20, new TimerTicker(l_ticker));
         timerTicker.setInitialDelay(0);
@@ -391,7 +413,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         notificationSound = new Audio("/files/chimes.wav");
     }
 
-    private void relocateBottomComponents() {
+    /*private void relocateBottomComponents() {
 
         int h_percent = bottomPanelHeight / 100;
         int w_percent = bottomPanelWidth / 100;
@@ -463,7 +485,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         l_serviceStopped.setSize(stringWidth, totalDataHeight + h_percent * 3);
         //the very first second they should not appear on screen:
         l_serviceStopped.setText("");
-    }
+    }*/
 
     private void sendToHostServer(DisplayMessage message){
         clientServer.send(message);
@@ -476,40 +498,79 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
      */
     private void createUIComponents() {
         tablePanel = new TablePanel(this.id);
-        tablePanel.addTablePanelListener(new TablePanel.TablePanelListener() {
-            @Override
-            public void relocateBottomPanelChildren() {
-                relocateBottomComponents();
-            }
+        try {
+            tablePanel.addTablePanelListener(new TablePanel.TablePanelListener() {
+                @Override
+                public void relocateBottomPanelChildren() {
+                    bottomPanel.relocateBottomComponents();
+                }
 
-            @Override
-            public void sendToServer(DisplayMessage message) {
-                sendToHostServer(message);
-            }
+                @Override
+                public void sendToServer(DisplayMessage message) {
+                    sendToHostServer(message);
+                }
 
-            @Override
-            public Dimension getMediaContentPanelSize() {
-                return mediaContentPanel.getSize();
-            }
+                @Override
+                public Dimension getMediaContentPanelSize() {
+                    return mediaContentPanel.getSize();
+                }
 
-            @Override
-            public void submitAction(int keyCode) {
-                submitEvent(keyCode);
-            }
+                @Override
+                public void submitAction(int keyCode) {
+                    submitEvent(keyCode);
+                }
 
-            @Override
-            public void playNotificationSound() {
-                notificationSound.Play();
-            }
+                @Override
+                public void playNotificationSound() {
+                    notificationSound.Play();
+                }
 
-            @Override
-            public List<JLabel> getTableTitleLabels() {
-                List<JLabel>tableTitleLabels = new ArrayList<>();
-                tableTitleLabels.add(l_terminalTitle);
-                tableTitleLabels.add(l_clientTitle);
-                return tableTitleLabels;
-            }
-        });
+                @Override
+                public List<JLabel> getTableTitleLabels() {
+                    List<JLabel> tableTitleLabels = new ArrayList<>();
+                    tableTitleLabels.add(l_terminalTitle);
+                    tableTitleLabels.add(l_clientTitle);
+                    return tableTitleLabels;
+                }
+            });
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+
+        bottomPanel = new BottomPanel();
+        try{
+            bottomPanel.addBottomPanelListener(new BottomPanel.BottomPanelListener() {
+                @Override
+                public String getFontName() {
+                    return l_clientTitle.getFont().getName();
+                }
+
+                @Override
+                public List<JLabel> getLabels() {
+                    List<JLabel> labels = new ArrayList<JLabel>();
+                    labels.add(l_totalTitle);
+                    labels.add(l_total);
+                    labels.add(l_takeTicket);
+                    labels.add(l_serviceStopped);
+                    return labels;
+                }
+
+                @Override
+                public int getRestOfClients() {
+                    return tablePanel.restOfClients;
+                }
+
+                @Override
+                public List<Boolean> getFlags() {
+                    List<Boolean> flags = new ArrayList<Boolean>();
+                    flags.add(PRINTER_ERROR);
+                    flags.add(SERVICE_STOPPED);
+                    return flags;
+                }
+            });
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
 
         tickerPanel = new JPanel(){
             @Override
@@ -525,7 +586,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         };
     }
 
-    private class SystemTimerListener implements ActionListener {
+    /*private class SystemTimerListener implements ActionListener {
         private JLabel label1;
         private JLabel label2;
         private JLabel label3;
@@ -589,7 +650,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                     break;
             }
         }
-    }
+    }*/
 
     private class TimerTicker implements ActionListener{
 

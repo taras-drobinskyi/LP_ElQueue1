@@ -61,6 +61,7 @@ public class TerminalRow extends TerminalData implements Comparable {
         }
     }
 
+
     @Override
     public int compareTo(Object obj) {
         TerminalData dataToCompare = (TerminalData)obj;

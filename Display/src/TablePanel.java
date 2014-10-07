@@ -30,7 +30,7 @@ public class TablePanel extends JPanel {
     private int USEDLevels;
     private int levelsToBeUSED = 0;
 
-    public int restOfClients = 0;
+    protected int restOfClients = 0;
 
     private final static int[] terminalHeightOffsets = {27, 44, 61, 78, 95};
     private final static int[] widthOffsets = {30, 60, 85};
@@ -509,10 +509,10 @@ public class TablePanel extends JPanel {
             for (TerminalRow r : slideUPRows){
                 r.ypos -= 10;
             }
-                /*
-                Before instantiate this listener we've sorted slideUPRows List against levelIndex values.
-                That's why at the next line slideUPRows.get(0) returns TerminalRow with the smallest levelIndex
-                 */
+            /*
+            Before instantiate this listener we've sorted slideUPRows List against levelIndex values.
+            That's why at the next line slideUPRows.get(0) returns TerminalRow with the smallest levelIndex
+             */
             int tableUPpos = slideUPRows.get(0).ypos;
             int rowThatGonePos = rowThatGone.ypos + 20;
             if (tableUPpos < rowThatGonePos){
@@ -521,11 +521,9 @@ public class TablePanel extends JPanel {
                     int level = row.levelIndex;
                     row.ypos = onePercentHeight * terminalHeightOffsets[level - 1];
                     row.levelIndex = level - 1;
-                    //row.saveToXML();
                 }
                 rowThatGone.levelIndex = -1;
                 setUSEDLevels(getUSEDLevels() - 1);
-                //rowThatGone.saveToXML();
                 releaseSlidingRequest();
             }
             repaint();
@@ -542,7 +540,8 @@ public class TablePanel extends JPanel {
 
     TablePanelListener listener;
 
-    public void addTablePanelListener(TablePanelListener listener){
+    public void addTablePanelListener(TablePanelListener listener) throws Exception {
+        if (this.listener != null) throw new Exception("TablePanelListener has been already assigned");
         this.listener = listener;
     }
 
