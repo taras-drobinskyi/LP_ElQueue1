@@ -250,33 +250,33 @@ public class XMLVARIABLES {
         saveDocument();
     }
 
-    public int getStandardBlinkRate() {
+    public int getErrorBlinkRate() {
         Element settings_Node = getSettingsNode();
-        NodeList standardBlinkRate_List = settings_Node.getElementsByTagName("standardBlinkRate");
-        Element standardBlinkRate_Node = (Element) standardBlinkRate_List.item(0);
-        return Integer.valueOf(standardBlinkRate_Node.getTextContent());
+        NodeList errorBlinkRate_List = settings_Node.getElementsByTagName("errorBlinkRate");
+        Element errorBlinkRate_Node = (Element) errorBlinkRate_List.item(0);
+        return Integer.valueOf(errorBlinkRate_Node.getTextContent());
     }
 
-    public void setStandardBlinkRate(int val) {
+    public void setErrorBlinkRate(int val) {
         Element settings_Node = getSettingsNode();
-        NodeList standardBlinkRate_List = settings_Node.getElementsByTagName("standardBlinkRate");
-        Element standardBlinkRate_Node = (Element) standardBlinkRate_List.item(0);
-        standardBlinkRate_Node.setTextContent(String.valueOf(val));
+        NodeList errorBlinkRate_List = settings_Node.getElementsByTagName("errorBlinkRate");
+        Element errorBlinkRate_Node = (Element) errorBlinkRate_List.item(0);
+        errorBlinkRate_Node.setTextContent(String.valueOf(val));
         saveDocument();
     }
 
-    public int getTakeTicketBlinkRate() {
+    public int getDefaultBlinkRate() {
         Element settings_Node = getSettingsNode();
-        NodeList takeTicketBlinkRate_List = settings_Node.getElementsByTagName("takeTicketBlinkRate");
-        Element takeTicketBlinkRate_Node = (Element) takeTicketBlinkRate_List.item(0);
-        return Integer.valueOf(takeTicketBlinkRate_Node.getTextContent());
+        NodeList defaultBlinkRate_List = settings_Node.getElementsByTagName("defaultBlinkRate");
+        Element defaultBlinkRate_Node = (Element) defaultBlinkRate_List.item(0);
+        return Integer.valueOf(defaultBlinkRate_Node.getTextContent());
     }
 
-    public void setTakeTicketBlinkRate(int val) {
+    public void setDefaultBlinkRate(int val) {
         Element settings_Node = getSettingsNode();
-        NodeList takeTicketBlinkRate_List = settings_Node.getElementsByTagName("takeTicketBlinkRate");
-        Element takeTicketBlinkRate_Node = (Element) takeTicketBlinkRate_List.item(0);
-        takeTicketBlinkRate_Node.setTextContent(String.valueOf(val));
+        NodeList defaultBlinkRate_List = settings_Node.getElementsByTagName("defaultBlinkRate");
+        Element defaultBlinkRate_Node = (Element) defaultBlinkRate_List.item(0);
+        defaultBlinkRate_Node.setTextContent(String.valueOf(val));
         saveDocument();
     }
 

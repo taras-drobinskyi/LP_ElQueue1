@@ -2,9 +2,8 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
-import display.TerminalData;
-import interfaces.ClientMessageFormListener;
 import sockets.DisplayMessage;
+import sockets.PrinterMessage;
 import sockets.SocketMessage;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
@@ -14,7 +13,6 @@ import javax.swing.*;
 import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.Line2D;
 import java.util.*;
 import java.util.List;
 
@@ -26,8 +24,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
     private int id = -1;
 
-    private int standardBlinkRate;
-    private int takeTicketBlinkRate;
+    /*private int defaultBlinkRate;
+    private int errorBlinkRate;*/
 
     HashMap<String, String> currentVideo;
 
@@ -44,10 +42,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     private int bgStringY;
 
     Timer timerTicker;
-    /*Timer timerBottomLine;
-    Timer timerError;
-    Timer timerServiceStopped;
-    Timer timerPrinter;*/
     Audio notificationSound;
     Audio errorSound;
 
@@ -60,10 +54,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     private JLabel l_totalTitle;
     private JLabel l_total;
     private JLabel l_takeTicket;
-    //public MainUIPanel tablePanel;
     public TablePanel tablePanel;
     private JLabel l_serviceStopped;
-    //private JPanel bottomPanel;
     private BottomPanel bottomPanel;
     private JPanel mediaContentPanel;
     private JPanel videoPanel;
@@ -75,8 +67,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     List<String> tickerMessages;
     int tickerMessagesItem = 0;
 
-    /*private int bottomPanelWidth;
-    private int bottomPanelHeight;*/
     private int tickerPanelWidth;
     private int tickerPanelHeight;
 
@@ -112,8 +102,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         tickerPanel.setLayout(null);
 
         XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
-        standardBlinkRate = variables.getStandardBlinkRate();
-        takeTicketBlinkRate = variables.getTakeTicketBlinkRate();
+        /*defaultBlinkRate = variables.getErrorBlinkRate();
+        errorBlinkRate = variables.getDefaultBlinkRate();*/
         tickerMessages = variables.getMessages();
         currentVideo = variables.getCurrentVieoData();
         initObjects();
@@ -149,16 +139,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             }
         });
 
-        /*bottomPanel.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                Rectangle r = e.getComponent().getBounds();
-                bottomPanelWidth = (int)r.getWidth();
-                bottomPanelHeight = (int)r.getHeight();
-                relocateBottomComponents();
-            }
-        });*/
-
         rootPanel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
@@ -179,7 +159,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             @Override
             public void run() {
                 //start blinking bottom line
-                //timerBottomLine.start();
                 List<JLabel>labels = new ArrayList<>();
                 labels.add(l_totalTitle);
                 labels.add(l_total);
@@ -225,7 +204,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                             assignClientServer(client);
                         }
                     });
-                    //clientConnector.start();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -279,47 +257,53 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
     private void executeSystemCommand(int command) {
         switch (command) {
+            case APP.RESET_SYSTEM:
+                sendToHostServer(new DisplayMessage(this.id, APP.RESET_SYSTEM,
+                        null, 0, new Date(), true));
+                break;
             case APP.PRINTER_ERROR_ON:
-                if (!SERVICE_STOPPED) {
+                /*if (!SERVICE_STOPPED) {
                     PRINTER_ERROR = true;
-                    /*bottomPanel.relocateBottomComponents();
-                    timerBottomLine.stop();
-                    timerError.start();*/
                     bottomPanel.startPrinterErrorBlinker(l_takeTicket);
                     notificationSound.Stop();
                     errorSound.Play();
                     notificationSound.Reset();
-                }
+                }*/
+                sendToHostServer(new DisplayMessage(this.id, APP.PRINTER_ERROR_ON,
+                        null, 0, new Date(), true));
                 break;
             case APP.PRINTER_ERROR_OFF:
-                if (!SERVICE_STOPPED) {
+                /*if (!SERVICE_STOPPED) {
                     PRINTER_ERROR = false;
-                    /*timerError.stop();
-                    timerBottomLine.start();
-                    bottomPanel.relocateBottomComponents();*/
                     List<JLabel>labels = new ArrayList<>();
                     labels.add(l_totalTitle);
                     labels.add(l_total);
                     labels.add(l_takeTicket);
                     bottomPanel.startDefaultBlinker(labels);
-                }
+                }*/
+                sendToHostServer(new DisplayMessage(this.id, APP.PRINTER_ERROR_OFF,
+                        null, 0, new Date(), true));
                 break;
             case APP.STOP_SERVICE:
-
+                sendToHostServer(new DisplayMessage(this.id, APP.STOP_SERVICE,
+                        null, 0, new Date(), true));
                 //triggerService(SERVICE_STOPPED);
 
                 break;
             case APP.RESET_SERVICE:
-
+                sendToHostServer(new DisplayMessage(this.id, APP.RESET_SERVICE,
+                        null, 0, new Date(), true));
                 //triggerService(SERVICE_STOPPED);
 
                 break;
-            /*case APP.TRIGGER_SERVICE:
-                SERVICE_STOPPED = !SERVICE_STOPPED;
-                triggerService(SERVICE_STOPPED);
+            case APP.TRIGGER_SERVICE:
+                /*SERVICE_STOPPED = !SERVICE_STOPPED;
+                triggerService(SERVICE_STOPPED);*/
+                sendToHostServer(new DisplayMessage(this.id, APP.TRIGGER_SERVICE,
+                        null, 0, new Date(), true));
                 break;
             case APP.PRINT_TICKET:
-                if(!TICKET_IS_PRINTING) {
+                /*if(!TICKET_IS_PRINTING) {
                     total++;
                     lastClient = total - 1;
                     if (nextClient == 0) {
@@ -329,8 +313,10 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                     variables.setLastClient(lastClient);
                     variables.setNextClient(nextClient);
                     printTicket();
-                }
-                break;*/
+                }*/
+                sendToHostServer(new DisplayMessage(this.id, APP.PRINT_TICKET,
+                        null, 0, new Date(), true));
+                break;
             default:
                 break;
         }
@@ -365,13 +351,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
     private void stopService(){
         SERVICE_STOPPED = true;
-        /*if (PRINTER_ERROR){
-            timerError.stop();
-        }else {
-            timerBottomLine.stop();
-        }
-        bottomPanel.relocateBottomComponents();
-        timerServiceStopped.start();*/
         List<JLabel>labels = new ArrayList<>();
         labels.add(l_takeTicket);
         labels.add(l_serviceStopped);
@@ -380,13 +359,9 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
     private void resetService(){
         SERVICE_STOPPED = false;
-        /*timerServiceStopped.stop();
-        bottomPanel.relocateBottomComponents();*/
         if (PRINTER_ERROR){
-            //timerError.start();
             bottomPanel.startPrinterErrorBlinker(l_takeTicket);
         }else{
-            //timerBottomLine.start();
             List<JLabel>labels = new ArrayList<>();
             labels.add(l_totalTitle);
             labels.add(l_total);
@@ -397,95 +372,12 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
     private void initObjects() {
 
-        /*timerBottomLine = new Timer(takeTicketBlinkRate, new SystemTimerListener(0));
-        timerBottomLine.setInitialDelay(0);
-        timerError = new Timer(standardBlinkRate, new SystemTimerListener(3));
-        timerError.setInitialDelay(0);
-        timerServiceStopped = new Timer(takeTicketBlinkRate, new SystemTimerListener(4));
-        timerServiceStopped.setInitialDelay(0);
-        timerPrinter = new Timer(1000, new SystemTimerListener(5));
-        timerPrinter.setInitialDelay(1000);*/
-
         timerTicker = new Timer(20, new TimerTicker(l_ticker));
         timerTicker.setInitialDelay(0);
 
         errorSound = new Audio("/files/notify.wav");
         notificationSound = new Audio("/files/chimes.wav");
     }
-
-    /*private void relocateBottomComponents() {
-
-        int h_percent = bottomPanelHeight / 100;
-        int w_percent = bottomPanelWidth / 100;
-        int totalDataHeight = h_percent * 90;
-
-        int w_loc;
-        int h_loc;
-
-        String labelText;
-        int stringWidth;
-        String fontName = l_clientTitle.getFont().getName();
-
-        //=====================TOTAL DATA ========================================
-
-
-        l_totalTitle.setText("ВСЕГО  В  ОЧЕРЕДИ:");
-        l_totalTitle.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
-        labelText = l_totalTitle.getText();
-        int totalTitle_stringWidth = l_totalTitle.getFontMetrics(l_totalTitle.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 50) - (totalTitle_stringWidth / 2);
-        //w_loc = l_total.getLocation().x - (totalTitle_stringWidth) - (w_percent_uiPanel * 4);
-        h_loc = h_percent * 30;
-        l_totalTitle.setLocation(w_loc, h_loc);
-        l_totalTitle.setSize(totalTitle_stringWidth, totalDataHeight + h_percent * 3);
-
-        l_total.setText(String.valueOf(tablePanel.restOfClients));
-        l_total.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
-        labelText = l_total.getText();
-        stringWidth = l_total.getFontMetrics(l_total.getFont()).stringWidth(labelText);
-        w_loc = l_totalTitle.getLocation().x + totalTitle_stringWidth + w_percent;
-        //w_loc = (w_percent_uiPanel * 101) - stringWidth - (w_percent_uiPanel * 2);
-        //w_loc = width - stringWidth - (h_percent_uiPanel*4);
-        h_loc = h_percent * 30;
-        l_total.setLocation(w_loc, h_loc);
-        l_total.setSize(stringWidth, totalDataHeight + h_percent * 3);
-
-        if (PRINTER_ERROR || SERVICE_STOPPED) {
-            l_total.setText("");
-            l_totalTitle.setText("");
-        }
-
-        //===========================================================================
-        if(SERVICE_STOPPED){
-            l_takeTicket.setText("ТАЛОНОВ  НЕТ");
-        }else if (PRINTER_ERROR) {
-            l_takeTicket.setText("ВСТАВЬТЕ  БУМАГУ!");
-        } else {
-            l_takeTicket.setText("ВОЗЬМИТЕ  ТАЛОН");
-        }
-        l_takeTicket.setFont(new Font(fontName, Font.PLAIN, totalDataHeight));
-        labelText = l_takeTicket.getText();
-        stringWidth = l_takeTicket.getFontMetrics(l_takeTicket.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 50) - (stringWidth / 2);
-        //h_loc = h_percent_uiPanel * 85;
-        h_loc = l_totalTitle.getLocation().y;
-        l_takeTicket.setLocation(w_loc, h_loc);
-        l_takeTicket.setSize(stringWidth, totalDataHeight + h_percent * 3);
-        //the very first second they should not appear on screen:
-        l_takeTicket.setText("");
-
-        l_serviceStopped.setText("ТЕХНИЧЕСКИЙ  ПЕРЕРЫВ");
-        l_serviceStopped.setFont(new Font(fontName, Font.PLAIN, totalDataHeight - h_percent * 2));
-        labelText = l_serviceStopped.getText();
-        stringWidth = l_serviceStopped.getFontMetrics(l_serviceStopped.getFont()).stringWidth(labelText);
-        w_loc = (w_percent * 50) - (stringWidth / 2);
-        //h_loc = h_percent_uiPanel * 85;
-        h_loc = l_totalTitle.getLocation().y;
-        l_serviceStopped.setLocation(w_loc, h_loc);
-        l_serviceStopped.setSize(stringWidth, totalDataHeight + h_percent * 3);
-        //the very first second they should not appear on screen:
-        l_serviceStopped.setText("");
-    }*/
 
     private void sendToHostServer(DisplayMessage message){
         clientServer.send(message);
@@ -547,7 +439,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
                 @Override
                 public List<JLabel> getLabels() {
-                    List<JLabel> labels = new ArrayList<JLabel>();
+                    List<JLabel> labels = new ArrayList<>();
                     labels.add(l_totalTitle);
                     labels.add(l_total);
                     labels.add(l_takeTicket);
@@ -562,10 +454,21 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
                 @Override
                 public List<Boolean> getFlags() {
-                    List<Boolean> flags = new ArrayList<Boolean>();
+                    List<Boolean> flags = new ArrayList<>();
                     flags.add(PRINTER_ERROR);
                     flags.add(SERVICE_STOPPED);
                     return flags;
+                }
+
+                @Override
+                public List<Integer> getBlinkRates() {
+                    List<Integer> blinkRates = new ArrayList<>();
+                    XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
+                    int defaultBlinkRate = variables.getDefaultBlinkRate();
+                    int errorBlinkRate = variables.getErrorBlinkRate();
+                    blinkRates.add(defaultBlinkRate);
+                    blinkRates.add(errorBlinkRate);
+                    return blinkRates;
                 }
             });
         }catch (Exception ex){
@@ -585,72 +488,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             }
         };
     }
-
-    /*private class SystemTimerListener implements ActionListener {
-        private JLabel label1;
-        private JLabel label2;
-        private JLabel label3;
-        private boolean option1 = true;
-        private int _optionNumber;
-
-        public SystemTimerListener(int optionNumber) {
-            switch (optionNumber) {
-                case 0: //initialize bottom line blinking
-                    this.label1 = l_total;
-                    this.label2 = l_totalTitle;
-                    this.label3 = l_takeTicket;
-                    break;
-                case 3: //Printer Error ON
-                    this.label1 = l_takeTicket;
-                    break;
-                case 4: //Service Stopped
-                    this.label1 = l_takeTicket;
-                    this.label2 = l_serviceStopped;
-                    break;
-                default:
-                    break;
-            }
-            this._optionNumber = optionNumber;
-        }
-
-        public void actionPerformed(ActionEvent e) {
-
-            switch (_optionNumber) {
-                case 0:
-                    if (!option1) {
-                        label3.setText("");
-                        label1.setText(String.valueOf(tablePanel.restOfClients));
-                        label2.setText("ВСЕГО  В  ОЧЕРЕДИ:");
-                    } else {
-                        label1.setText("");
-                        label2.setText("");
-                        label3.setText("ВОЗЬМИТЕ  ТАЛОН");
-                    }
-                    option1 = !option1;
-                    break;
-                case 3:
-                    if (option1) {
-                        label1.setText("");
-                    } else {
-                        label1.setText("ВСТАВЬТЕ  БУМАГУ!");
-                    }
-                    option1 = !option1;
-                    break;
-                case 4:
-                    if (option1) {
-                        label1.setText("");
-                        label2.setText("ТЕХНИЧЕСКИЙ  ПЕРЕРЫВ");
-                    } else {
-                        label2.setText("");
-                        label1.setText("ТАЛОНОВ  НЕТ");
-                    }
-                    option1 = !option1;
-                    break;
-                default:
-                    break;
-            }
-        }
-    }*/
 
     private class TimerTicker implements ActionListener{
 
@@ -727,11 +564,28 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 tablePanel.restOfClients = message.restOfClients;
                 tablePanel.deleteRow(message.terminals.get(0));
                 break;
-            /*case APP.RESET_SYSTEM:
-                break;*/
+            case APP.PRINT_TICKET:
+                tablePanel.restOfClients = message.restOfClients;
+                bottomPanel.relocateBottomComponents();
+                break;
             case APP.PRINTER_ERROR_ON:
+                if (!SERVICE_STOPPED) {
+                    PRINTER_ERROR = true;
+                    bottomPanel.startPrinterErrorBlinker(l_takeTicket);
+                    notificationSound.Stop();
+                    errorSound.Play();
+                    notificationSound.Reset();
+                }
                 break;
             case APP.PRINTER_ERROR_OFF:
+                if (!SERVICE_STOPPED) {
+                    PRINTER_ERROR = false;
+                    List<JLabel>labels = new ArrayList<>();
+                    labels.add(l_totalTitle);
+                    labels.add(l_total);
+                    labels.add(l_takeTicket);
+                    bottomPanel.startDefaultBlinker(labels);
+                }
                 break;
             case APP.STOP_SERVICE:
                 stopService();

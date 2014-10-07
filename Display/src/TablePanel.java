@@ -208,6 +208,7 @@ public class TablePanel extends JPanel {
     }
 
     public void reAssignTerminals(List<TerminalData> terminalRows){
+        USEDLevels = 0;
         for (TerminalRow row : table){
             int terminal = row.terminalNumber;
             TerminalData terminalData = terminalRows.get(terminal);
@@ -215,8 +216,11 @@ public class TablePanel extends JPanel {
             row.clientNumber = terminalData.clientNumber;
             row.terminalNumber = terminalData.terminalNumber;
             row.visible = terminalData.visible;
+            if (terminalData.visible) USEDLevels++;
             row.state = terminalData.state;
         }
+        relocateResizedTerminalRorws();
+        this.listener.relocateBottomPanelChildren();
     }
 
     private void relocateTerminalRows(){

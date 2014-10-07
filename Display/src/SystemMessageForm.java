@@ -83,7 +83,7 @@ public class SystemMessageForm extends JFrame {
 
         variables = new XMLVARIABLES(APP.VARIABLES_PATH);
 
-        standardBlinkRate = variables.getStandardBlinkRate();
+        standardBlinkRate = variables.getErrorBlinkRate();
     }
 
     private class TimerListener implements ActionListener {

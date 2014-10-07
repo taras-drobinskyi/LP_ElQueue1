@@ -369,9 +369,9 @@ public class HostServer {
                     validator.stopThread();
                 }
                 try {
-                    in.close();
-                    out.close();
-                    socket.close();
+                    if (in != null) in.close();
+                    if (out != null) out.close();
+                    if (socket != null) socket.close();
                     System.out.println("Socket with ID = " + id + " has been closed");
                     for (SocketObjectListener l : listeners) {
                         l.onCloseSocket(this);

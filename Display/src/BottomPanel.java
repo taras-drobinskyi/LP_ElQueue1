@@ -121,7 +121,7 @@ public class BottomPanel extends JPanel {
     }
 
     protected void startDefaultBlinker(List<JLabel> labels){
-        defaultBlinker = new Timer(2000, new DefaultTimerListener(labels));
+        defaultBlinker = new Timer(listener.getBlinkRates().get(0), new DefaultTimerListener(labels));
         if (errorBlinker != null) {
             errorBlinker.stop();
             errorBlinker = null;
@@ -135,7 +135,7 @@ public class BottomPanel extends JPanel {
     }
 
     protected void startPrinterErrorBlinker(JLabel label){
-        errorBlinker = new Timer(500, new PrinterErrorTimerListener(label));
+        errorBlinker = new Timer(listener.getBlinkRates().get(1), new PrinterErrorTimerListener(label));
         if (defaultBlinker != null) {
             defaultBlinker.stop();
             defaultBlinker = null;
@@ -149,7 +149,7 @@ public class BottomPanel extends JPanel {
     }
 
     protected void startStopServiceBlinker(List<JLabel> labels){
-        stopServiceBlinker = new Timer(2000, new StopServiceListener(labels));
+        stopServiceBlinker = new Timer(listener.getBlinkRates().get(0), new StopServiceListener(labels));
         if (defaultBlinker != null) {
             defaultBlinker.stop();
             defaultBlinker = null;
@@ -241,5 +241,6 @@ public class BottomPanel extends JPanel {
         public List<JLabel> getLabels();
         public int getRestOfClients();
         public List<Boolean> getFlags();
+        public List<Integer> getBlinkRates();
     }
 }

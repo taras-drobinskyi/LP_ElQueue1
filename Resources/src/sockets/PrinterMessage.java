@@ -11,7 +11,6 @@ import java.util.Date;
 public class PrinterMessage extends SocketMessage implements Serializable {
     public static final int PRINT_TICKET = 0;
 
-
     public int val;
     /**
      * @param id           The id index

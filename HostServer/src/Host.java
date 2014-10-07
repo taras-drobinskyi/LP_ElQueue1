@@ -2,6 +2,7 @@ import display.TerminalData;
 import sockets.DisplayMessage;
 import sockets.PrinterMessage;
 import sockets.SocketMessage;
+import sockets.TerminalMessage;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -95,6 +96,9 @@ public class Host implements HostServer.HostServerListener {
         variables.setLastClient(variables.getLastClient() + 1);
         lastClient = variables.getLastClient();
 
+        //fixme: the next line is just for testing and must be deleted when printer i connected
+        total = lastClient +1;
+
         //clientValues = new int[APP.TERMINAL_QUANTITY];
 
         //terminalRows = new ArrayList<>();
@@ -114,8 +118,8 @@ public class Host implements HostServer.HostServerListener {
         ticketsPrinted = variables.getTicketsPrinted();
         clicksToChangeBattery = variables.getClicksToChangeBattery();
         ticketsToInsertPaper = variables.getTicketsToInsertPaper();
-        standardBlinkRate = variables.getStandardBlinkRate();
-        takeTicketBlinkRate = variables.getTakeTicketBlinkRate();
+        standardBlinkRate = variables.getErrorBlinkRate();
+        takeTicketBlinkRate = variables.getDefaultBlinkRate();
 
         if (nextClient == 0) {
             nextClient = lastClient;
@@ -136,16 +140,16 @@ public class Host implements HostServer.HostServerListener {
         return restOfClients;
     }
 
-    private void executeSystemCommand(int command) {
+    /*private void executeSystemCommand(int command) {
         switch (command) {
             case APP.RESET_SYSTEM:
                 total = 1;
                 lastClient = 0;
                 nextClient = 0;
                 for (int i=0; i< APP.TERMINAL_QUANTITY; i++){
-                    /*clientValues[i] = 0;
+                    *//*clientValues[i] = 0;
                     final HashMap<String, Integer> terminalData = terminalRows.get(i);
-                    terminalData.put("clientnumber", 0);*/
+                    terminalData.put("clientnumber", 0);*//*
                     terminals.get(i).clientNumber = 0;
                 }
 
@@ -204,6 +208,50 @@ public class Host implements HostServer.HostServerListener {
             default:
                 break;
         }
+    }*/
+
+    private void resetSystem(){
+        total = 1;
+        lastClient = 0;
+        nextClient = 0;
+
+        for (Terminal t : terminals){
+            t.clientNumber = 0;
+            t.visible = false;
+            t.levelIndex = -1;
+            t.state = TerminalData.ACCEPTED;
+            t.saveToXML();
+        }
+
+        variables.setLastClient(lastClient);
+        variables.setNextClient(nextClient);
+
+        SERVICE_STOPPED = false;
+        triggerService(SERVICE_STOPPED, true);
+    }
+
+    private void startPrinterError(){
+        if (!SERVICE_STOPPED) {
+            PRINTER_ERROR = true;
+            ticketsPrinted = 0;
+            variables.setTicketsPrinted(ticketsPrinted);
+            lastClient++;
+            total = lastClient + 1;
+            variables.setLastClient(lastClient);
+            if (nextClient == 0) {
+                nextClient = lastClient;
+            }
+            variables.setNextClient(nextClient);
+            sendToDisplay(APP.PRINTER_ERROR_ON, null);
+        }
+    }
+
+    private void stopPrinterError(){
+        if (!SERVICE_STOPPED) {
+            PRINTER_ERROR = false;
+            printTicket();
+            sendToDisplay(APP.PRINTER_ERROR_OFF, null);
+        }
     }
 
     /**
@@ -233,7 +281,7 @@ public class Host implements HostServer.HostServerListener {
     private void printTicket(){
         if (!PRINTER_ERROR) {
             if (TICKET_TAKEN){
-                TICKET_IS_PRINTING = true;
+                //TICKET_IS_PRINTING = true;
                 /*//1 sec deley that prevents to print something new
                 timerPrinter.start();*/
                 server.socketOrganizer.sendPrinters(new int[]{0},
@@ -242,18 +290,21 @@ public class Host implements HostServer.HostServerListener {
                 ticketsPrinted++;
                 variables.setTicketsPrinted(ticketsPrinted);
                 TICKET_TAKEN = false;
+                sendToDisplay(APP.PRINT_TICKET, null);
             }else {
                 if (!SERVICE_STOPPED) {
 
-                    TICKET_IS_PRINTING = true;
+                    //TICKET_IS_PRINTING = true;
                     /*//1 sec deley that prevents to print something new
                     timerPrinter.start();*/
                     server.socketOrganizer.sendPrinters(new int[]{0},
                             new PrinterMessage(0, PrinterMessage.PRINT_TICKET, total, new Date(), true));
                     ticketsPrinted++;
                     variables.setTicketsPrinted(ticketsPrinted);
+                    sendToDisplay(APP.PRINT_TICKET, null);
                 } else {
                     TICKET_TAKEN = true;
+                    sendToDisplay(APP.PRINT_TICKET, null);
                 }
             }
         }
@@ -276,16 +327,17 @@ public class Host implements HostServer.HostServerListener {
     }
 
     private void sendToDisplay(int operation, List<Terminal>dataList){
+        int[] IDs = server.socketOrganizer.getDisplaysIDs();
         if (dataList != null){
             List<TerminalData>listToSend = new ArrayList<>();
             for (Terminal t: dataList){
                 listToSend.add(new TerminalData(t.levelIndex, t.clientNumber, t.terminalNumber, t.visible,t.state));
             }
             server.socketOrganizer.sendDisplays(server.socketOrganizer.getDisplaysIDs(),
-                    new DisplayMessage(0, operation, listToSend, getRestOfClients(), new Date(), true));
+                    new DisplayMessage(IDs[0], operation, listToSend, getRestOfClients(), new Date(), true));
         }else{
             server.socketOrganizer.sendDisplays(server.socketOrganizer.getDisplaysIDs(),
-                    new DisplayMessage(0, operation, null, getRestOfClients(), new Date(), true));
+                    new DisplayMessage(IDs[0], operation, null, getRestOfClients(), new Date(), true));
         }
 
     }
@@ -473,23 +525,44 @@ public class Host implements HostServer.HostServerListener {
                 break;
             case SocketMessage.HOLD_CLIENT:
                 break;
-            /*case DisplayMessage.INIT_ROWS:
-                break;*/
+            case APP.PRINT_TICKET:
+                if(!TICKET_IS_PRINTING) {
+                    total++;
+                    lastClient = total - 1;
+                    if (nextClient == 0) {
+                        nextClient = lastClient;
+                    }
+                    variables.setLastClient(lastClient);
+                    variables.setNextClient(nextClient);
+                    printTicket();
+                }
+                break;
             case DisplayMessage.ADD_ROW:
                 assignTerminal(message.terminals.get(0).terminalNumber);
                 break;
             case DisplayMessage.DELETE_ROW:
                 assignTerminal(message.terminals.get(0).terminalNumber);
                 break;
-            /*case APP.RESET_SYSTEM:
-                break;*/
+            case APP.RESET_SYSTEM:
+                resetSystem();
+                break;
             case APP.PRINTER_ERROR_ON:
+                startPrinterError();
                 break;
             case APP.PRINTER_ERROR_OFF:
+                stopPrinterError();
                 break;
             case APP.STOP_SERVICE:
+                SERVICE_STOPPED = true;
+                triggerService(SERVICE_STOPPED);
                 break;
             case APP.RESET_SERVICE:
+                SERVICE_STOPPED = false;
+                triggerService(SERVICE_STOPPED);
+                break;
+            case APP.TRIGGER_SERVICE:
+                SERVICE_STOPPED = !SERVICE_STOPPED;
+                triggerService(SERVICE_STOPPED);
                 break;
             default:
                 break;
