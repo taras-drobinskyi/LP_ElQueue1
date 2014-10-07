@@ -19,8 +19,6 @@ public class TerminalRow extends TerminalData implements Comparable {
 
     private int[] terminalHeightOffsets;
 
-
-
     public TerminalRow(TerminalData terminalData, int[] terminalHeightOffsets) {
         super(terminalData.levelIndex, terminalData.clientNumber
                 , terminalData.terminalNumber, terminalData.visible, terminalData.state);
@@ -30,7 +28,7 @@ public class TerminalRow extends TerminalData implements Comparable {
         this.xpos[1] = 0;
         this.xpos[2] = 0;
         this.ypos = 0;
-        //todo: write functionality to store standardBlinkRate locally
+        //todo: write functionality to store blinkRate locally
         timerBlinking = new Timer(500, new BlinkingTimerListener());
     }
 

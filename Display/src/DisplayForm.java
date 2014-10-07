@@ -24,9 +24,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
     private int id = -1;
 
-    /*private int defaultBlinkRate;
-    private int errorBlinkRate;*/
-
     HashMap<String, String> currentVideo;
 
     //Terminal Commands:
@@ -102,8 +99,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         tickerPanel.setLayout(null);
 
         XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
-        /*defaultBlinkRate = variables.getErrorBlinkRate();
-        errorBlinkRate = variables.getDefaultBlinkRate();*/
         tickerMessages = variables.getMessages();
         currentVideo = variables.getCurrentVieoData();
         initObjects();
@@ -139,6 +134,10 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             }
         });
 
+        /*
+        We adding this listener only for testing reasons. When all devices are connected
+        it will not be needed anymore
+         */
         rootPanel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
@@ -218,6 +217,11 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         }
     }
 
+    /**
+     * this method is just for testing (in case the real printer and terminals
+     * are not connected).
+     * @param keyCode A command type to be executed.
+     */
     public void submitEvent(int keyCode) {
         if(keyCode>=0 && keyCode<=APP.MAX_TERMINAL_QUANTITY){
             int terminalNumber = keyCode - TERMINAL_BASE + 1;
@@ -255,6 +259,11 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         }
     }
 
+    /**
+     * this method is just for testing (in case the real printer and terminals
+     * are not connected).
+     * @param command A command type to be executed.
+     */
     private void executeSystemCommand(int command) {
         switch (command) {
             case APP.RESET_SYSTEM:
@@ -262,58 +271,28 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                         null, 0, new Date(), true));
                 break;
             case APP.PRINTER_ERROR_ON:
-                /*if (!SERVICE_STOPPED) {
-                    PRINTER_ERROR = true;
-                    bottomPanel.startPrinterErrorBlinker(l_takeTicket);
-                    notificationSound.Stop();
-                    errorSound.Play();
-                    notificationSound.Reset();
-                }*/
                 sendToHostServer(new DisplayMessage(this.id, APP.PRINTER_ERROR_ON,
                         null, 0, new Date(), true));
                 break;
             case APP.PRINTER_ERROR_OFF:
-                /*if (!SERVICE_STOPPED) {
-                    PRINTER_ERROR = false;
-                    List<JLabel>labels = new ArrayList<>();
-                    labels.add(l_totalTitle);
-                    labels.add(l_total);
-                    labels.add(l_takeTicket);
-                    bottomPanel.startDefaultBlinker(labels);
-                }*/
                 sendToHostServer(new DisplayMessage(this.id, APP.PRINTER_ERROR_OFF,
                         null, 0, new Date(), true));
                 break;
             case APP.STOP_SERVICE:
                 sendToHostServer(new DisplayMessage(this.id, APP.STOP_SERVICE,
                         null, 0, new Date(), true));
-                //triggerService(SERVICE_STOPPED);
 
                 break;
             case APP.RESET_SERVICE:
                 sendToHostServer(new DisplayMessage(this.id, APP.RESET_SERVICE,
                         null, 0, new Date(), true));
-                //triggerService(SERVICE_STOPPED);
 
                 break;
             case APP.TRIGGER_SERVICE:
-                /*SERVICE_STOPPED = !SERVICE_STOPPED;
-                triggerService(SERVICE_STOPPED);*/
                 sendToHostServer(new DisplayMessage(this.id, APP.TRIGGER_SERVICE,
                         null, 0, new Date(), true));
                 break;
             case APP.PRINT_TICKET:
-                /*if(!TICKET_IS_PRINTING) {
-                    total++;
-                    lastClient = total - 1;
-                    if (nextClient == 0) {
-                        nextClient = lastClient;
-                    }
-                    relocateBottomPanelChildren();
-                    variables.setLastClient(lastClient);
-                    variables.setNextClient(nextClient);
-                    printTicket();
-                }*/
                 sendToHostServer(new DisplayMessage(this.id, APP.PRINT_TICKET,
                         null, 0, new Date(), true));
                 break;
@@ -321,33 +300,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 break;
         }
     }
-/*
-    private void triggerService (boolean turnOn, boolean... flags){
-        boolean resettingSystem = false;
-        if (flags.length>0){
-            resettingSystem = flags[0];
-        }
-        if (turnOn){
-            if (PRINTER_ERROR){
-                timerError.stop();
-            }else {
-                timerBottomLine.stop();
-            }
-            relocateBottomPanelChildren();
-            timerServiceStopped.start();
-        }else{
-            timerServiceStopped.stop();
-            relocateBottomPanelChildren();
-            if (PRINTER_ERROR){
-                timerError.start();
-            }*//*else {
-                timerBottomLine.start();
-                if (TICKET_TAKEN || resettingSystem) {
-                    printTicket();
-                }
-            }*//*
-        }
-    }*/
 
     private void stopService(){
         SERVICE_STOPPED = true;
@@ -526,19 +478,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
             }
         }
     }
-
-    private List<DisplayFormListener> displayFormListeners = new ArrayList<>();
-
-    public void addDisplayFormListener(DisplayFormListener listener){
-        displayFormListeners.add(listener);
-    }
-
-    public interface DisplayFormListener {
-        public void onAssignClient(int terminalIndex, int client);
-        public void onAcceptClient(int terminalIndex, int client);
-        public void onHoldTerminals(int[] terminals, int val);
-    }
-
     /**
      * This callback is implemented in {@link ClientConnectorProvider}. Here it's never used.
      * @param id An ID of the client.
@@ -594,7 +533,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 if (message.terminals != null){
                     tablePanel.restOfClients = message.restOfClients;
                     tablePanel.reAssignTerminals(message.terminals);
-                    //todo: reassign also bottom line
+                    bottomPanel.relocateBottomComponents();
                 }else{
                     resetService();
                 }

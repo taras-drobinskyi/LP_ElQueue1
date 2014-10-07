@@ -187,10 +187,9 @@ public class TablePanel extends JPanel {
         row.performAnimation(panelWidth, panelHeight, onePercentHeight);
     }
 
-    public void assignTerminal(int keyCode) {
-        int terminalIndex = keyCode;
+    public void assignTerminal(int terminalIndex) {
         TerminalRow row = getTerminalRow(terminalIndex);
-        System.out.println("assignTerminal keyCode = " + keyCode);
+        System.out.println("assignTerminal keyCode = " + terminalIndex);
 
         if (row.state == TerminalRow.ACCEPTED) {
             List<TerminalData> terminals = new ArrayList<>();
@@ -220,7 +219,6 @@ public class TablePanel extends JPanel {
             row.state = terminalData.state;
         }
         relocateResizedTerminalRorws();
-        this.listener.relocateBottomPanelChildren();
     }
 
     private void relocateTerminalRows(){

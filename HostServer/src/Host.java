@@ -16,7 +16,6 @@ import java.util.List;
  */
 public class Host implements HostServer.HostServerListener {
 
-    //List<HashMap<String, Integer>> terminalRows;
     List<Terminal>terminals;
 
     static int standardBlinkRate;
@@ -37,7 +36,6 @@ public class Host implements HostServer.HostServerListener {
 
     XMLVARIABLES variables;
     private int total = 0;
-    //int[] clientValues;
     private int usedLevels;
 
     private final HostServer server;
@@ -45,43 +43,6 @@ public class Host implements HostServer.HostServerListener {
     public static void main(String[] args) {
 
         new Host();
-        //XMLVARIABLES variables = new XMLVARIABLES(APP.VARIABLES_PATH);
-        /*final HostServer server = new HostServer();
-        final DisplayForm form = new DisplayForm();
-        server.addHostServerListener(new HostServer.HostServerListener() {
-            @Override
-            public void onTerminalServerMessage(HostServer.SocketOrganizer.SocketObject soc) {
-                form.submitEvent(soc.message.terminal);
-            }
-        });
-        server.start();
-        form.addMainFormListener(new DisplayForm.MainFormListener() {
-            @Override
-            public void onAssignClient(int terminalIndex, int client) {
-                int[] terminals = {terminalIndex};
-                server.socketOrganizer.sendTerminals(terminals, sockets.SocketMessage.REQUEST_CLIENT, client);
-            }
-
-            @Override
-            public void onAcceptClient(int terminalIndex, int client) {
-                int[] terminals = {terminalIndex};
-                server.socketOrganizer.sendTerminals(terminals, sockets.SocketMessage.ACCEPT_CLIENT, client);
-            }
-
-            @Override
-            public void onHoldTerminals(int[] terminals, int val) {
-                System.out.println("onHoldTerminals val = " + val);
-                server.socketOrganizer.sendTerminals(terminals, sockets.SocketMessage.HOLD_TERMINAL, val);
-            }
-        });
-        form.mainUIPanel.initialTerminalAssignmentCheck();*/
-
-
-
-        /*GraphicsEnvironment env = GraphicsEnvironment
-                .getLocalGraphicsEnvironment();
-        GraphicsDevice vc = env.getDefaultScreenDevice();
-        vc.setFullScreenWindow(form);*/
     }
 
     public Host(){
@@ -99,9 +60,6 @@ public class Host implements HostServer.HostServerListener {
         //fixme: the next line is just for testing and must be deleted when printer i connected
         total = lastClient +1;
 
-        //clientValues = new int[APP.TERMINAL_QUANTITY];
-
-        //terminalRows = new ArrayList<>();
         terminals = new ArrayList<>();
         usedLevels = 0;
         for (int i=0; i<APP.TERMINAL_QUANTITY; i++){
@@ -109,7 +67,6 @@ public class Host implements HostServer.HostServerListener {
             Terminal terminal = new Terminal(terminalData);
             terminals.add(terminal);
             if (terminal.visible) usedLevels++;
-            //clientValues[i] = terminalRowData.get("clientnumber");
         }
 
         nextClient = variables.getNextClient();
@@ -126,8 +83,6 @@ public class Host implements HostServer.HostServerListener {
         }
 
         variables.setNextClient(nextClient);
-
-        //setRestOfClients();
     }
 
     private int getRestOfClients() {
@@ -139,76 +94,6 @@ public class Host implements HostServer.HostServerListener {
         }
         return restOfClients;
     }
-
-    /*private void executeSystemCommand(int command) {
-        switch (command) {
-            case APP.RESET_SYSTEM:
-                total = 1;
-                lastClient = 0;
-                nextClient = 0;
-                for (int i=0; i< APP.TERMINAL_QUANTITY; i++){
-                    *//*clientValues[i] = 0;
-                    final HashMap<String, Integer> terminalData = terminalRows.get(i);
-                    terminalData.put("clientnumber", 0);*//*
-                    terminals.get(i).clientNumber = 0;
-                }
-
-                variables.setLastClient(lastClient);
-                variables.setNextClient(nextClient);
-
-                SERVICE_STOPPED = false;
-                triggerService(SERVICE_STOPPED, true);
-                break;
-            case APP.PRINTER_ERROR_ON:
-                if (!SERVICE_STOPPED) {
-                    PRINTER_ERROR = true;
-                    ticketsPrinted = 0;
-                    variables.setTicketsPrinted(ticketsPrinted);
-                    lastClient++;
-                    total = lastClient + 1;
-                    variables.setLastClient(lastClient);
-                    if (nextClient == 0) {
-                        nextClient = lastClient;
-                    }
-                    variables.setNextClient(nextClient);
-                    sendToDisplay(APP.PRINTER_ERROR_ON, null);
-                }
-                break;
-            case APP.PRINTER_ERROR_OFF:
-                if (!SERVICE_STOPPED) {
-                    PRINTER_ERROR = false;
-                    printTicket();
-                    sendToDisplay(APP.PRINTER_ERROR_OFF, null);
-                }
-                break;
-            case APP.STOP_SERVICE:
-                SERVICE_STOPPED = true;
-                triggerService(SERVICE_STOPPED);
-                break;
-            case APP.RESET_SERVICE:
-                SERVICE_STOPPED = false;
-                triggerService(SERVICE_STOPPED);
-                break;
-            case APP.TRIGGER_SERVICE:
-                SERVICE_STOPPED = !SERVICE_STOPPED;
-                triggerService(SERVICE_STOPPED);
-                break;
-            case APP.PRINT_TICKET:
-                if(!TICKET_IS_PRINTING) {
-                    total++;
-                    lastClient = total - 1;
-                    if (nextClient == 0) {
-                        nextClient = lastClient;
-                    }
-                    variables.setLastClient(lastClient);
-                    variables.setNextClient(nextClient);
-                    printTicket();
-                }
-                break;
-            default:
-                break;
-        }
-    }*/
 
     private void resetSystem(){
         total = 1;
@@ -281,9 +166,6 @@ public class Host implements HostServer.HostServerListener {
     private void printTicket(){
         if (!PRINTER_ERROR) {
             if (TICKET_TAKEN){
-                //TICKET_IS_PRINTING = true;
-                /*//1 sec deley that prevents to print something new
-                timerPrinter.start();*/
                 server.socketOrganizer.sendPrinters(new int[]{0},
                         new PrinterMessage(0, PrinterMessage.PRINT_TICKET, total, new Date(), true));
 
@@ -293,10 +175,6 @@ public class Host implements HostServer.HostServerListener {
                 sendToDisplay(APP.PRINT_TICKET, null);
             }else {
                 if (!SERVICE_STOPPED) {
-
-                    //TICKET_IS_PRINTING = true;
-                    /*//1 sec deley that prevents to print something new
-                    timerPrinter.start();*/
                     server.socketOrganizer.sendPrinters(new int[]{0},
                             new PrinterMessage(0, PrinterMessage.PRINT_TICKET, total, new Date(), true));
                     ticketsPrinted++;
@@ -349,7 +227,6 @@ public class Host implements HostServer.HostServerListener {
 
         if (terminal.state == TerminalData.ACCEPTED) {
             if (nextClient > 0) {
-                //clientValues[terminalIndex] = nextClient;
                 terminal.clientNumber = nextClient;
                 if (nextClient < lastClient) {
                     nextClient++;
@@ -358,10 +235,6 @@ public class Host implements HostServer.HostServerListener {
                 }
                 terminal.saveToXML();
                 terminal.resetFromXML();
-                /*relocateTerminalRows();
-                row.performAnimation();
-                relocateBottomComponents();
-                notificationSound.Play();*/
                 List<Terminal> terminalsToSend = new ArrayList<>();
                 terminalsToSend.add(terminal);
                 sendToDisplay(DisplayMessage.ADD_ROW, terminalsToSend);
@@ -373,7 +246,6 @@ public class Host implements HostServer.HostServerListener {
                 variables.setNextClient(nextClient);
             }
         }else if (terminal.state == TerminalData.WAITING){
-            //row.performAnimation();
             List<Terminal> terminalsToSend = new ArrayList<>();
             terminalsToSend.add(terminal);
             sendToDisplay(DisplayMessage.DELETE_ROW, terminalsToSend);
