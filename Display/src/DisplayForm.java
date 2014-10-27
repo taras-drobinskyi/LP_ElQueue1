@@ -5,9 +5,9 @@
 import sockets.DisplayMessage;
 import sockets.PrinterMessage;
 import sockets.SocketMessage;
-import uk.co.caprica.vlcj.player.MediaPlayerFactory;
+/*import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
-import uk.co.caprica.vlcj.player.embedded.videosurface.CanvasVideoSurface;
+import uk.co.caprica.vlcj.player.embedded.videosurface.CanvasVideoSurface;*/
 
 import javax.swing.*;
 import javax.swing.Timer;
@@ -176,11 +176,11 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
         videoPanel.add(canvas, BorderLayout.CENTER);
 
-        MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory();
+        /*MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory();
         CanvasVideoSurface videoSurface = mediaPlayerFactory.newVideoSurface(canvas);
         EmbeddedMediaPlayer mediaPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer();
         mediaPlayer.setVideoSurface(videoSurface);
-        mediaPlayer.playMedia(currentVideo.get("path"));
+        mediaPlayer.playMedia(currentVideo.get("path"));*/
 
         setVisible(true);
     }

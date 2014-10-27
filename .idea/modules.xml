@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/ClientServer/ClientServer.iml" filepath="$PROJECT_DIR$/ClientServer/ClientServer.iml" />
       <module fileurl="file://$PROJECT_DIR$/Display/Display.iml" filepath="$PROJECT_DIR$/Display/Display.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ElQDisplay/ElQDisplay.iml" filepath="$PROJECT_DIR$/ElQDisplay/ElQDisplay.iml" />
       <module fileurl="file://$PROJECT_DIR$/HostServer/HostServer.iml" filepath="$PROJECT_DIR$/HostServer/HostServer.iml" />
       <module fileurl="file://$PROJECT_DIR$/LP_ElQueue1.iml" filepath="$PROJECT_DIR$/LP_ElQueue1.iml" />
       <module fileurl="file://$PROJECT_DIR$/Printer/Printer.iml" filepath="$PROJECT_DIR$/Printer/Printer.iml" />
