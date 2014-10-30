@@ -41,24 +41,29 @@
                     android:layout_height="match_parent"/>-->
             </FrameLayout>
             <FrameLayout
-                android:id="@+id/messages"
+                android:id="@+id/frame_messages"
                 android:layout_width="match_parent"
                 android:layout_height="0dip"
                 android:layout_weight="1"
                 android:background="#ffcf3da3">
-
             </FrameLayout>
         </LinearLayout>
         <FrameLayout
-            android:id="@+id/table"
+            android:id="@+id/frame_table"
             android:layout_width="0dip"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="#0099cc"></FrameLayout>
+        <!--<SurfaceView
+
+            android:id="@+id/table"
+            android:layout_width="0dip"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>-->
 
     </LinearLayout>
     <FrameLayout
-        android:id="@+id/system"
+        android:id="@+id/frame_system"
         android:layout_width="match_parent"
         android:layout_height="0dip"
         android:layout_weight="1"

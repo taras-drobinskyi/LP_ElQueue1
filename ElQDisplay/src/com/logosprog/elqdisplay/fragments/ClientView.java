@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.view.View;
 
@@ -21,7 +20,7 @@ public class ClientView extends View {
     public ClientView(Context context) {
         super(context);
         changingY = 0;
-        //font=Typeface.createFromAsset(context.getAssets(), "G-Unit.ttf");
+        font=Typeface.createFromAsset(context.getAssets(), "G-Unit.ttf");
     }
 
     @Override
