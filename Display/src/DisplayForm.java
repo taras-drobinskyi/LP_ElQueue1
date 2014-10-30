@@ -76,8 +76,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     public DisplayForm(){
         //Form Title
         super("Продукт Компании \"ВЕРСИЯ\"");
-        startClientServer();
         this.clientServerListeners = this;
+        startClientServer();
         initForm();
 
     }

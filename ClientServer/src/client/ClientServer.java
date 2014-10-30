@@ -9,6 +9,7 @@ import sockets.OutPut;
 import sockets.SocketMessage;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -176,7 +177,8 @@ public class ClientServer {
             }
             try {
                 // make connection to the server hostName/port
-                Socket socket = new Socket(hostName, port);
+                InetAddress hostIP = APP.getHostIP(hostName);
+                Socket socket = new Socket(hostIP, port);
 
                 System.out.println("client: connected!");
 
