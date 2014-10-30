@@ -1,4 +1,6 @@
 import interfaces.SystemMessageFormListener;
+import main.APP;
+import main.XMLVARIABLES;
 
 
 import javax.swing.*;

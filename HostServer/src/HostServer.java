@@ -2,6 +2,7 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import main.APP;
 import sockets.DisplayMessage;
 import sockets.InPut;
 import sockets.OutPut;

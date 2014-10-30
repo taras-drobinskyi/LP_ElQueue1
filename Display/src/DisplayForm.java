@@ -2,8 +2,12 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import client.ClientConnectorProvider;
+import client.ClientServer;
+import main.APP;
+import main.Audio;
+import main.XMLVARIABLES;
 import sockets.DisplayMessage;
-import sockets.PrinterMessage;
 import sockets.SocketMessage;
 /*import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;

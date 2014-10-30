@@ -1,8 +1,9 @@
 import display.TerminalData;
+import main.APP;
+import main.XMLVARIABLES;
 import sockets.DisplayMessage;
 import sockets.PrinterMessage;
 import sockets.SocketMessage;
-import sockets.TerminalMessage;
 
 import java.io.Serializable;
 import java.util.ArrayList;

@@ -4,6 +4,7 @@
 
 import display.TerminalData;
 import interfaces.ClientMessageFormListener;
+import main.APP;
 import sockets.DisplayMessage;
 import sockets.SocketMessage;
 

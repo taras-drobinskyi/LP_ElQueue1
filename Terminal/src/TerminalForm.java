@@ -2,6 +2,8 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import client.ClientServer;
+import main.APP;
 import sockets.SocketMessage;
 import sockets.TerminalMessage;
 
