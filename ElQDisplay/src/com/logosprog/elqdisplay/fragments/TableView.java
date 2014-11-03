@@ -6,8 +6,10 @@ package com.logosprog.elqdisplay.fragments;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -22,7 +24,8 @@ public class TableView extends SurfaceView implements SurfaceHolder.Callback {
 
     public TableView(Context context) {
         super(context);
-        font=Typeface.createFromAsset(context.getAssets(), "G-Unit.ttf");
+        //font=Typeface.createFromAsset(context.getAssets(), "G-Unit.ttf");
+        getHolder().addCallback(this);
     }
 
     public void stop() {
@@ -59,6 +62,8 @@ public class TableView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     private class TableViewDrawer extends Thread{
+
+        static final String TAG = "TableViewDrawer";
 
         SurfaceHolder surfaceHolder;
         Thread thread = null;
@@ -113,24 +118,35 @@ public class TableView extends SurfaceView implements SurfaceHolder.Callback {
             int yPos = canvasHeight;
 
             Paint textPaint =new Paint();
-            textPaint.setARGB(50, 254, 10, 50);
+            //textPaint.setARGB(50, 254, 10, 50);
+            textPaint.setColor(Color.WHITE);
             textPaint.setTextAlign(Paint.Align.CENTER);
-            textPaint.setTextSize(50);
+            textPaint.setTextSize(100);
             textPaint.setTypeface(font);
 
+            long startTime = System.currentTimeMillis();
+            long delay = 33;
+            int shift = 5;
+            long estTime = ((canvasHeight/shift)*delay);
+            Log.e(TAG, "Estimated time = " + estTime + "s");
+
+            int i = 0;
+
             while (isRunning) {
-                if (!surfaceHolder.getSurface().isValid()) {
-                /*
+                /*if (!surfaceHolder.getSurface().isValid()) {
+                *//*
                 continue is like break in switch-case structure. It allows us
                 continue our while loop without touching next lines
-                 */
+                 *//*
                     continue;
-                }
+                }*/
+
+
                 // получаем текущее время и вычисляем разницу с предыдущим
                 // сохраненным моментом времени
-                long now = System.currentTimeMillis();
+                /*long now = System.currentTimeMillis();
                 long elapsedTime = now - prevTime;
-                if (elapsedTime > 30){
+                if (elapsedTime > 2){
                     // если прошло больше 30 миллисекунд - сохраним текущее время
                     // и повернем картинку на 2 градуса.
                     // точка вращения - центр картинки
@@ -138,26 +154,11 @@ public class TableView extends SurfaceView implements SurfaceHolder.Callback {
 
 
 
-                    yPos -= 10;
-                    if ((yPos - 10) <= 0) yPos = canvasHeight;
 
-                }
 
-                /*
-            next line means that we assign the surface to this canvas and right after
-            that we locking the "door" to this surface, so that no one else can
-            draw on it except this canvas.
-             */
-                Canvas canvas = surfaceHolder.lockCanvas();
-                canvas.drawRGB(02, 02, 150);
+                }*/
 
-                canvas.drawText("103 > 3", canvasWidth/2, yPos, textPaint);
 
-                /*
-            here we unlocking the "door" to the surface
-            and display the canvas to the user
-             */
-                surfaceHolder.unlockCanvasAndPost(canvas);
 
             /*if(x != 0 && y != 0){
                 canvas.drawBitmap(test, x-(test.getWidth()/2), y-(test.getHeight()/2), null);
@@ -173,13 +174,39 @@ public class TableView extends SurfaceView implements SurfaceHolder.Callback {
             aniY = aniY + scaledY;*/
 
 
+                yPos = yPos - shift;
+                if ((yPos - shift) <= 0){
+                    yPos = canvasHeight;
+                    long realTime = (System.currentTimeMillis() - startTime);
+                    startTime = System.currentTimeMillis();
+                    Log.e(TAG, "Real time = " + realTime + "s");
+                    Log.d(TAG, "Number of iterations = " + i);
+                    i = 0;
+                }else{
+                    i++;
+                }
 
+                    /*
+            next line means that we assign the surface to this canvas and right after
+            that we locking the "door" to this surface, so that no one else can
+            draw on it except this canvas.
+             */
+                Canvas canvas = surfaceHolder.lockCanvas();
+                canvas.drawARGB(255, 125, 11, 54);
+                //canvas.drawColor(Color.WHITE);
 
-            /*try {
-                thread.sleep(16);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }*/
+                canvas.drawText("103 > 3", canvasWidth / 2, yPos, textPaint);
+                /*
+            here we unlocking the "door" to the surface
+            and display the canvas to the user
+             */
+                surfaceHolder.unlockCanvasAndPost(canvas);
+
+                /*try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }*/
             }
         }
     }

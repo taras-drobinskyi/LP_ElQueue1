@@ -19,6 +19,8 @@ import android.widget.VideoView;
 
 import com.logosprog.elqdisplay.App;
 import com.logosprog.elqdisplay.R;
+import com.logosprog.elqdisplay.interfaces.MainActivityController;
+import com.logosprog.elqdisplay.interfaces.MainActivityDelegate;
 
 /**
  * A simple {@link android.app.Fragment} subclass.
@@ -29,7 +31,7 @@ import com.logosprog.elqdisplay.R;
  * create an instance of this fragment.
  *
  */
-public class VideoLayout extends Fragment {
+public class VideoLayout extends Fragment implements MainActivityDelegate {
 
     static final String TAG = "VideoLayout";
 
@@ -191,6 +193,13 @@ public class VideoLayout extends Fragment {
         return fragment;
     }
 
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        final MainActivityController controller = (MainActivityController) getActivity();
+        //controller.onAttachDelegate(this);
+    }
+
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
@@ -257,6 +266,16 @@ public class VideoLayout extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onAssignClient(int terminal, int client) {
+        video.stopPlayback();
+    }
+
+    @Override
+    public void onDetachClient(int terminal, int client) {
+        video.start();
     }
 
     /**

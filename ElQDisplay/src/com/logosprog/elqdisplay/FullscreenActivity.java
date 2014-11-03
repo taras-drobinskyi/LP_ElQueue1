@@ -4,7 +4,11 @@
 
 package com.logosprog.elqdisplay;
 
+import android.content.Context;
 import android.view.Window;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.TranslateAnimation;
 import client.ClientConnectorProvider;
 import client.ClientServer;
 import com.logosprog.elqdisplay.fragments.ClientLayout;
@@ -72,13 +76,22 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        try {
+        View decorView = getWindow().getDecorView();
+        /*Hide both the navigation bar and the status bar.
+        SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+        a general rule, you should design your app to hide the status bar whenever you
+        hide the navigation bar.*/
+        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LOW_PROFILE;
+        decorView.setSystemUiVisibility(uiOptions);
+
+        /*try {
             Runtime.getRuntime().exec(new String[]{"su","-c","service call activity 79 s16 com.android.systemui"});
             Log.e(TAG, "--------Working!!!--------");
         } catch (IOException e) {
             e.printStackTrace();
             Log.e(TAG, "ERRRRRRROOORRRRR!!!");
-        }
+        }*/
+
         createDirIfNotExists();
 
         setContentView(R.layout.activity_main);
@@ -94,12 +107,10 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         Fragment fragmentClient = new ClientLayout();
         Fragment fragmentTable = new TableLayout();
         Fragment fragmentVideo = VideoLayout.newInstance(false);
-        transaction.replace(R.id.frame_video, fragmentVideo, "fragmentVideo");
+        //transaction.replace(R.id.frame_video, fragmentVideo, "fragmentVideo");
         transaction.replace(R.id.frame_client, fragmentClient, "fragmentClient");
         transaction.replace(R.id.frame_table, fragmentTable, "fragmentTable");
         transaction.commit();
-
-
 
         /*VideoView video = (VideoView) findViewById(R.id.frame_video);
         Uri vid_Uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.test);
@@ -176,14 +187,26 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
                     }
                 }*/
                 counter++;
+
                 for (MainActivityDelegate delegate : delegates){
                     delegate.onAssignClient(counter, counter);
                 }
+
                 controlsView.animate()
                         .translationY(0)
                         .setDuration(getResources().getInteger(
                                 android.R.integer.config_longAnimTime));
                 delayedHide(AUTO_HIDE_DELAY_MILLIS);
+
+
+                /*Animation a = new TranslateAnimation(0.0f, 0.0f, target.getHeight() + targetParent.getPaddingBottom(),
+                        -(targetParent.getHeight() - target.getHeight() -
+                                targetParent.getPaddingTop() - targetParent.getPaddingBottom()));
+                a.setDuration(1000);
+                a.setStartOffset(300);
+
+                a.setInterpolator(AnimationUtils.loadInterpolator(context, android.R.anim.decelerate_interpolator));
+                target.startAnimation(a);*/
             }
         });
 
@@ -210,6 +233,24 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         // created, to briefly hint to the user that UI controls
         // are available.
         delayedHide(100);
+
+        /*Animation b = new TranslateAnimation(0.0f, 0.0f, targetParent.getHeight() - target.getHeight() -
+        targetParent.getPaddingTop() - targetParent.getPaddingBottom(), 0.0f);
+
+        Animation a = new TranslateAnimation(0.0f,
+                targetParent.getWidth() - target.getWidth() - targetParent.getPaddingLeft() -
+                        targetParent.getPaddingRight(), 0.0f, 0.0f);
+
+        a.setDuration(1000);
+        a.setStartOffset(300);
+        a.setRepeatMode(Animation.RESTART);
+        a.setRepeatCount(Animation.INFINITE);
+        a.setInterpolator(AnimationUtils.loadInterpolator(this,
+                android.R.anim.decelerate_interpolator));
+        target.startAnimation(a);*/
+
+
+
     }
 
     private void assignClientServer(ClientServer client){
@@ -252,7 +293,6 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
             return false;
         }
     };*/
-
     Handler mHideHandler = new Handler();
     Runnable mHideRunnable = new Runnable() {
         @Override
@@ -262,6 +302,9 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
                     .translationY(controlsView.getHeight())
                     .setDuration(getResources().getInteger(
                             android.R.integer.config_longAnimTime));
+            for (MainActivityDelegate delegate : delegates){
+                delegate.onDetachClient(counter, counter);
+            }
         }
     };
     /**

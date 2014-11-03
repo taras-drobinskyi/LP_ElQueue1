@@ -20,7 +20,7 @@ public class TableLayout extends Fragment implements MainActivityDelegate {
 
     Context activityContext;
 
-    TableView tableView;
+    MyAnimationView tableView;
 
     public TableLayout(){
         // Required empty public constructor
@@ -35,7 +35,8 @@ public class TableLayout extends Fragment implements MainActivityDelegate {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        tableView = new TableView(activityContext);
+        //tableView = new TableView(activityContext);
+        tableView = new MyAnimationView(activityContext);
 
         return tableView;
     }
@@ -61,7 +62,7 @@ public class TableLayout extends Fragment implements MainActivityDelegate {
 
     @Override
     public void onAssignClient(int terminal, int client) {
-
+        tableView.startAnimation();
     }
 
     @Override

@@ -19,7 +19,7 @@ import com.logosprog.elqdisplay.interfaces.MainActivityDelegate;
 /**
  * A simple {@link android.app.Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link com.logosprog.elqdisplay.fragments.ClientLayout.OnClientInteractionListener} interface
+ * {@link com.logosprog.elqdisplay.fragments.ClientLayout.ClientInteractionListener} interface
  * to handle interaction events.
  *
  */
@@ -29,7 +29,7 @@ public class ClientLayout extends Fragment implements MainActivityDelegate {
 
     ClientView clientView;
 
-    private OnClientInteractionListener mListener;
+    private ClientInteractionListener mListener;
 
     public ClientLayout() {
         // Required empty public constructor
@@ -110,8 +110,9 @@ public class ClientLayout extends Fragment implements MainActivityDelegate {
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
-    public interface OnClientInteractionListener {
+    public interface ClientInteractionListener {
         public void onClientCall();
+        public void onHiddenClientView();
     }
 
 }
