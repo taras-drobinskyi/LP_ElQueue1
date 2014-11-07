@@ -2,7 +2,7 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
-package com.logosprog.elqdisplay.fragments;
+package com.logosprog.elqdisplay.fragments.tableutils;
 
 import android.graphics.*;
 import android.graphics.drawable.Drawable;
@@ -46,10 +46,14 @@ public class TextDrawable extends Drawable {
     public float getHeight() {
         return 22f;
     }
+    public void setVisible(boolean value){setVisible(value, false);}
+    public boolean getVisible(){return isVisible();}
 
     @Override
     public void draw(Canvas canvas) {
-        canvas.drawText(text, 0, 0, paint);
+        if (isVisible()) {
+            canvas.drawText(text, 0, 0, paint);
+        }
     }
 
     @Override

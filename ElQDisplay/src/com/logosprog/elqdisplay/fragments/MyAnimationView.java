@@ -4,17 +4,17 @@
 
 package com.logosprog.elqdisplay.fragments;
 
+import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.*;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.OvalShape;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import com.logosprog.elqdisplay.fragments.tableutils.TextDrawable;
 
 import java.util.ArrayList;
 
@@ -27,6 +27,7 @@ public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdat
 
     public final ArrayList<TextDrawable> textList = new ArrayList<>();
     AnimatorSet animation = null;
+    ObjectAnimator anim2 = null;
     private float mDensity;
 
     public MyAnimationView(Context context) {
@@ -42,9 +43,10 @@ public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdat
 
     private void createTextAnimation() {
         if (animation == null) {
+            textList.get(0).setVisible(false,false);
             ObjectAnimator anim1 = ObjectAnimator.ofFloat(textList.get(0), "y",
                     0f, getHeight() - textList.get(0).getHeight()).setDuration(1500);
-            ObjectAnimator anim2 = anim1.clone();
+            anim2 = anim1.clone();
             anim2.setTarget(textList.get(1));
             anim1.addUpdateListener(this);
 
@@ -65,6 +67,28 @@ public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdat
             animation = new AnimatorSet();
             animation.playTogether(anim1, anim2, s1);
             animation.playSequentially(s1, s2);
+
+            animation.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animator) {
+                    Log.d(TAG, "isStarted = " + animator.isStarted() + " isRunning = " + animator.isRunning());
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animator) {
+                    Log.d(TAG, "isStarted = " + animator.isStarted() + " isRunning = " + animator.isRunning());
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animator) {
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animator) {
+
+                }
+            });
         }
     }
 
@@ -81,7 +105,14 @@ public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdat
         for (int i = 0; i < textList.size(); ++i) {
             TextDrawable textDrawable = textList.get(i);
             canvas.save();
+            /*
+            Shifting the canvas so that next drawing object's location (x and y)
+             is on screen's x=0, y=0 coordinates
+             */
             canvas.translate(textDrawable.getX(), textDrawable.getY());
+            /*
+            draw the object with object.x and object.y arguments = 0
+             */
             textDrawable.draw(canvas);
             canvas.restore();
         }
@@ -91,6 +122,10 @@ public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdat
         //createAnimation();
         createTextAnimation();
         animation.start();
+        ObjectAnimator animRight = ObjectAnimator.ofFloat(textList.get(1), "x",
+                textList.get(1).getX(), getWidth() - 100f).setDuration(4000);
+        //animRight.addUpdateListener(this);
+        animRight.start();
     }
 
     public void onAnimationUpdate(ValueAnimator animation) {

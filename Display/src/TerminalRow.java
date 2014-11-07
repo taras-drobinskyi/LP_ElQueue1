@@ -29,7 +29,7 @@ public class TerminalRow extends TerminalData implements Comparable {
         this.xpos[2] = 0;
         this.ypos = 0;
         //todo: write functionality to store blinkRate locally
-        timerBlinking = new Timer(500, new BlinkingTimerListener());
+        timerBlinking = new Timer(500, new Blinker());
     }
 
     private void transitionCompleted(){
@@ -75,7 +75,7 @@ public class TerminalRow extends TerminalData implements Comparable {
         this.listener.redrawComponents();
     }
 
-    private class BlinkingTimerListener implements ActionListener {
+    private class Blinker implements ActionListener {
 
         private boolean isForeground = true;
         private final static int maxBlinking = 4;
