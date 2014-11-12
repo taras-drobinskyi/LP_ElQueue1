@@ -4,10 +4,7 @@
 
 package com.logosprog.elqdisplay.fragments;
 
-import android.animation.Animator;
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
+import android.animation.*;
 import android.content.Context;
 import android.graphics.*;
 import android.util.Log;
@@ -26,8 +23,8 @@ public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdat
     final static String TAG = "MyAnimationView";
 
     public final ArrayList<TextDrawable> textList = new ArrayList<>();
-    AnimatorSet animation = null;
-    ObjectAnimator anim2 = null;
+    //AnimatorSet animation = null;
+    //ObjectAnimator anim2 = null;
     private float mDensity;
 
     public MyAnimationView(Context context) {
@@ -35,61 +32,81 @@ public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdat
 
         mDensity = getContext().getResources().getDisplayMetrics().density;
 
+        /*animation = new AnimatorSet();
+        animation.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                Log.d(TAG, "StartAnimation, duration = " + animation.getDuration());
+            }
+
+            @Override
+            public void onAnimationEnd(Animator anim) {
+                Log.d(TAG, "EndAnimation, duration = " + anim.getDuration());
+                if (i>0){
+                    i = 0;
+                }else {
+                    createTextAnimation2();
+                    animation.start();
+                    i++;
+                }
+            }
+        });*/
+
         TextDrawable text0 = addTextView(50f, 25f);
         TextDrawable text1 = addTextView(150f, 25f);
         TextDrawable text2 = addTextView(250f, 25f);
         TextDrawable text3 = addTextView(350f, 25f);
     }
 
-    private void createTextAnimation() {
-        if (animation == null) {
+    private void createTextAnimation1() {
+        //if (animation == null) {
+        AnimatorSet animation = new AnimatorSet();
+        animation.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                Log.d(TAG, "StartAnimation1");
+            }
+
+            @Override
+            public void onAnimationEnd(Animator anim) {
+                Log.d(TAG, "EndAnimation1");
+                createTextAnimation2();
+            }
+        });
             textList.get(0).setVisible(false,false);
             ObjectAnimator anim1 = ObjectAnimator.ofFloat(textList.get(0), "y",
                     0f, getHeight() - textList.get(0).getHeight()).setDuration(1500);
-            anim2 = anim1.clone();
+        ObjectAnimator anim2 = anim1.clone();
             anim2.setTarget(textList.get(1));
             anim1.addUpdateListener(this);
+            animation.playTogether(anim1, anim2);
+        animation.start();
+        //}
+    }
 
-            TextDrawable text2 = textList.get(2);
-            ObjectAnimator animDown = ObjectAnimator.ofFloat(text2, "y",
-                    0f, getHeight() - text2.getHeight()).setDuration(500);
-            animDown.setInterpolator(new AccelerateInterpolator());
-            ObjectAnimator animUp = ObjectAnimator.ofFloat(text2, "y",
-                    getHeight() - text2.getHeight(), 0f).setDuration(1000);
-            animUp.setInterpolator(new DecelerateInterpolator());
-            AnimatorSet s1 = new AnimatorSet();
-            s1.playSequentially(animDown, animUp);
-            animDown.addUpdateListener(this);
-            animUp.addUpdateListener(this);
-            AnimatorSet s2 = (AnimatorSet) s1.clone();
-            s2.setTarget(textList.get(3));
-
-            animation = new AnimatorSet();
-            animation.playTogether(anim1, anim2, s1);
-            animation.playSequentially(s1, s2);
-
-            animation.addListener(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationStart(Animator animator) {
-                    Log.d(TAG, "isStarted = " + animator.isStarted() + " isRunning = " + animator.isRunning());
-                }
-
-                @Override
-                public void onAnimationEnd(Animator animator) {
-                    Log.d(TAG, "isStarted = " + animator.isStarted() + " isRunning = " + animator.isRunning());
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animator) {
-
-                }
-
-                @Override
-                public void onAnimationRepeat(Animator animator) {
-
-                }
-            });
-        }
+    private void createTextAnimation2(){
+        AnimatorSet animation = new AnimatorSet();
+        animation.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                Log.d(TAG, "StartAnimation2");
+            }
+        });
+        TextDrawable text2 = textList.get(2);
+        ObjectAnimator animDown = ObjectAnimator.ofFloat(text2, "y",
+                0f, getHeight() - text2.getHeight()).setDuration(500);
+        animDown.setInterpolator(new AccelerateInterpolator());
+        ObjectAnimator animUp = ObjectAnimator.ofFloat(text2, "y",
+                getHeight() - text2.getHeight(), 0f).setDuration(1000);
+        animUp.setInterpolator(new DecelerateInterpolator());
+        AnimatorSet s1 = new AnimatorSet();
+        s1.playSequentially(animDown, animUp);
+        animDown.addUpdateListener(this);
+        animUp.addUpdateListener(this);
+        AnimatorSet s2 = (AnimatorSet) s1.clone();
+        s2.setTarget(textList.get(3));
+        animation.playSequentially(s1, s2);
+        animation.start();
     }
 
     private TextDrawable addTextView(float x, float y) {
@@ -120,12 +137,7 @@ public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdat
 
     public void startAnimation() {
         //createAnimation();
-        createTextAnimation();
-        animation.start();
-        ObjectAnimator animRight = ObjectAnimator.ofFloat(textList.get(1), "x",
-                textList.get(1).getX(), getWidth() - 100f).setDuration(4000);
-        //animRight.addUpdateListener(this);
-        animRight.start();
+        createTextAnimation1();
     }
 
     public void onAnimationUpdate(ValueAnimator animation) {

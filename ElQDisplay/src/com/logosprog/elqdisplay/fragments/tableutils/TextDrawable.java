@@ -12,7 +12,7 @@ import android.graphics.drawable.Drawable;
  */
 public class TextDrawable extends Drawable {
 
-    private final String text;
+    private String text;
     private final Paint paint;
 
     private float x = 0, y = 0;
@@ -29,8 +29,12 @@ public class TextDrawable extends Drawable {
         paint.setShadowLayer(6f, 0, 0, Color.BLACK);
         paint.setStyle(Paint.Style.FILL);
         paint.setTextAlign(Paint.Align.LEFT);
+        float width = 0f;
+
     }
 
+    public void setText(String value){this.text = value;}
+    public String getText(){return this.text;}
     public void setX(float value) {
         x = value;
     }
@@ -48,6 +52,18 @@ public class TextDrawable extends Drawable {
     }
     public void setVisible(boolean value){setVisible(value, false);}
     public boolean getVisible(){return isVisible();}
+    public void setFontSize(float val){this.paint.setTextSize(val);}
+    public float getFontSize(){return this.paint.getTextSize();}
+
+    /**
+     *
+     * @return the width (int) of paint with specified text string
+     */
+    public int getTextWidth() {
+        Rect bounds = new Rect();
+        paint.getTextBounds(text, 0, text.length(), bounds);
+        return bounds.left + bounds.width();
+    }
 
     @Override
     public void draw(Canvas canvas) {

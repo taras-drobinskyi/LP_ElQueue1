@@ -18,7 +18,7 @@ public class TerminalRow extends TerminalData implements Comparable {
 
     protected boolean partlyVisible;
     private int[] terminalHeightOffsets;
-    protected TextDrawable[] drawables;
+    public TextDrawable[] drawables;
 
     private ScheduledThreadPoolExecutor blinkingScheduler;
 
@@ -27,12 +27,25 @@ public class TerminalRow extends TerminalData implements Comparable {
                 , terminalData.terminalNumber, terminalData.visible, terminalData.state);
         this.terminalHeightOffsets = terminalHeightOffsets;
         drawables = new TextDrawable[3];
-
-        blinkingScheduler = new ScheduledThreadPoolExecutor(1);
-        //blinkingScheduler.scheduleAtFixedRate(new Blinker(), 0, 500, TimeUnit.SECONDS);
+        drawables[0] = new TextDrawable(String.valueOf(terminalData.clientNumber));
+        drawables[1] = new TextDrawable(">");
+        drawables[2] = new TextDrawable(String.valueOf(terminalData.terminalNumber));
+        /*blinkingScheduler = new ScheduledThreadPoolExecutor(1);
+        ScheduledFuture<?> futureTask = blinkingScheduler.scheduleAtFixedRate(new Blinker(), 0, 500, TimeUnit.SECONDS);
+        futureTask.cancel(true);*/
 
 
     }
+
+    /*public TextDrawable getClientDrawable(){
+        return drawables[0];
+    }
+    public TextDrawable getArrowrawable(){
+        return drawables[1];
+    }
+    public TextDrawable getTerminalDrawable(){
+        return drawables[2];
+    }*/
 
     @Override
     public int compareTo(Object obj) {
@@ -61,23 +74,11 @@ public class TerminalRow extends TerminalData implements Comparable {
         }
     }
 
-    private void transitionCompleted(){
-        this.listener.onTransitionCompleted(this);
-    }
-
     private void redrawMyComponents() {
         this.listener.redrawComponents();
     }
 
-    private void showMessageForm(){
-        this.listener.onShowMessageForm(this);
-    }
-
-    private void disposeMessageForm(){
-        this.listener.onDisposeMessageForm(this);
-    }
-
-    private class Blinker implements Runnable{
+    protected class Blinker implements Runnable{
 
         private boolean isVisible = true;
         private final static int maxBlinking = 4;
@@ -92,7 +93,7 @@ public class TerminalRow extends TerminalData implements Comparable {
                 isVisible = !isVisible;
                 if (!clientMessageFormIsShown){
                     clientMessageFormIsShown = true;
-                    showMessageForm();
+                    //showMessageForm();
                 }
             } else {
                 alreadyBlinked = 0;
@@ -102,7 +103,7 @@ public class TerminalRow extends TerminalData implements Comparable {
                 state = WAITING;
                 //saveToXML();
                 clientMessageFormIsShown = false;
-                disposeMessageForm();
+                //disposeMessageForm();
             }
             redrawMyComponents();
         }
@@ -114,9 +115,6 @@ public class TerminalRow extends TerminalData implements Comparable {
     }
 
     public interface TerminalRowListener{
-        public void onTransitionCompleted(TerminalRow row);
-        public void onShowMessageForm(TerminalRow row);
-        public void onDisposeMessageForm(TerminalRow row);
         public void check_ForTerminalsOnHoldSet();
         public int getUsedLevels();
         public void check_ForTerminalsOnHoldRelease();

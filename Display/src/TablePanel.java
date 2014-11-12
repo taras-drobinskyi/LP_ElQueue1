@@ -66,7 +66,7 @@ public class TablePanel extends JPanel {
                 onePercentWidth = panelWidth / 100;
                 onePercentHeight = panelHeight / 100;
                 relocateTitles(listener.getTableTitleLabels());
-                relocateResizedTerminalRorws();
+                relocateResizedTerminalRows();
             }
         });
     }
@@ -156,7 +156,7 @@ public class TablePanel extends JPanel {
         initialTerminalAssignmentCheck();
         tableIsValid = true;
         System.out.println("USED LEVELS = " + getUSEDLevels());
-        relocateResizedTerminalRorws();
+        relocateResizedTerminalRows();
         this.listener.relocateBottomPanelChildren();
     }
 
@@ -219,7 +219,7 @@ public class TablePanel extends JPanel {
             if (terminalData.visible) USEDLevels++;
             row.state = terminalData.state;
         }
-        relocateResizedTerminalRorws();
+        relocateResizedTerminalRows();
     }
 
     private void relocateTerminalRows(){
@@ -242,13 +242,13 @@ public class TablePanel extends JPanel {
         repaint();
     }
 
-    protected void relocateResizedTerminalRorws(){
+    protected void relocateResizedTerminalRows(){
         int fontHeight = onePercentHeight * 16;
 
         TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
         FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
 
-        for (TerminalRow r : getTable()){
+        for (TerminalRow r : table){
             if (r.visible) {
                 int h_offset = terminalHeightOffsets[r.levelIndex];
                 r.ypos = onePercentHeight * h_offset;
