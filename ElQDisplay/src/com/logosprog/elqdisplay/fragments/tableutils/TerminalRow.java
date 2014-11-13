@@ -17,19 +17,17 @@ import java.util.concurrent.TimeUnit;
 public class TerminalRow extends TerminalData implements Comparable {
 
     protected boolean partlyVisible;
-    private int[] terminalHeightOffsets;
     public TextDrawable[] drawables;
 
     private ScheduledThreadPoolExecutor blinkingScheduler;
 
-    public TerminalRow(TerminalData terminalData, int[] terminalHeightOffsets) {
+    public TerminalRow(TerminalData terminalData) {
         super(terminalData.levelIndex, terminalData.clientNumber
                 , terminalData.terminalNumber, terminalData.visible, terminalData.state);
-        this.terminalHeightOffsets = terminalHeightOffsets;
         drawables = new TextDrawable[3];
         drawables[0] = new TextDrawable(String.valueOf(terminalData.clientNumber));
         drawables[1] = new TextDrawable(">");
-        drawables[2] = new TextDrawable(String.valueOf(terminalData.terminalNumber));
+        drawables[2] = new TextDrawable(String.valueOf(terminalData.terminalNumber +1));
         /*blinkingScheduler = new ScheduledThreadPoolExecutor(1);
         ScheduledFuture<?> futureTask = blinkingScheduler.scheduleAtFixedRate(new Blinker(), 0, 500, TimeUnit.SECONDS);
         futureTask.cancel(true);*/

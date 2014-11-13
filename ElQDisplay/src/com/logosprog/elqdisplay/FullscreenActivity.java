@@ -4,11 +4,7 @@
 
 package com.logosprog.elqdisplay;
 
-import android.content.Context;
 import android.view.Window;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.view.animation.TranslateAnimation;
 import client.ClientConnectorProvider;
 import client.ClientServer;
 import com.logosprog.elqdisplay.fragments.ClientLayout;
@@ -22,13 +18,11 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import sockets.DisplayMessage;
 import sockets.SocketMessage;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -302,9 +296,9 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
                     .translationY(controlsView.getHeight())
                     .setDuration(getResources().getInteger(
                             android.R.integer.config_longAnimTime));
-            for (MainActivityDelegate delegate : delegates){
-                delegate.onDetachClient(counter, counter);
-            }
+            /*for (MainActivityDelegate delegate : delegates){
+                delegate.onAcceptClient(counter, counter);
+            }*/
         }
     };
     /**
@@ -335,7 +329,23 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
 
     @Override
     public void onInputMessage(Object object) {
-
+        DisplayMessage message = (DisplayMessage)object;
+        switch (message.operation){
+            case DisplayMessage.INIT_ROWS:
+                System.out.println("INIT_ROWS!!!");
+                for (MainActivityDelegate delegate : delegates){
+                    delegate.onInitTable(message.terminals, message.restOfClients);
+                }
+                message.received = true;
+                clientServer.send(message);
+                break;
+            case DisplayMessage.DELETE_ROW:
+                System.out.println("DELETE_ROW!!!");
+                for (MainActivityDelegate delegate : delegates){
+                    delegate.onAcceptClient(message.terminals.get(0), message.restOfClients);
+                }
+                break;
+        }
     }
 
     @Override

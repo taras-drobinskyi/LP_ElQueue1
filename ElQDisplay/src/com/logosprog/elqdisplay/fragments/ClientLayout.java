@@ -15,6 +15,9 @@ import android.view.ViewGroup;
 
 import com.logosprog.elqdisplay.interfaces.MainActivityController;
 import com.logosprog.elqdisplay.interfaces.MainActivityDelegate;
+import display.TerminalData;
+
+import java.util.List;
 
 /**
  * A simple {@link android.app.Fragment} subclass.
@@ -93,11 +96,16 @@ public class ClientLayout extends Fragment implements MainActivityDelegate {
     }
 
     @Override
-    public void onDetachClient(int terminal, int client) {
+    public void onAcceptClient(TerminalData terminalRowData, int restOfClients) {
         /*clientView.animate()
                 .translationY(clientView.getHeight())
                 .setDuration(getResources().getInteger(
                         android.R.integer.config_longAnimTime));*/
+    }
+
+    @Override
+    public void onInitTable(List<TerminalData> terminals, int restOfClients) {
+
     }
 
     /**

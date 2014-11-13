@@ -135,7 +135,7 @@ public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdat
         }
     }
 
-    public void startAnimation() {
+    public void runMyAnimation() {
         //createAnimation();
         createTextAnimation1();
     }

@@ -21,6 +21,9 @@ import com.logosprog.elqdisplay.App;
 import com.logosprog.elqdisplay.R;
 import com.logosprog.elqdisplay.interfaces.MainActivityController;
 import com.logosprog.elqdisplay.interfaces.MainActivityDelegate;
+import display.TerminalData;
+
+import java.util.List;
 
 /**
  * A simple {@link android.app.Fragment} subclass.
@@ -270,12 +273,17 @@ public class VideoLayout extends Fragment implements MainActivityDelegate {
 
     @Override
     public void onAssignClient(int terminal, int client) {
-        video.stopPlayback();
+
     }
 
     @Override
-    public void onDetachClient(int terminal, int client) {
-        video.start();
+    public void onAcceptClient(TerminalData terminalRowData, int restOfClients) {
+
+    }
+
+    @Override
+    public void onInitTable(List<TerminalData> terminals, int restOfClients) {
+
     }
 
     /**

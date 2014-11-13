@@ -6,8 +6,13 @@ package com.logosprog.elqdisplay.fragments;
 
 import android.animation.*;
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import com.logosprog.elqdisplay.fragments.tableutils.DeleteRowQueue;
 import com.logosprog.elqdisplay.fragments.tableutils.TerminalRow;
 import com.logosprog.elqdisplay.fragments.tableutils.TextDrawable;
@@ -23,13 +28,14 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  * Created by forando on 08.11.14.
  */
 public class TableView extends View implements ValueAnimator.AnimatorUpdateListener,
-        DeleteRowQueue.DeleteRowQueueListener{
+        DeleteRowQueue.DeleteRowQueueListener, ViewTreeObserver.OnGlobalLayoutListener{
 
     private static final String TAG = "TableView";
 
     private int id;
 
     private List<TerminalRow> table;
+    private List<TerminalData> tempTerminalRows;
 
     private int USEDLevels;
     private int levelsToBeUSED = 0;
@@ -39,6 +45,16 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     private final static int[] terminalHeightOffsets = {27, 44, 61, 78, 95};
     private final static int[] widthOffsets = {30, 60, 85};
 
+    /**
+     * Flag that indicates whether or not the {@link #initTable(java.util.List, int)}
+     * method has been called.
+     */
+    private boolean requestedINIT = false;
+    /**
+     * Flag that indicates if the width and height of this View has been already
+     * specified.
+     */
+    private boolean layoutDimensionsAreValid = false;
     private boolean tableIsValid = false;
     private boolean isRowsSliding = false;
     private boolean isOnHoldTerminals = false;
@@ -56,7 +72,9 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     AnimatorSet deleteRowAnim;
     AnimatorSet addRowAnim;
 
-    private volatile DeleteRowQueue deleteRowQueue;
+    Paint paint;
+
+    protected DeleteRowQueue deleteRowQueue;
 
     private ScheduledThreadPoolExecutor blinkingScheduler;
 
@@ -67,31 +85,45 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
 
         blinkingScheduler = new ScheduledThreadPoolExecutor(APP.TERMINAL_QUANTITY);
 
-        this.mDensity = getContext().getResources().getDisplayMetrics().density;
+        /*this.mDensity = getContext().getResources().getDisplayMetrics().density;
         this.panelWidth = getContext().getResources().getDisplayMetrics().widthPixels;
-        this.panelHeight = getContext().getResources().getDisplayMetrics().heightPixels;
-        Log.d(TAG, "THE REAL panelHeight = " + panelHeight);
-        onePercentWidth = panelWidth / 100;
-        onePercentHeight = panelHeight / 100;
+        this.panelHeight = getContext().getResources().getDisplayMetrics().heightPixels;*/
 
         deleteRowQueue = new DeleteRowQueue();
         deleteRowQueue.addDeleteRowQueueListener(this);
+
+        /*
+        Register for measuring layout height and width
+         */
+        getViewTreeObserver().addOnGlobalLayoutListener(this);
+
+        //setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        this.paint = new Paint();
+        this.paint.setColor(Color.WHITE);
+        this.paint.setStrokeWidth(5f);
     }
 
     protected void initTable(List<TerminalData> terminalRows, int restOfClients){
+        requestedINIT = true;
         this.restOfClients = restOfClients;
         l_clientTitle = new TextDrawable("Талон");
         l_terminalTitle = new TextDrawable("Касса");
-        relocateTitles();
-        initClients(terminalRows);
+
+        if (layoutDimensionsAreValid) {
+            relocateTitles();
+            initClients(terminalRows);
+        }else{
+            this.tempTerminalRows = terminalRows;
+            Log.e(TAG, "Fail to init table. Layout width and height has not been got yet.");
+        }
     }
 
     private void initClients(List<TerminalData> terminalRows){
         table = new ArrayList<>();
         USEDLevels = 0;
-        for(int i=0; i< APP.TERMINAL_QUANTITY; i++){
+        for(int i=0; i< APP.TERMINAL_QUANTITY; ++i){
             TerminalData terminalData = terminalRows.get(i);
-            TerminalRow terminalRow = new TerminalRow(terminalData, terminalHeightOffsets);
+            TerminalRow terminalRow = new TerminalRow(terminalData);
             terminalRow.addTerminalRowListener(new TerminalRow.TerminalRowListener() {
 
                 @Override
@@ -120,13 +152,13 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                 }
             });
             table.add(terminalRow);
-            if (terminalRow.levelIndex>=0) USEDLevels++;
+            if (terminalRow.levelIndex>=0) ++USEDLevels;
         }
         initialTerminalAssignmentCheck();
         tableIsValid = true;
-        System.out.println("USED LEVELS = " + getUSEDLevels());
+        Log.d(TAG, "USED LEVELS = " + getUSEDLevels());
         relocateResizedTerminalRows();
-        this.listener.relocateBottomPanelChildren();
+        /*this.listener.relocateBottomPanelChildren();*/
     }
 
     protected void addRow(TerminalData terminalRowData){
@@ -140,13 +172,14 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         }
         row.clientNumber = terminalRowData.clientNumber;
         relocateTerminalRows();
-        row.performAnimation(panelWidth, panelHeight, onePercentHeight);
+        /*row.performAnimation(panelWidth, panelHeight, onePercentHeight);*/
         this.listener.relocateBottomPanelChildren();
         this.listener.playNotificationSound();
     }
 
-    protected void deleteRow(TerminalData terminalRowData){
-        TerminalRow row = getTerminalRow(terminalRowData.terminalNumber);
+    protected void deleteRow(int terminalNumber){
+        System.out.println("Delete row " + terminalNumber);
+        TerminalRow row = getTerminalRow(terminalNumber);
         if (row.state != TerminalRow.WAITING){
             row.state = TerminalRow.WAITING;
             System.err.println("TerminalRow with terminalNumber=" + row.terminalNumber +
@@ -159,23 +192,30 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         AnimatorSet deleteAnimation = new AnimatorSet();
         deleteAnimation.addListener(new AnimatorListenerAdapter() {
             @Override
+            public void onAnimationStart(Animator animation) {
+                System.out.println("Animation Started!!!");
+            }
+
+            @Override
             public void onAnimationEnd(Animator animation) {
-                TerminalRow row = deleteRowQueue.poll();
-                if (row != null){
-                    deleteRow(row);
-                }
+                /*int terminalNumber =  deleteRowQueue.poll();
+                if (terminalNumber != null){
+                    deleteRow();
+                }*/
+                System.out.println("Animation Ended!!!");
             }
         });
 
         TextDrawable drawable = row.drawables[0];
         ObjectAnimator clientToDelete = ObjectAnimator.ofFloat(drawable, "x", drawable.getX(),
-                panelWidth).setDuration(1000);
+                panelWidth + (widthOffsets[0] * onePercentWidth)).setDuration(1000);
         drawable = row.drawables[1];
         ObjectAnimator arrowToDelete = ObjectAnimator.ofFloat(drawable, "x", drawable.getX(),
-                panelWidth).setDuration(1000);
+                panelWidth + (widthOffsets[1] * onePercentWidth)).setDuration(1000);
         drawable = row.drawables[2];
         ObjectAnimator terminalToDelete = ObjectAnimator.ofFloat(drawable, "x", drawable.getX(),
-                panelWidth).setDuration(1000);
+                panelWidth + (widthOffsets[2] * onePercentWidth)).setDuration(1000);
+        clientToDelete.addUpdateListener(this);
         AnimatorSet slideAside = new AnimatorSet();
         slideAside.playTogether(clientToDelete, arrowToDelete, terminalToDelete);
 
@@ -202,7 +242,10 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                 animations.add(ObjectAnimator.ofFloat(drawable, "y", drawable.getY(),
                         yDestination).setDuration(500));
             }
-            AnimatorSet.Builder builder = slideUP.play(animations.get(0));
+
+            ObjectAnimator animator = animations.get(0);
+            animator.addUpdateListener(this);
+            AnimatorSet.Builder builder = slideUP.play(animator);
             for (int i=1; i<animations.size(); ++i){
                 builder.with(animations.get(i));
             }
@@ -259,14 +302,14 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         l_clientTitle.setFontSize(titleHeight);
         int stringWidth = l_clientTitle.getTextWidth();
         w_loc = (onePercentWidth * widthOffsets[0]) - (stringWidth / 2);
-        h_loc = onePercentHeight;
+        h_loc = onePercentHeight*8;
         l_clientTitle.setX(w_loc);
         l_clientTitle.setY(h_loc);
 
         l_terminalTitle.setFontSize(titleHeight);
         stringWidth = l_terminalTitle.getTextWidth();
-        w_loc = (onePercentWidth * widthOffsets[0]) - (stringWidth / 2);
-        h_loc = onePercentHeight;
+        w_loc = (onePercentWidth * widthOffsets[2]) - (stringWidth / 2);
+        h_loc = onePercentHeight*8;
         l_terminalTitle.setX(w_loc);
         l_terminalTitle.setY(h_loc);
 
@@ -278,8 +321,8 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         for (TerminalRow r : table){
             for (int i=0; i<3; ++i){
                 TextDrawable drawable = r.drawables[i];
-                int stringWidth = drawable.getTextWidth();
                 drawable.setFontSize(fontHeight);
+                int stringWidth = drawable.getTextWidth();
                 drawable.setX((onePercentWidth * widthOffsets[i]) - (stringWidth / 2));
             }
         }
@@ -300,8 +343,8 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
 
             for (int i=0; i<3; ++i){
                 TextDrawable drawable = r.drawables[i];
-                int stringWidth = drawable.getTextWidth();
                 drawable.setFontSize(fontHeight);
+                int stringWidth = drawable.getTextWidth();
                 drawable.setX((onePercentWidth * widthOffsets[i]) - (stringWidth / 2));
             }
         }
@@ -409,16 +452,49 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     }
 
     @Override
+    protected void onDraw(Canvas canvas) {
+        if (tableIsValid) {
+            /*canvas.drawColor(Color.DKGRAY);
+            canvas.drawLine(0f, 0f, panelWidth, panelHeight, paint);*/
+        /*
+        Shifting the canvas so that next drawing object's location (x and y)
+         is on screen's x=0, y=0 coordinates
+        */
+            canvas.translate(l_clientTitle.getX(), l_clientTitle.getY());
+        /*
+            draw the object with object.x and object.y arguments = 0
+             */
+            l_clientTitle.draw(canvas);
+            canvas.restore();
+            canvas.save();
+
+            canvas.translate(l_terminalTitle.getX(), l_terminalTitle.getY());
+            l_terminalTitle.draw(canvas);
+            canvas.restore();
+            canvas.save();
+
+            for (TerminalRow row : table) {
+                for (int i = 0; i < 3; ++i) {
+                    TextDrawable drawable = row.drawables[i];
+                    canvas.translate(drawable.getX(), drawable.getY());
+                    drawable.draw(canvas);
+                    canvas.restore();
+                    canvas.save();
+                }
+            }
+        }
+    }
+
+    @Override
     public void onAnimationUpdate(ValueAnimator valueAnimator) {
         redraw();
     }
 
     @Override
     public void onDeleteRowQueueInit() {
-        TerminalRow row = deleteRowQueue.poll();
-        if (row != null){
-            deleteRow(row);
-        }
+        int terminalNumber = deleteRowQueue.poll();
+        System.out.println("Trying to delete row " + terminalNumber);
+        deleteRow(terminalNumber);
     }
 
     TablePanelListener listener;
@@ -426,6 +502,23 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     public void addTablePanelListener(TablePanelListener listener) throws Exception {
         if (this.listener != null) throw new Exception("TablePanelListener has been already assigned");
         this.listener = listener;
+    }
+
+    @Override
+    public void onGlobalLayout() {
+        getViewTreeObserver().removeGlobalOnLayoutListener(this);
+        panelWidth = getMeasuredWidth();
+        panelHeight = getMeasuredHeight();
+        Log.d(TAG, "THE REAL panelHeight = " + panelHeight + " panelWidth = " + panelWidth);
+        onePercentWidth = panelWidth / 100;
+        onePercentHeight = panelHeight / 100;
+        layoutDimensionsAreValid = true;
+
+        if (requestedINIT){
+            relocateTitles();
+            initClients(tempTerminalRows);
+            //tempTerminalRows = null;
+        }
     }
 
     public interface TablePanelListener{

@@ -17,7 +17,7 @@ import java.util.Queue;
  */
 public class DeleteRowQueue {
 
-    private volatile Queue<TerminalRow>queue;
+    private volatile Queue<Integer>queue;
 
     public DeleteRowQueue(){
         queue = new LinkedList<>();
@@ -32,20 +32,22 @@ public class DeleteRowQueue {
      * @param row {@link com.logosprog.elqdisplay.fragments.tableutils.TerminalRow}
      * @return boolean whether or not the element has been added to the queue
      */
-    public boolean offer(TerminalRow row){
-        if (queue.size() == 0){
+    public boolean offer(int row){
+        int size = queue.size();
+        boolean result = queue.offer(row);
+        if (size == 0){
             for (DeleteRowQueueListener listener : listeners){
                 listener.onDeleteRowQueueInit();
             }
         }
-        return queue.offer(row);
+        return result;
     }
 
     /**
      * The same as {@link java.util.Queue#poll()}.
      * @return {@link com.logosprog.elqdisplay.fragments.tableutils.TerminalRow} object
      */
-    public TerminalRow poll(){
+    public int poll(){
         return queue.poll();
     }
 

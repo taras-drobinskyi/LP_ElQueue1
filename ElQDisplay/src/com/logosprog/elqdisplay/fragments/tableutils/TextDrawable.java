@@ -14,6 +14,7 @@ public class TextDrawable extends Drawable {
 
     private String text;
     private final Paint paint;
+    Rect bounds;
 
     private float x = 0, y = 0;
 
@@ -26,14 +27,18 @@ public class TextDrawable extends Drawable {
         paint.setTextSize(50f);
         paint.setAntiAlias(true);
         paint.setFakeBoldText(true);
-        paint.setShadowLayer(6f, 0, 0, Color.BLACK);
+        paint.setShadowLayer(12f, 10f, 10f, Color.DKGRAY);
         paint.setStyle(Paint.Style.FILL);
         paint.setTextAlign(Paint.Align.LEFT);
-        float width = 0f;
+        bounds = new Rect();
+        paint.getTextBounds(text, 0, text.length(), bounds);
 
     }
 
-    public void setText(String value){this.text = value;}
+    public void setText(String value){
+        this.text = value;
+        paint.getTextBounds(text, 0, text.length(), bounds);
+    }
     public String getText(){return this.text;}
     public void setX(float value) {
         x = value;
@@ -52,7 +57,10 @@ public class TextDrawable extends Drawable {
     }
     public void setVisible(boolean value){setVisible(value, false);}
     public boolean getVisible(){return isVisible();}
-    public void setFontSize(float val){this.paint.setTextSize(val);}
+    public void setFontSize(float val){
+        this.paint.setTextSize(val);
+        paint.getTextBounds(text, 0, text.length(), bounds);
+    }
     public float getFontSize(){return this.paint.getTextSize();}
 
     /**
@@ -60,8 +68,7 @@ public class TextDrawable extends Drawable {
      * @return the width (int) of paint with specified text string
      */
     public int getTextWidth() {
-        Rect bounds = new Rect();
-        paint.getTextBounds(text, 0, text.length(), bounds);
+        //paint.getTextBounds(text, 0, text.length(), bounds);
         return bounds.left + bounds.width();
     }
 
@@ -69,6 +76,7 @@ public class TextDrawable extends Drawable {
     public void draw(Canvas canvas) {
         if (isVisible()) {
             canvas.drawText(text, 0, 0, paint);
+            //canvas.drawRect(bounds, paint);
         }
     }
 

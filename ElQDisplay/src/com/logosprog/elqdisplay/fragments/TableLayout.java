@@ -10,8 +10,12 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import com.logosprog.elqdisplay.fragments.tableutils.TerminalRow;
 import com.logosprog.elqdisplay.interfaces.MainActivityController;
 import com.logosprog.elqdisplay.interfaces.MainActivityDelegate;
+import display.TerminalData;
+
+import java.util.List;
 
 /**
  * Created by forando on 30.10.14.
@@ -20,7 +24,8 @@ public class TableLayout extends Fragment implements MainActivityDelegate {
 
     Context activityContext;
 
-    MyAnimationView tableView;
+    //MyAnimationView tableView;
+    TableView tableView;
 
     public TableLayout(){
         // Required empty public constructor
@@ -35,8 +40,8 @@ public class TableLayout extends Fragment implements MainActivityDelegate {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        //tableView = new TableView(activityContext);
-        tableView = new MyAnimationView(activityContext);
+        tableView = new TableView(activityContext, 0);
+        //tableView = new MyAnimationView(activityContext);
 
         return tableView;
     }
@@ -56,17 +61,25 @@ public class TableLayout extends Fragment implements MainActivityDelegate {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        final MainActivityController controller = (MainActivityController) getActivity();
+        final MainActivityController controller =
+                (MainActivityController) getActivity();
         controller.onAttachDelegate(this);
     }
 
     @Override
     public void onAssignClient(int terminal, int client) {
-        tableView.startAnimation();
+        tableView.deleteRow(1);
     }
 
     @Override
-    public void onDetachClient(int terminal, int client) {
+    public void onAcceptClient(TerminalData terminalRowData, int restOfClients) {
+        //TerminalRow row = tableView.getTerminalRow(terminalRowData.terminalNumber);
+        //tableView.deleteRowQueue.offer(terminalRowData.terminalNumber);
+        //tableView.deleteRow(row);
+    }
 
+    @Override
+    public void onInitTable(List<TerminalData> terminals, int restOfClients) {
+        tableView.initTable(terminals, restOfClients);
     }
 }
