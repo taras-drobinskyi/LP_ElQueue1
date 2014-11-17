@@ -12,7 +12,7 @@ public class ClientConnectorProvider implements ClientServer.ClientServerListene
     ClientServer client;
 
     private volatile Thread myThread;
-    ClientServer.ClientServerListener myListener;
+    ClientServer.ClientServerListener thisThreadClientServerListener;
     ClientServer.ClientServerListener clientListener;
     int type;
     int id;
@@ -31,7 +31,7 @@ public class ClientConnectorProvider implements ClientServer.ClientServerListene
         this.clientListener = clientListener;
         this.type = type;
         this.id = id;
-        this.myListener = this;
+        this.thisThreadClientServerListener = this;
         startClientServer();
         restartsQuant++;
     }
@@ -39,13 +39,12 @@ public class ClientConnectorProvider implements ClientServer.ClientServerListene
     private void startClientServer(){
         System.out.println(restartsQuant + " Attempt to get connected to the Server!!!");
         client = new ClientServer(APP.IP, APP.PORT, type, id);
-        client.addClientServerListener(myListener);
+        client.addClientServerListener(thisThreadClientServerListener);
         client.startClient();
     }
 
     private void restartClientServer(){
         restartsQuant++;
-        //delay = delay*2;
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -69,9 +68,9 @@ public class ClientConnectorProvider implements ClientServer.ClientServerListene
 
     @Override
     public void onRegister(int id) {
-        client.removeClientServerListener(myListener);
+        client.removeClientServerListener(thisThreadClientServerListener);
         client.addClientServerListener(clientListener);
-        this.listener.onClientConnected(this.client);
+        this.listener.onClientConnected(client);
     }
 
     @Override

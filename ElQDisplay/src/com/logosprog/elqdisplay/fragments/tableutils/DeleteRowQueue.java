@@ -48,7 +48,13 @@ public class DeleteRowQueue {
      * @return {@link com.logosprog.elqdisplay.fragments.tableutils.TerminalRow} object
      */
     public int poll(){
-        return queue.poll();
+        int result = -1;
+        try {
+            result = queue.poll();
+        }catch (NullPointerException ex){
+            System.out.println("The deleteQueue is empty, size = " + queue.size() );
+        }
+        return result;
     }
 
     private List<DeleteRowQueueListener> listeners;

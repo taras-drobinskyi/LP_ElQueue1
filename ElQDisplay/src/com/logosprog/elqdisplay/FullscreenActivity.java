@@ -247,17 +247,21 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
 
     }
 
+    Handler assignClientHandler = new Handler();
+    Runnable assignClientRunnable;
+
     private void assignClientServer(ClientServer client){
-        this.clientServer = client;
-        this.id = client.id;
-        this.clientServer.send(new DisplayMessage(id, DisplayMessage.SOCKET_READY, null, 0, new Date(), true));
+        if (assignClientRunnable != null) assignClientHandler.removeCallbacks(assignClientRunnable);
+        assignClientRunnable = new AssignClientRunnable(client);
+        assignClientHandler.post(assignClientRunnable);
     }
 
     private void startClientServer(){
-        new Thread(new Runnable() {
+        Thread clientServerConnectionThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                ClientConnectorProvider clientConnectorProvider = new ClientConnectorProvider(clientServerListeners, SocketMessage.DISPLAY, id);
+                ClientConnectorProvider clientConnectorProvider =
+                        new ClientConnectorProvider(clientServerListeners, SocketMessage.DISPLAY, id);
                 try {
                     clientConnectorProvider.addClientConnectorListener(new ClientConnectorProvider.ClientConnectorListener() {
                         @Override
@@ -269,7 +273,10 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
                     e.printStackTrace();
                 }
             }
-        }).start();
+        });
+
+        clientServerConnectionThread.setName("ClientServer");
+        clientServerConnectionThread.start();
     }
 
 
@@ -301,6 +308,7 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
             }*/
         }
     };
+
     /**
      * Schedules a call to hide() in [delay] milliseconds, canceling any
      * previously scheduled calls.
@@ -329,27 +337,71 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
 
     @Override
     public void onInputMessage(Object object) {
-        DisplayMessage message = (DisplayMessage)object;
-        switch (message.operation){
-            case DisplayMessage.INIT_ROWS:
-                System.out.println("INIT_ROWS!!!");
-                for (MainActivityDelegate delegate : delegates){
-                    delegate.onInitTable(message.terminals, message.restOfClients);
-                }
-                message.received = true;
-                clientServer.send(message);
-                break;
-            case DisplayMessage.DELETE_ROW:
-                System.out.println("DELETE_ROW!!!");
-                for (MainActivityDelegate delegate : delegates){
-                    delegate.onAcceptClient(message.terminals.get(0), message.restOfClients);
-                }
-                break;
-        }
+        if (updateConversationRunnable != null)
+            updateConversationHandler.removeCallbacks(updateConversationRunnable);
+
+        updateConversationRunnable = new UpdateConversationRunnable(object);
+        updateConversationHandler.post(updateConversationRunnable);
     }
 
     @Override
     public void onCloseSocket() {
-        startClientServer();
+
+        //startClientServer();
+        clientServer = null;
+    }
+
+    private class AssignClientRunnable implements Runnable{
+
+        ClientServer client;
+
+        public AssignClientRunnable(ClientServer client){
+            this.client = client;
+        }
+
+        @Override
+        public void run() {
+            clientServer = client;
+            id = client.id;
+            clientServer.send(new DisplayMessage(id, DisplayMessage.SOCKET_READY, null, 0, new Date(), true));
+        }
+    }
+
+    /**
+     * We need this handler in order to perform UI initialize UI animation
+     * within UI-Thread.
+     */
+    Handler updateConversationHandler = new Handler();
+    Runnable updateConversationRunnable;
+
+    private class UpdateConversationRunnable implements Runnable {
+        Object object;
+        public UpdateConversationRunnable(Object obj){
+            this.object = obj;
+        }
+
+        @Override
+        public void run() {
+            DisplayMessage message = (DisplayMessage)object;
+            switch (message.operation){
+                case DisplayMessage.INIT_ROWS:
+                    System.out.println("Received message: INIT_ROWS");
+                    for (MainActivityDelegate delegate : delegates){
+                        delegate.onInitTable(message.terminals, message.restOfClients);
+                    }
+                    message.received = true;
+                    clientServer.send(message);
+                    break;
+                case DisplayMessage.DELETE_ROW:
+                    System.out.println("Received message: DELETE_ROW");
+                    for (MainActivityDelegate delegate : delegates){
+                        delegate.onAcceptClient(message.terminals.get(0), message.restOfClients);
+                        int terminal = message.terminals.get(0).terminalNumber;
+                        int client = message.terminals.get(0).clientNumber;
+                        delegate.onAssignClient(terminal, client);
+                    }
+                    break;
+            }
+        }
     }
 }

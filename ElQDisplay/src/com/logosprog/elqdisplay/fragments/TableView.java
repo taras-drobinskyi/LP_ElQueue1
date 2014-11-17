@@ -28,7 +28,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  * Created by forando on 08.11.14.
  */
 public class TableView extends View implements ValueAnimator.AnimatorUpdateListener,
-        DeleteRowQueue.DeleteRowQueueListener, ViewTreeObserver.OnGlobalLayoutListener{
+        ViewTreeObserver.OnGlobalLayoutListener{
 
     private static final String TAG = "TableView";
 
@@ -74,8 +74,6 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
 
     Paint paint;
 
-    protected DeleteRowQueue deleteRowQueue;
-
     private ScheduledThreadPoolExecutor blinkingScheduler;
 
     public TableView(Context context, int id) {
@@ -88,9 +86,6 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         /*this.mDensity = getContext().getResources().getDisplayMetrics().density;
         this.panelWidth = getContext().getResources().getDisplayMetrics().widthPixels;
         this.panelHeight = getContext().getResources().getDisplayMetrics().heightPixels;*/
-
-        deleteRowQueue = new DeleteRowQueue();
-        deleteRowQueue.addDeleteRowQueueListener(this);
 
         /*
         Register for measuring layout height and width
@@ -180,6 +175,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     protected void deleteRow(int terminalNumber){
         System.out.println("Delete row " + terminalNumber);
         TerminalRow row = getTerminalRow(terminalNumber);
+        if (row == null) return;
         if (row.state != TerminalRow.WAITING){
             row.state = TerminalRow.WAITING;
             System.err.println("TerminalRow with terminalNumber=" + row.terminalNumber +
@@ -191,18 +187,11 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
 
         AnimatorSet deleteAnimation = new AnimatorSet();
         deleteAnimation.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                System.out.println("Animation Started!!!");
-            }
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                /*int terminalNumber =  deleteRowQueue.poll();
-                if (terminalNumber != null){
-                    deleteRow();
-                }*/
-                System.out.println("Animation Ended!!!");
+                listener.onDeleteAnimationFinished();
+                System.out.println("Delete Animation Finished.");
             }
         });
 
@@ -491,25 +480,12 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     }
 
     @Override
-    public void onDeleteRowQueueInit() {
-        int terminalNumber = deleteRowQueue.poll();
-        System.out.println("Trying to delete row " + terminalNumber);
-        deleteRow(terminalNumber);
-    }
-
-    TablePanelListener listener;
-
-    public void addTablePanelListener(TablePanelListener listener) throws Exception {
-        if (this.listener != null) throw new Exception("TablePanelListener has been already assigned");
-        this.listener = listener;
-    }
-
-    @Override
     public void onGlobalLayout() {
         getViewTreeObserver().removeGlobalOnLayoutListener(this);
         panelWidth = getMeasuredWidth();
         panelHeight = getMeasuredHeight();
-        Log.d(TAG, "THE REAL panelHeight = " + panelHeight + " panelWidth = " + panelWidth);
+        Log.d(TAG, "THE REAL panelHeight = " + panelHeight +
+                " panelWidth = " + panelWidth);
         onePercentWidth = panelWidth / 100;
         onePercentHeight = panelHeight / 100;
         layoutDimensionsAreValid = true;
@@ -521,12 +497,21 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         }
     }
 
-    public interface TablePanelListener{
+    TableViewlListener listener;
+
+    public void addTableViewListener(TableViewlListener listener) throws Exception {
+        if (this.listener != null)
+            throw new Exception("TablePanelListener has been already assigned");
+        this.listener = listener;
+    }
+
+    public interface TableViewlListener{
         public void relocateBottomPanelChildren();
         public void sendToServer(DisplayMessage message);
         //public Dimension getMediaContentPanelSize();
         public void submitAction(int keyCode);
         public void playNotificationSound();
+        public void onDeleteAnimationFinished();
         //public List<JLabel> getTableTitleLabels();
     }
 }
