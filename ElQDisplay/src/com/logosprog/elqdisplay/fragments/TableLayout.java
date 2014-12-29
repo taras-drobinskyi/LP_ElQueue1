@@ -79,8 +79,7 @@ public class TableLayout extends Fragment implements MainActivityDelegate,
 
     @Override
     public void onAssignClient(TerminalData terminalRowData, int restOfClients) {
-        int terminalNumber = terminalRowData.terminalNumber;
-        tableView.assignClient(terminalNumber);
+        tableView.assignClient(terminalRowData.terminalNumber, terminalRowData.clientNumber);
     }
 
     @Override

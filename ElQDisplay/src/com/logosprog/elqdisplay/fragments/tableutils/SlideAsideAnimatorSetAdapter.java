@@ -9,15 +9,37 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 
 /**
+ * This class wraps {@link android.animation.AnimatorSet} object.
+ * It adapts {@link android.animation.Animator.AnimatorListener}
+ * interface returning for further proceeding
+ * {@link com.logosprog.elqdisplay.fragments.tableutils.TerminalRow} object,
+ * that has just been removed from the table.<br>
+ *
  * Created by forando on 29.12.14.
  */
-public class SlideAsideAnimatorSetWrapper {
+public class SlideAsideAnimatorSetAdapter {
 
+    /**
+     * An object to be returned after
+     * {@link android.animation.Animator.AnimatorListener}
+     * is called.<br>
+     * The whole point of the
+     * {@link com.logosprog.elqdisplay.fragments.tableutils.SlideAsideAnimatorSetAdapter}
+     * is to return, when needed, this object.
+     */
     private TerminalRow row;
+    /**
+     * wrapping object
+     */
     private AnimatorSet animator;
+
+    /**
+     * An adapter listener. <br> Adapts
+     * {@link android.animation.Animator.AnimatorListener} calls.
+     */
     SlideAsideListener listener;
 
-    public SlideAsideAnimatorSetWrapper(AnimatorSet animator, TerminalRow row){
+    public SlideAsideAnimatorSetAdapter(AnimatorSet animator, TerminalRow row){
         this.animator = animator;
         this.row = row;
     }

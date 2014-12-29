@@ -11,7 +11,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import com.logosprog.elqdisplay.fragments.tableutils.*;
 import display.TerminalData;
@@ -156,7 +155,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                 }
             });
             table.add(terminalRow);
-            if (terminalRow.levelIndex>=0) ++USEDLevels;
+            if (terminalRow.levelIndex>=0) incrementUSEDLevels();
         }
         initialTerminalAssignmentCheck();
         tableIsValid = true;
@@ -165,8 +164,8 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         /*this.listener.relocateBottomPanelChildren();*/
     }
 
-    protected void addRow(TerminalData terminalRowData){
-        TerminalRow row = getTerminalRow(terminalRowData.terminalNumber);
+    protected void addRow(int terminalNumber, int clientNumber){
+        TerminalRow row = getTerminalRow(terminalNumber);
         if (row.state != TerminalRow.ACCEPTED){
             row.state = TerminalRow.ACCEPTED;
             System.err.println("TerminalRow with terminalNumber=" + row.terminalNumber +
@@ -174,8 +173,30 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                     "We've set this value manually" );
 
         }
-        row.clientNumber = terminalRowData.clientNumber;
+        row.clientNumber = clientNumber;
+        row.levelIndex = getUSEDLevels();
+        long duration = 1000*(APP.LEVEL_QUANTITY - row.levelIndex +2)/APP.LEVEL_QUANTITY;
+        float yDestination = terminalHeightOffsets[row.levelIndex] * onePercentHeight;
+        float yStartingPoint = panelHeight + (onePercentWidth * 17);
+        incrementUSEDLevels();
         relocateTerminalRows();
+        row.setVisible(true);
+
+        TextDrawable drawable = row.drawables[0];
+        ObjectAnimator clientToDelete = ObjectAnimator.ofFloat(drawable, "y", yStartingPoint,
+                yDestination).setDuration(duration);
+        drawable = row.drawables[1];
+        ObjectAnimator arrowToDelete = ObjectAnimator.ofFloat(drawable, "y", yStartingPoint,
+                yDestination).setDuration(duration);
+        drawable = row.drawables[2];
+        ObjectAnimator terminalToDelete = ObjectAnimator.ofFloat(drawable, "y", yStartingPoint,
+                yDestination).setDuration(duration);
+        clientToDelete.addUpdateListener(this);
+        AnimatorSet addRowAnimation = new AnimatorSet();
+        addRowAnimation.playTogether(clientToDelete, arrowToDelete, terminalToDelete);
+
+        addRowAnimation.start();
+
         /*row.performAnimation(panelWidth, panelHeight, onePercentHeight);*/
         this.listener.relocateBottomPanelChildren();
         this.listener.playNotificationSound();
@@ -233,9 +254,9 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         ObjectAnimator terminalToDelete = ObjectAnimator.ofFloat(drawable, "x", drawable.getX(),
                 panelWidth + (widthOffsets[2] * onePercentWidth)).setDuration(1000);
         clientToDelete.addUpdateListener(this);
-        SlideAsideAnimatorSetWrapper slideAside = new SlideAsideAnimatorSetWrapper(new AnimatorSet(), row);
+        SlideAsideAnimatorSetAdapter slideAside = new SlideAsideAnimatorSetAdapter(new AnimatorSet(), row);
         slideAside.playTogether(clientToDelete, arrowToDelete, terminalToDelete);
-        slideAside.addSlideAsideListener(new SlideAsideAnimatorSetWrapper.SlideAsideListener() {
+        slideAside.addSlideAsideListener(new SlideAsideAnimatorSetAdapter.SlideAsideListener() {
             @Override
             public void onAnimationStart(TerminalRow row) {
                 //dummy
@@ -246,7 +267,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                 Log.d(TAG, "deleteRow: Slide Aside Animation Finished.");
                 row.levelIndex = -1;
                 row.state = TerminalData.ACCEPTED;
-                row.visible = false;
+                row.setVisible(false);
                 decrementUSEDLevels();
             }
         });
@@ -392,6 +413,10 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         return null;
     }
 
+    public synchronized void incrementUSEDLevels(){
+        ++USEDLevels;
+    }
+
     public synchronized void decrementUSEDLevels()throws RuntimeException{
         if (USEDLevels>0) {
             --USEDLevels;
@@ -486,8 +511,8 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         System.out.println("USED LEVELS = " + getUSEDLevels());
     }
 
-    protected void assignClient(int terminal){
-        //deleteRowQueue.offer(terminal);
+    protected void assignClient(int terminalNumber, int clientNumber){
+        addRow(terminalNumber, clientNumber);
     }
 
     protected void acceptClient(int terminal){

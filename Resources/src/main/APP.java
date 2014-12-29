@@ -12,7 +12,7 @@ public class APP {
 
     public final static int TERMINAL_QUANTITY = 5;
     public final static int MAX_TERMINAL_QUANTITY = 10;
-    public final static int LEVEL_QUANTITY = 6;
+    public final static int LEVEL_QUANTITY = 5;
 
     //System Commands:
     public final static int RESET_SYSTEM = 0;
