@@ -375,7 +375,7 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
     }
 
     @Override
-    public void onInputMessage() {
+    public void onInputMessage(Object object) {
         submitInputMessage();
     }
 

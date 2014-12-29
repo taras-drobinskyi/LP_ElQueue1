@@ -8,6 +8,8 @@ import android.graphics.*;
 import android.graphics.drawable.Drawable;
 
 /**
+ * Wraps in String with text
+ *
  * Created by forando on 03.11.14.
  */
 public class TextDrawable extends Drawable {

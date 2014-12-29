@@ -4,6 +4,8 @@
 
 package com.logosprog.elqdisplay.fragments.tableutils;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,6 +18,8 @@ import java.util.Queue;
  * callbacks to it's functionality
  */
 public class DeleteRowQueue {
+
+    private final String TAG = getClass().getSimpleName();
 
     private volatile Queue<Integer>queue;
 
@@ -52,9 +56,14 @@ public class DeleteRowQueue {
         try {
             result = queue.poll();
         }catch (NullPointerException ex){
-            System.out.println("The deleteQueue is empty, size = " + queue.size() );
+            //System.out.println("The deleteQueue is empty, size = " + queue.size() );
+            Log.d(TAG, "The deleteQueue is empty, size = " + queue.size());
         }
         return result;
+    }
+
+    public int getSize(){
+        return queue.size();
     }
 
     private List<DeleteRowQueueListener> listeners;

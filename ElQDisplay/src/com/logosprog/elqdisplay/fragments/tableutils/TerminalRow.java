@@ -57,6 +57,13 @@ public class TerminalRow extends TerminalData implements Comparable {
         return retVal;
     }
 
+    public void setVisible(boolean val){
+        visible = val;
+        drawables[0].setVisible(val);
+        drawables[1].setVisible(val);
+        drawables[2].setVisible(val);
+    }
+
     public synchronized void performAnimation(int uiPanelWidth, int uiPanelHeight, int h_percent_uiPanel){
         if (state == ACCEPTED) {
             state = CALLING;

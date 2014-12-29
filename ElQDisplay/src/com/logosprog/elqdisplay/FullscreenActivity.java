@@ -4,6 +4,7 @@
 
 package com.logosprog.elqdisplay;
 
+import android.util.Log;
 import android.view.Window;
 import client.ClientConnectorProvider;
 import client.ClientServer;
@@ -33,6 +34,9 @@ import java.util.List;
  * status bar and navigation/system bar) with user interaction.
  */
 public class FullscreenActivity extends ActivityBase implements MainActivityController, ClientServer.ClientServerListener {
+
+    private final String TAG = "FullscreenActivity";
+
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -182,9 +186,9 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
                 }*/
                 counter++;
 
-                for (MainActivityDelegate delegate : delegates){
+                /*for (MainActivityDelegate delegate : delegates){
                     delegate.onAssignClient(counter, counter);
-                }
+                }*/
 
                 controlsView.animate()
                         .translationY(0)
@@ -337,8 +341,7 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
 
     @Override
     public void onInputMessage(Object object) {
-        if (updateConversationRunnable != null)
-            updateConversationHandler.removeCallbacks(updateConversationRunnable);
+        if (updateConversationRunnable != null)updateConversationHandler.removeCallbacks(updateConversationRunnable);
 
         updateConversationRunnable = new UpdateConversationRunnable(object);
         updateConversationHandler.post(updateConversationRunnable);
@@ -385,7 +388,8 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
             DisplayMessage message = (DisplayMessage)object;
             switch (message.operation){
                 case DisplayMessage.INIT_ROWS:
-                    System.out.println("Received message: INIT_ROWS");
+                    //System.out.println("Received message: INIT_ROWS");
+                    Log.d(TAG, "Received message: INIT_ROWS");
                     for (MainActivityDelegate delegate : delegates){
                         delegate.onInitTable(message.terminals, message.restOfClients);
                     }
@@ -393,12 +397,17 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
                     clientServer.send(message);
                     break;
                 case DisplayMessage.DELETE_ROW:
-                    System.out.println("Received message: DELETE_ROW");
+                    //System.out.println("Received message: DELETE_ROW");
+                    Log.d(TAG, "Received message: DELETE_ROW");
                     for (MainActivityDelegate delegate : delegates){
                         delegate.onAcceptClient(message.terminals.get(0), message.restOfClients);
-                        int terminal = message.terminals.get(0).terminalNumber;
-                        int client = message.terminals.get(0).clientNumber;
-                        delegate.onAssignClient(terminal, client);
+                    }
+                    break;
+                case DisplayMessage.ADD_ROW:
+                    //System.out.println("Received message: ADD_ROW");
+                    Log.d(TAG, "Received message: ADD_ROW");
+                    for (MainActivityDelegate delegate : delegates){
+                        delegate.onAssignClient(message.terminals.get(0), message.restOfClients);
                     }
                     break;
             }

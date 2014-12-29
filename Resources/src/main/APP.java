@@ -27,8 +27,8 @@ public class APP {
     Server stuff
      */
     //public static final String IP = "localhost";
-    //public static final String IP = "192.168.0.181";
-    public static final String IP = "192.168.1.168";
+    public static final String IP = "192.168.0.181";
+    //public static final String IP = "10.0.0.109";
     //public static final String IP = "10.0.2.2";
 
     public static final int PORT = 1337;

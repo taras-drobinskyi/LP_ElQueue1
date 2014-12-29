@@ -272,7 +272,7 @@ public class VideoLayout extends Fragment implements MainActivityDelegate {
     }
 
     @Override
-    public void onAssignClient(int terminal, int client) {
+    public void onAssignClient(TerminalData terminalRowData, int restOfClients) {
 
     }
 
