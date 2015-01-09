@@ -34,7 +34,20 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     private List<TerminalRow> table;
     private List<TerminalData> tempTerminalRows;
 
+    /**
+     * Indicates how many Table Levels/Rows is being shown on a screen.
+     */
     private int USEDLevels;
+    /**
+     * Additional to {@link #USEDLevels} helper field.<br>
+     *     It's used to coordinate two different type of animation:
+     *     {@link #deleteRow} and {@link #addRow} that may happen at a same time.<br>
+     *     The value of this field is changed in those methods right <b>before</b> their animation
+     *     begins and indicates how many Table Levels/Rows <b>is going to be</b> shown on a screen
+     *     <b>after</b> the animation.<br>
+     *     Here is the difference with {@link #USEDLevels}, cause the last one is
+     *     changed only <b>after</b> animation is done.
+     */
     private int levelsToBeUSED = 0;
 
     protected int restOfClients = 0;
@@ -52,7 +65,12 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
      * Indicates whether animation for deleting row has been started and not
      * been finished yet.
      */
-    private boolean deleteAnimationIsInProgress = false;
+    private int addRowAnimationsInProgress = 0;
+    /**
+     * Indicates whether animation for deleting row has been started and not
+     * been finished yet.
+     */
+    private boolean deleteRowAnimationIsInProgress = false;
     /**
      * Flag that indicates if the width and height of this View has been already
      * specified.
@@ -177,11 +195,11 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
 
         }
         row.clientNumber = clientNumber;
-        row.levelIndex = getUSEDLevels();
+        //row.levelIndex = getUSEDLevels();
+        row.levelIndex = setLevelsToBeUsed(false);
         long duration = 1000*(APP.LEVEL_QUANTITY - row.levelIndex +2)/APP.LEVEL_QUANTITY;
         float yDestination = terminalHeightOffsets[row.levelIndex] * onePercentHeight;
         float yStartingPoint = panelHeight + (onePercentWidth * 17);
-        incrementUSEDLevels();
         relocateTerminalRows();
         row.setVisible(true);
 
@@ -197,7 +215,24 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         clientToDelete.addUpdateListener(this);
         AnimatorSet addRowAnimation = new AnimatorSet();
         addRowAnimation.playTogether(clientToDelete, arrowToDelete, terminalToDelete);
+        addRowAnimation.addListener(new AnimatorListenerAdapter() {
 
+            @Override
+            public void onAnimationStart(Animator animation) {
+                Log.d(TAG, "addRow: addRow Animation Started");
+                ++addRowAnimationsInProgress;
+                setLevelsToBeUsed(true, true);
+                super.onAnimationStart(animation);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                //System.out.println("Delete Animation Finished.");
+                --addRowAnimationsInProgress;
+                incrementUSEDLevels();
+                Log.d(TAG, "addRow: addRow Animation Finished. USEDLevels = " + getUSEDLevels());
+            }
+        });
         addRowAnimation.start();
 
         /*row.performAnimation(panelWidth, panelHeight, onePercentHeight);*/
@@ -213,6 +248,9 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         TerminalRow row = getTerminalRow(terminalNumber);
         if (row == null) return;
         if (row.state != TerminalRow.WAITING){
+            /*
+            fixme: On a server side this state is not set properly
+             */
             row.state = TerminalRow.WAITING;
             System.err.println("TerminalRow with terminalNumber=" + row.terminalNumber +
                     "was asked to perform SlideAside animation. But its state was not equal to: WAITING. " +
@@ -232,25 +270,6 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                 deleteNextRow();
             }
         });*/
-        AnimatorSet deleteAnimation = new AnimatorSet();
-        deleteAnimation.addListener(new AnimatorListenerAdapter() {
-
-            @Override
-            public void onAnimationStart(Animator animation) {
-                Log.d(TAG, "deleteRow: Delete Animation Started");
-                deleteAnimationIsInProgress = true;
-                super.onAnimationStart(animation);
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                //System.out.println("Delete Animation Finished.");
-                Log.d(TAG, "deleteRow: Delete Animation Finished. USEDLevels = " + getUSEDLevels());
-                deleteAnimationIsInProgress = false;
-                deleteNextRow();
-            }
-        });
-
         TextDrawable drawable = row.drawables[0];
         ObjectAnimator clientToDelete = ObjectAnimator.ofFloat(drawable, "x", drawable.getX(),
                 panelWidth + (widthOffsets[0] * onePercentWidth)).setDuration(1000);
@@ -266,22 +285,58 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         slideAside.addSlideAsideListener(new SlideAsideAnimatorSetAdapter.SlideAsideListener() {
             @Override
             public void onAnimationStart(TerminalRow row) {
-                //dummy
+                Log.d(TAG, "deleteRow: Slide Aside Animation Started");
+                deleteRowAnimationIsInProgress = true;
+                setLevelsToBeUsed(true, false);
             }
 
             @Override
             public void onAnimationEnd(TerminalRow row) {
-                Log.d(TAG, "deleteRow: Slide Aside Animation Finished.");
+                decrementUSEDLevels();
+                Log.d(TAG, "deleteRow: Slide Aside Animation Finished. USEDLevels = " + getUSEDLevels());
+                int levelIndex = row.levelIndex;
                 row.levelIndex = -1;
                 row.state = TerminalData.ACCEPTED;
                 row.setVisible(false);
-                decrementUSEDLevels();
+                deleteRowAnimationIsInProgress = false;
+                slideUpRows(levelIndex);
             }
         });
 
+        slideAside.start();
+
+
+
+        /*AnimatorSet deleteAnimation = new AnimatorSet();
+
+
+
+        deleteAnimation.addListener(new AnimatorListenerAdapter() {
+
+            @Override
+            public void onAnimationStart(Animator animation) {
+                Log.d(TAG, "deleteRow: Delete Animation Started");
+                deleteRowAnimationIsInProgress = true;
+                setLevelsToBeUsed(true, false);
+                super.onAnimationStart(animation);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                //System.out.println("Delete Animation Finished.");
+                Log.d(TAG, "deleteRow: Delete Animation Finished.");
+                deleteRowAnimationIsInProgress = false;
+                deleteNextRow();
+            }
+        });
+        deleteAnimation.start();*/
+
+    }
+
+    private void slideUpRows(int levelIndex){
         List<TerminalRow> slideUPRows = new ArrayList<>();
         for (TerminalRow r : table){
-            if (r.levelIndex > row.levelIndex){
+            if (r.levelIndex > levelIndex){
                 slideUPRows.add(r);
             }
         }
@@ -293,7 +348,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                 int level = r.levelIndex;
                 r.levelIndex = level - 1;
                 float yDestination = terminalHeightOffsets[level - 1] * onePercentHeight;
-                drawable = r.drawables[0];
+                TextDrawable drawable = r.drawables[0];
                 animations.add(ObjectAnimator.ofFloat(drawable, "y", drawable.getY(),
                         yDestination).setDuration(500));
                 drawable = r.drawables[1];
@@ -311,13 +366,28 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
             for (int i=1; i<animations.size(); ++i){
                 builder.with(animations.get(i));
             }
-            deleteAnimation.playSequentially(slideAside.getAnimator(), slideUP);
+            slideUP.addListener(new AnimatorListenerAdapter() {
+
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    Log.d(TAG, "slideUpRows: slideUpRows Animation Started");
+                    /*deleteRowAnimationIsInProgress = true;
+                    setLevelsToBeUsed(true, false);*/
+                    super.onAnimationStart(animation);
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    //System.out.println("Delete Animation Finished.");
+                    Log.d(TAG, "slideUpRows: slideUpRows Animation Finished.");
+                    //deleteRowAnimationIsInProgress = false;
+                    deleteNextRow();
+                }
+            });
+            slideUP.start();
         }else{
-            deleteAnimation.play(slideAside.getAnimator());
+            deleteNextRow();
         }
-
-        deleteAnimation.start();
-
     }
 
     public void assignTerminal(int terminalIndex) {
@@ -440,6 +510,34 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         return USEDLevels;
     }
 
+    /**
+     * This method operates with {@link #levelsToBeUSED}. Set FALSE to the first param
+     * if you want just get it's value.
+     * @param set Specifies whether this method is called to override {@link #levelsToBeUSED} (TRUE)
+     *            or just return it's current value (FALSE).
+     * @param forAddingRows Optional. Additional flag, that defines in which direction {@link #levelsToBeUSED}
+     *                      has to be changed: <ul>
+     *                      <li>for adding a row (+) = true</li>
+     *                      <li>for deleting a row (-) = false</li>
+     *                      </ul>
+     *                      Must be set only if the first parameter = true.
+     * @return The value of {@link #levelsToBeUSED}.
+     * @throws RuntimeException if the second param is null when the first is TRUE
+     */
+    public synchronized int setLevelsToBeUsed(boolean set, boolean... forAddingRows)throws RuntimeException{
+        if (!set) return levelsToBeUSED;
+        if (forAddingRows == null) throw new RuntimeException(
+                "NullPointerException In method setLevelsToBeUsed (second argument)");
+        int baseValue = (deleteRowAnimationIsInProgress || addRowAnimationsInProgress>0) ? levelsToBeUSED : getUSEDLevels();
+        if (forAddingRows[0]) {
+            levelsToBeUSED = baseValue + 1;
+        }else{
+            levelsToBeUSED = baseValue - 1;
+        }
+        Log.d(TAG, "setLevelsToBeUsed: levelsToBeUSED = " + levelsToBeUSED);
+        return levelsToBeUSED;
+    }
+
     public void initialTerminalAssignmentCheck(){
         if (USEDLevels >= APP.LEVEL_QUANTITY){
             sendOnHoldTerminals(1);
@@ -528,7 +626,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     }
 
     protected void deleteNextRow(){
-        if (!deleteAnimationIsInProgress) {
+        if (!deleteRowAnimationIsInProgress) {
             int terminalNumber = deleteRowQueue.poll();
             if (terminalNumber >= 0) {
                 //System.out.println("Trying to delete row " + terminalNumber);
@@ -540,7 +638,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         }
     }
 
-    private void redraw(){
+    private void redraw() {
         invalidate();
     }
 

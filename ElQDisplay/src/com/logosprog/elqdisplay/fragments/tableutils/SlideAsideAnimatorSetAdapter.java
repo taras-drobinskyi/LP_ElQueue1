@@ -67,6 +67,13 @@ public class SlideAsideAnimatorSetAdapter {
 
     public Animator getAnimator(){return animator;}
 
+    /**
+     * See {@link android.animation.AnimatorSet#start}
+     */
+    public void start(){
+        animator.start();
+    }
+
     public interface SlideAsideListener{
         void onAnimationStart(TerminalRow row);
 
