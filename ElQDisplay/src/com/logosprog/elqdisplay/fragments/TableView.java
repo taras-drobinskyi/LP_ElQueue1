@@ -165,6 +165,9 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     }
 
     protected void addRow(int terminalNumber, int clientNumber){
+        /*
+        fixme: works incorrectly if deleteRow method is in action
+         */
         TerminalRow row = getTerminalRow(terminalNumber);
         if (row.state != TerminalRow.ACCEPTED){
             row.state = TerminalRow.ACCEPTED;
@@ -203,6 +206,10 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     }
 
     protected void deleteRow(int terminalNumber){
+        /*
+        fixme: when two or more requests come simultaneously sometimes
+        some of the requested rows is not deleted
+         */
         TerminalRow row = getTerminalRow(terminalNumber);
         if (row == null) return;
         if (row.state != TerminalRow.WAITING){
