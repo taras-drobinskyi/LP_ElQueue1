@@ -35,6 +35,10 @@ public class TablePanel extends JPanel {
 
     private final static int[] terminalHeightOffsets = {27, 44, 61, 78, 95};
     private final static int[] widthOffsets = {30, 60, 85};
+    private static final int FONT_HEIGHT_SCALE_TICKER = 10;
+    private static final int FONT_HEIGHT_SCALE_TABLE = 14;
+    private static final int FONT_HEIGHT_SCALE_TABLE_TITLE = 8;
+    private static final int FONT_HEIGHT_SCALE_BOTTOMLINE = 10;
 
     private Point hor_line1_p1 = new Point(100, 100);
     private Point hor_line1_p2 = new Point(200, 200);
@@ -224,7 +228,7 @@ public class TablePanel extends JPanel {
 
     private void relocateTerminalRows(){
 
-        int fontHeight = onePercentHeight * 16;
+        int fontHeight = onePercentHeight * FONT_HEIGHT_SCALE_TABLE;
 
         TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
         FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
@@ -243,7 +247,7 @@ public class TablePanel extends JPanel {
     }
 
     protected void relocateResizedTerminalRows(){
-        int fontHeight = onePercentHeight * 16;
+        int fontHeight = onePercentHeight * FONT_HEIGHT_SCALE_TABLE;
 
         TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
         FontMetrics fontMetrics = getFontMetrics(TABLE_FONT);
@@ -427,7 +431,7 @@ public class TablePanel extends JPanel {
         JLabel l_terminalTitle = tableTitleLabels.get(0);
         JLabel l_clientTitle = tableTitleLabels.get(1);
 
-        int titleHeight = onePercentHeight * 8;
+        int titleHeight = onePercentHeight * FONT_HEIGHT_SCALE_TABLE_TITLE;
 
         int w_loc;
         int h_loc;
