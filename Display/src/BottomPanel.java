@@ -22,6 +22,8 @@ public class BottomPanel extends JPanel {
     private Timer errorBlinker;
     private Timer stopServiceBlinker;
 
+    private static final int FONT_HEIGHT_SCALE_BOTTOMLINE = 70;
+
     public BottomPanel(){
         this.addComponentListener(new ComponentAdapter() {
             @Override
@@ -42,7 +44,7 @@ public class BottomPanel extends JPanel {
 
         int h_percent = bottomPanelHeight / 100;
         int w_percent = bottomPanelWidth / 100;
-        int totalDataHeight = h_percent * 90;
+        int totalDataHeight = h_percent * FONT_HEIGHT_SCALE_BOTTOMLINE;
 
         int w_loc;
         int h_loc;

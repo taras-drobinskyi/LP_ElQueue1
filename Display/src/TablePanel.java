@@ -38,7 +38,6 @@ public class TablePanel extends JPanel {
     private static final int FONT_HEIGHT_SCALE_TICKER = 10;
     private static final int FONT_HEIGHT_SCALE_TABLE = 14;
     private static final int FONT_HEIGHT_SCALE_TABLE_TITLE = 8;
-    private static final int FONT_HEIGHT_SCALE_BOTTOMLINE = 10;
 
     private Point hor_line1_p1 = new Point(100, 100);
     private Point hor_line1_p2 = new Point(200, 200);
