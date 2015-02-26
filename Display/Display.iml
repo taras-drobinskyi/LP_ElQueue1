@@ -9,8 +9,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="ClientServer" exported="" />
     <orderEntry type="module" module-name="Resources" exported="" />
-    <orderEntry type="module" module-name="HostServer" exported="" />
-    <orderEntry type="module" module-name="Printer" exported="" />
+    <orderEntry type="module" module-name="HostServer" />
+    <orderEntry type="module" module-name="Printer" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -30,4 +30,3 @@
     </orderEntry>
   </component>
 </module>
-
