@@ -34,7 +34,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     final static int TERMINAL_BASE = 49;
 
     private static final Font BG_STRING_FONT = new Font(Font.SANS_SERIF,
-            Font.BOLD, 72);
+            Font.BOLD, 50);
 
     private ClientServer clientServer;
 
