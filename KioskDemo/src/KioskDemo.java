@@ -7,7 +7,7 @@
  */
 public class KioskDemo {
     public static void main(String[] args) {
-        new HostServer();
+        new Host();
         new DisplayForm();
     }
 }

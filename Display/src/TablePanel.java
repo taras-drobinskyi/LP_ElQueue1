@@ -443,7 +443,7 @@ public class TablePanel extends JPanel {
         l_clientTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
         labelText = l_clientTitle.getText();
         stringWidth = l_clientTitle.getFontMetrics(l_clientTitle.getFont()).stringWidth(labelText);
-        w_loc = (onePercentWidth * widthOffsets[0]) - (stringWidth / 2);
+        w_loc = (onePercentWidth * 30) - (stringWidth / 2);
         h_loc = onePercentHeight;
         l_clientTitle.setLocation(w_loc, h_loc);
         l_clientTitle.setSize(stringWidth, titleHeight - onePercentHeight * 2);
@@ -451,7 +451,7 @@ public class TablePanel extends JPanel {
         l_terminalTitle.setFont(new Font(fontName, Font.PLAIN, titleHeight));
         labelText = l_terminalTitle.getText();
         stringWidth = l_terminalTitle.getFontMetrics(l_terminalTitle.getFont()).stringWidth(labelText);
-        w_loc = (onePercentWidth * widthOffsets[2]) - (stringWidth / 2);
+        w_loc = (onePercentWidth * 90) - (stringWidth / 2);
         h_loc = onePercentHeight;
         l_terminalTitle.setLocation(w_loc, h_loc);
         l_terminalTitle.setSize(stringWidth, titleHeight - onePercentHeight * 2);
