@@ -34,7 +34,7 @@ public class TablePanel extends JPanel {
     protected int restOfClients = 0;
 
     private final static int[] terminalHeightOffsets = {27, 44, 61, 78, 95};
-    private final static int[] widthOffsets = {40, 80, 100};
+    private final static int[] widthOffsets = {30, 70, 95};
     private static final int FONT_HEIGHT_SCALE_TICKER = 10;
     private static final int FONT_HEIGHT_SCALE_TABLE = 14;
     private static final int FONT_HEIGHT_SCALE_TABLE_TITLE = 8;
