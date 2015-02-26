@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/Display/Display.iml" filepath="$PROJECT_DIR$/Display/Display.iml" />
       <module fileurl="file://$PROJECT_DIR$/ElQDisplay/ElQDisplay.iml" filepath="$PROJECT_DIR$/ElQDisplay/ElQDisplay.iml" />
       <module fileurl="file://$PROJECT_DIR$/HostServer/HostServer.iml" filepath="$PROJECT_DIR$/HostServer/HostServer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/KioskDemo/KioskDemo.iml" filepath="$PROJECT_DIR$/KioskDemo/KioskDemo.iml" />
       <module fileurl="file://$PROJECT_DIR$/LP_ElQueue1.iml" filepath="$PROJECT_DIR$/LP_ElQueue1.iml" />
       <module fileurl="file://$PROJECT_DIR$/Printer/Printer.iml" filepath="$PROJECT_DIR$/Printer/Printer.iml" />
       <module fileurl="file://$PROJECT_DIR$/Resources/Resources.iml" filepath="$PROJECT_DIR$/Resources/Resources.iml" />
@@ -14,4 +15,3 @@
     </modules>
   </component>
 </project>
-

@@ -65,6 +65,23 @@ public class XMLVARIABLES {
         }
     }
 
+    private Element getGeneralInfoNode() {
+        Element rootElement = doc.getDocumentElement();
+        NodeList generalinfo_List = rootElement.getElementsByTagName("generalinfo");
+        return (Element) generalinfo_List.item(0);
+    }
+
+    private Element getHostServerIPNode() {
+        Element generalinfo_Node = getGeneralInfoNode();
+        NodeList hostserverip_List = generalinfo_Node.getElementsByTagName("hostserverip");
+        return (Element) hostserverip_List.item(0);
+    }
+
+    public String getHostServerIP() {
+        Element hostserverip_Node = getHostServerIPNode();
+        return hostserverip_Node.getTextContent();
+    }
+
     private Element getLastClientNode() {
         Element rootElement = doc.getDocumentElement();
         NodeList counters_List = rootElement.getElementsByTagName("counters");

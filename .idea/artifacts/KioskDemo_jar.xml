@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="KioskDemo:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/KioskDemo_jar</output-path>
+    <root id="archive" name="KioskDemo.jar">
+      <element id="module-output" name="KioskDemo" />
+      <element id="module-output" name="HostServer" />
+      <element id="module-output" name="Resources" />
+      <element id="module-output" name="Display" />
+      <element id="module-output" name="ClientServer" />
+    </root>
+  </artifact>
+</component>
