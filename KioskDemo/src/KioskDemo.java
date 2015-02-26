@@ -9,5 +9,9 @@ public class KioskDemo {
     public static void main(String[] args) {
         new Host();
         new DisplayForm();
+        /*GraphicsEnvironment env = GraphicsEnvironment
+                .getLocalGraphicsEnvironment();
+        GraphicsDevice vc = env.getDefaultScreenDevice();
+        vc.setFullScreenWindow(form);*/
     }
 }
