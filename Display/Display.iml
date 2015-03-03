@@ -9,22 +9,11 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="ClientServer" exported="" />
     <orderEntry type="module" module-name="Resources" exported="" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/jna-3.5.2.jar!/" />
-          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/platform-3.5.2.jar!/" />
-          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1.jar!/" />
-          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1-tests.jar!/" />
-        </CLASSES>
-        <JAVADOC>
-          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1-javadoc.jar!/" />
-        </JAVADOC>
-        <SOURCES>
-          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1-sources.jar!/" />
-          <root url="jar://$USER_HOME$/Документы/JARs/vlcj-2.4.1/vlcj-2.4.1-test-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
+    <orderEntry type="library" exported="" name="jna-3.5.2" level="project" />
+    <orderEntry type="library" exported="" name="platform-3.5.2" level="project" />
+    <orderEntry type="library" exported="" name="vlcj-3.5.0" level="project" />
+    <orderEntry type="library" name="vlcj-3.5.0-sources" level="project" />
+    <orderEntry type="library" name="vlcj-3.5.0-javadoc" level="project" />
+    <orderEntry type="library" exported="" name="slf4j-api-1.7.10" level="project" />
   </component>
 </module>
