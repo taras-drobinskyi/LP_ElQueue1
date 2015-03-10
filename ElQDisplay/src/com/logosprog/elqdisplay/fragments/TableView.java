@@ -53,7 +53,8 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     protected int restOfClients = 0;
 
     private final static int[] terminalHeightOffsets = {27, 44, 61, 78, 95};
-    private final static int[] widthOffsets = {30, 60, 85};
+    //private final static int[] widthOffsets = {30, 60, 85};
+    private final static int[] widthOffsets = {0, 30, 55};
 
     /**
      * Flag that indicates whether or not the {@link #initTable(java.util.List, int)}
@@ -185,6 +186,10 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     protected void addRow(int terminalNumber, int clientNumber){
         /*
         fixme: works incorrectly if deleteRow method is in action
+         */
+        /*
+        fixme: when two or more requests come simultaneously sometimes
+        some of the requested rows is not added
          */
         TerminalRow row = getTerminalRow(terminalNumber);
         if (row.state != TerminalRow.ACCEPTED){
