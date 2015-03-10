@@ -113,7 +113,7 @@ public class ClientMessageForm extends JFrame {
             this.table = new ArrayList<>();
             this.screenWidth = width;
             this.screenHeight = height;
-            fontHeight = (height/100) * 12;
+            fontHeight = (height/100) * 9;
             TABLE_FONT = new Font(Font.DIALOG, Font.PLAIN, fontHeight);
             fontMetrics = getFontMetrics(TABLE_FONT);
             addRow(client, terminal);

@@ -9,9 +9,7 @@ import main.Audio;
 import main.XMLVARIABLES;
 import sockets.DisplayMessage;
 import sockets.SocketMessage;
-import uk.co.caprica.vlcj.player.MediaPlayer;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
-import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import uk.co.caprica.vlcj.player.embedded.videosurface.CanvasVideoSurface;
 
 
@@ -26,7 +24,7 @@ import java.util.List;
  * Created by forando on 06.04.14.
  * This is Main Form for Application
  */
-public class DisplayForm extends JFrame implements ClientServer.ClientServerListener, MediaPlayerAdapter.MediaPlayerAdapterListener {
+public class DisplayForm extends JFrame implements ClientServer.ClientServerListener {
 
     private int id = -1;
 
@@ -52,7 +50,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     private boolean SERVICE_STOPPED = false;
 
     //EmbeddedMediaPlayer mediaPlayer;
-    MediaPlayerAdapter mediaPlayerAdapter;
+    CustomMediaPlayer customMediaPlayer;
 
     private JPanel rootPanel;
     private JLabel l_clientTitle;
@@ -92,7 +90,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
 
 
         setContentPane(rootPanel);
-        //setUndecorated(true);
+        setUndecorated(true);
 
         pack();
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -178,7 +176,10 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         rootPanel.setFocusable(true);
         rootPanel.requestFocusInWindow();
 
-        mediaPlayerAdapter = new MediaPlayerAdapter(currentVideo.get("path"));
+        customMediaPlayer = new CustomMediaPlayer(currentVideo.get("path"));
+        videoPanel.add(customMediaPlayer.getCanvas(), BorderLayout.CENTER);
+        customMediaPlayer.play();
+
         /*canvas = new Canvas();
         canvas.setBackground(Color.BLACK);*/
 
@@ -186,9 +187,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         /*examples.MyLayoutManager.MouseDragger mouseDragger = mgr.new MouseDragger();
         mouseDragger.makeDraggable(canvas);*/
 
-        videoPanel.add(canvas, BorderLayout.CENTER);
 
-        MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory();
+        /*MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory();
         CanvasVideoSurface videoSurface = mediaPlayerFactory.newVideoSurface(canvas);
         mediaPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer();
         mediaPlayer.setVideoSurface(videoSurface);
@@ -197,24 +197,25 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         mediaPlayer.stop();
         mediaPlayer.start();
 
-        mediaPlayerAdapter.addMediaPlayerAdapterListener(this);
+        customMediaPlayer.addCustomMediaPlayerListener(this);*/
+
 
         setVisible(true);
     }
 
-    private void playMedia(){
+    /*private void playMedia(){
         mediaPlayer.playMedia(currentVideo.get("path"));
         mediaPlayer.stop();
         mediaPlayer.start();
-        /*mediaPlayer.addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
+        *//*mediaPlayer.addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
             @Override
             public void finished(MediaPlayer mediaPlayer) {
                 System.out.println("FINISHED!!!");
                 super.finished(mediaPlayer);
                 playMedia();
             }
-        });*/
-    }
+        });*//*
+    }*/
 
     private void assignClientServer(ClientServer client){
         this.clientServer = client;
@@ -470,11 +471,6 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 g.drawString(tickerMessages.get(tickerMessagesItem), bgStringX, bgStringY);
             }
         };
-    }
-
-    @Override
-    public void finishedPlaying() {
-        playMedia();
     }
 
     private class TimerTicker implements ActionListener{

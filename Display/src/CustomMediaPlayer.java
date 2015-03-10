@@ -5,7 +5,9 @@
 import uk.co.caprica.vlcj.binding.internal.libvlc_media_t;
 import uk.co.caprica.vlcj.player.MediaPlayer;
 import uk.co.caprica.vlcj.player.MediaPlayerEventListener;
+import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
+import uk.co.caprica.vlcj.player.embedded.videosurface.CanvasVideoSurface;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -14,23 +16,43 @@ import java.util.List;
 /**
  * Created by forando on 03.03.15.
  */
-public class MediaPlayerAdapter implements MediaPlayerEventListener {
+public class CustomMediaPlayer implements MediaPlayerEventListener {
 
     private EmbeddedMediaPlayer mediaPlayer;
 
     private Canvas canvas;
 
-    public MediaPlayerAdapter(String videoPath){
+    private String path;
+
+    public CustomMediaPlayer(String videoPath){
         listeners = new ArrayList<>();
 
+        path = videoPath;
         canvas = new Canvas();
         canvas.setBackground(Color.BLACK);
 
-        mediaPlayer.addMediaPlayerEventListener(this);
+        MediaPlayerFactory mediaPlayerFactory = new MediaPlayerFactory();
+        CanvasVideoSurface videoSurface = mediaPlayerFactory.newVideoSurface(canvas);
+        mediaPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer();
+        mediaPlayer.setVideoSurface(videoSurface);
+        mediaPlayer.setRepeat(true);
     }
 
     public Canvas getCanvas(){
         return canvas;
+    }
+
+    private void secondPlay(){
+        mediaPlayer.play();
+        //mediaPlayer.start();
+        mediaPlayer.addMediaPlayerEventListener(this);
+    }
+
+    public void play(){
+        //mediaPlayer.stop();
+        mediaPlayer.playMedia(path);
+        //mediaPlayer.start();
+        //mediaPlayer.addMediaPlayerEventListener(this);
     }
 
     @Override
@@ -74,10 +96,12 @@ public class MediaPlayerAdapter implements MediaPlayerEventListener {
     }
 
     @Override
-    public void finished(MediaPlayer mediaPlayer) {
-        for (MediaPlayerAdapterListener listener : listeners){
+    public void finished(MediaPlayer player) {
+        for (CustomMediaPlayerListener listener : listeners){
             listener.finishedPlaying();
         }
+        mediaPlayer.removeMediaPlayerEventListener(this);
+        secondPlay();
     }
 
     @Override
@@ -200,17 +224,17 @@ public class MediaPlayerAdapter implements MediaPlayerEventListener {
 
     }
 
-    private List<MediaPlayerAdapterListener> listeners;
+    private List<CustomMediaPlayerListener> listeners;
 
-    public void addMediaPlayerAdapterListener(MediaPlayerAdapterListener listener){
+    public void addCustomMediaPlayerListener(CustomMediaPlayerListener listener){
         listeners.add(listener);
     }
 
-    public void removeMediaPlayerAdapterListener(MediaPlayerAdapterListener listener){
+    public void removeCustomMediaPlayerListener(CustomMediaPlayerListener listener){
         listeners.remove(listener);
     }
 
-    public interface MediaPlayerAdapterListener{
+    public interface CustomMediaPlayerListener {
         public void finishedPlaying();
     }
 }

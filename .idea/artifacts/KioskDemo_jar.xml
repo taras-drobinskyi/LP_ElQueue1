@@ -7,11 +7,12 @@
       <element id="module-output" name="Resources" />
       <element id="module-output" name="Display" />
       <element id="module-output" name="ClientServer" />
+      <element id="extracted-dir" path="$USER_HOME$/Документы/jars/vlcj-3.5.0/jna-3.5.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/Документы/jars/vlcj-3.5.0/vlcj-3.5.0.jar" path-in-jar="/" />
       <element id="library" level="project" name="vlcj-3.5.0-sources" />
-      <element id="extracted-dir" path="$USER_HOME$/Документы/jars/vlcj-3.5.0/platform-3.5.2.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$USER_HOME$/Документы/jars/vlcj-3.5.0/jna-3.5.2.jar" path-in-jar="/" />
       <element id="library" level="project" name="vlcj-3.5.0-javadoc" />
+      <element id="extracted-dir" path="$USER_HOME$/Документы/jars/vlcj-3.5.0/platform-3.5.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Документы/jars/vlcj-3.5.0/slf4j-api-1.7.10.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>
