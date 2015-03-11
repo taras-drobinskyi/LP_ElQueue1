@@ -64,7 +64,7 @@ public class TableAnimationQueue {
         HashMap<String, Integer> rowData = new HashMap<>();
         rowData.put(KEY_ANIMATION, animation);
         rowData.put(KEY_TERMINAL, terminal);
-        rowData.put(KEY_CLIENT, (client == null)? -1 : client[0]);
+        rowData.put(KEY_CLIENT, (client.length >0)? client[0] : -1);
         int size = queue.size();
         boolean result = queue.offer(rowData);
         if (size == 0){

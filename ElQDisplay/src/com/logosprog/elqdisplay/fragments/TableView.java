@@ -71,7 +71,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
      * Indicates whether animation for deleting row has been started and not
      * been finished yet.
      */
-    private boolean deleteRowAnimationIsInProgress = false;
+    private boolean animationIsInProgress = false;
     /**
      * Flag that indicates if the width and height of this View has been already
      * specified.
@@ -230,6 +230,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
             public void onAnimationStart(Animator animation) {
                 Log.d(TAG, "addRow: addRow Animation Started");
                 ++addRowAnimationsInProgress;
+                animationIsInProgress = true;
                 setLevelsToBeUsed(true, true);
                 super.onAnimationStart(animation);
             }
@@ -240,6 +241,8 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                 --addRowAnimationsInProgress;
                 incrementUSEDLevels();
                 Log.d(TAG, "addRow: addRow Animation Finished. USEDLevels = " + getUSEDLevels());
+                animationIsInProgress = false;
+                performNextAnimation();
             }
         });
         addRowAnimation.start();
@@ -280,7 +283,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
             }
         });*/
         TextDrawable drawable = row.drawables[0];
-        int duration = 1000;
+        int duration = 500;
         ObjectAnimator clientToDelete = ObjectAnimator.ofFloat(drawable, "x", drawable.getX(),
                 panelWidth + (widthOffsets[0] * onePercentWidth)).setDuration(duration);
         drawable = row.drawables[1];
@@ -296,7 +299,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
             @Override
             public void onAnimationStart(TerminalRow row) {
                 Log.d(TAG, "deleteRow: Slide Aside Animation Started");
-                deleteRowAnimationIsInProgress = true;
+                animationIsInProgress = true;
                 setLevelsToBeUsed(true, false);
             }
 
@@ -308,7 +311,6 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                 row.levelIndex = -1;
                 row.state = TerminalData.ACCEPTED;
                 row.setVisible(false);
-                deleteRowAnimationIsInProgress = false;
                 slideUpRows(levelIndex);
             }
         });
@@ -326,7 +328,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
             @Override
             public void onAnimationStart(Animator animation) {
                 Log.d(TAG, "deleteRow: Delete Animation Started");
-                deleteRowAnimationIsInProgress = true;
+                animationIsInProgress = true;
                 setLevelsToBeUsed(true, false);
                 super.onAnimationStart(animation);
             }
@@ -335,7 +337,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
             public void onAnimationEnd(Animator animation) {
                 //System.out.println("Delete Animation Finished.");
                 Log.d(TAG, "deleteRow: Delete Animation Finished.");
-                deleteRowAnimationIsInProgress = false;
+                animationIsInProgress = false;
                 performNextAnimation();
             }
         });
@@ -381,7 +383,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                 @Override
                 public void onAnimationStart(Animator animation) {
                     Log.d(TAG, "slideUpRows: slideUpRows Animation Started");
-                    /*deleteRowAnimationIsInProgress = true;
+                    /*animationIsInProgress = true;
                     setLevelsToBeUsed(true, false);*/
                     super.onAnimationStart(animation);
                 }
@@ -390,12 +392,14 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                 public void onAnimationEnd(Animator animation) {
                     //System.out.println("Delete Animation Finished.");
                     Log.d(TAG, "slideUpRows: slideUpRows Animation Finished.");
-                    //deleteRowAnimationIsInProgress = false;
+                    //animationIsInProgress = false;
+                    animationIsInProgress = false;
                     performNextAnimation();
                 }
             });
             slideUP.start();
         }else{
+            animationIsInProgress = false;
             performNextAnimation();
         }
     }
@@ -538,7 +542,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         if (!set) return levelsToBeUSED;
         if (forAddingRows == null) throw new RuntimeException(
                 "NullPointerException In method setLevelsToBeUsed (second argument)");
-        int baseValue = (deleteRowAnimationIsInProgress || addRowAnimationsInProgress>0) ? levelsToBeUSED : getUSEDLevels();
+        int baseValue = (animationIsInProgress || addRowAnimationsInProgress>0) ? levelsToBeUSED : getUSEDLevels();
         if (forAddingRows[0]) {
             levelsToBeUSED = baseValue + 1;
         }else{
@@ -640,7 +644,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     }
 
     protected void performNextAnimation(){
-        if (!deleteRowAnimationIsInProgress) {
+        if (!animationIsInProgress) {
             //int terminalNumber = deleteRowQueue.poll();
             HashMap<String, Integer> rowData = tableAnimationQueue.poll();
             if (rowData != null) {
@@ -746,7 +750,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
 
     @Override
     public void onTableAnimationQueueInit() {
-        performNextAnimation();
+        if (!animationIsInProgress) performNextAnimation();
     }
 
     public interface TableViewlListener{
