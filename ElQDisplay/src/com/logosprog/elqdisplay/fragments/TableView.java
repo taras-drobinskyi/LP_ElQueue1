@@ -188,13 +188,6 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     }
 
     protected void addRow(int terminalNumber, int clientNumber){
-        /*
-        fixme: works incorrectly if deleteRow method is in action
-         */
-        /*
-        fixme: when two or more requests come simultaneously sometimes
-        some of the requested rows is not added
-         */
         TerminalRow row = getTerminalRow(terminalNumber);
         if (row.state != TerminalRow.ACCEPTED){
             row.state = TerminalRow.ACCEPTED;
@@ -203,7 +196,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                     "We've set this value manually" );
 
         }
-        row.clientNumber = clientNumber;
+        row.setClient(clientNumber);
         //row.levelIndex = getUSEDLevels();
         row.levelIndex = setLevelsToBeUsed(false);
         long duration = 1000*(APP.LEVEL_QUANTITY - row.levelIndex +2)/APP.LEVEL_QUANTITY;
@@ -253,10 +246,6 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     }
 
     protected void deleteRow(int terminalNumber){
-        /*
-        fixme: when two or more requests come simultaneously sometimes
-        some of the requested rows is not deleted
-         */
         TerminalRow row = getTerminalRow(terminalNumber);
         if (row == null) return;
         if (row.state != TerminalRow.WAITING){

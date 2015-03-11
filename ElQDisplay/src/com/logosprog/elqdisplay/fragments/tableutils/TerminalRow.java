@@ -58,6 +58,16 @@ public class TerminalRow extends TerminalData implements Comparable {
         return retVal;
     }
 
+    /**
+     *
+     * @param client
+     * Sets the clientNumber and sets text for correspondent drawable
+     */
+    public void setClient(int client){
+        this.clientNumber = client;
+        drawables[0].setText(String.valueOf(client));
+    }
+
     public void setVisible(boolean val){
         visible = val;
         drawables[0].setVisible(val);

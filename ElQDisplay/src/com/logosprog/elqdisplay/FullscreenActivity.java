@@ -341,10 +341,12 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
 
     @Override
     public void onInputMessage(Object object) {
-        if (updateConversationRunnable != null)updateConversationHandler.removeCallbacks(updateConversationRunnable);
+        updateConversationHandler.post(new UpdateConversationRunnable(object));
+
+        /*if (updateConversationRunnable != null)updateConversationHandler.removeCallbacks(updateConversationRunnable);
 
         updateConversationRunnable = new UpdateConversationRunnable(object);
-        updateConversationHandler.post(updateConversationRunnable);
+        updateConversationHandler.post(updateConversationRunnable);*/
     }
 
     @Override
@@ -375,7 +377,7 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
      * within UI-Thread.
      */
     Handler updateConversationHandler = new Handler();
-    Runnable updateConversationRunnable;
+    //Runnable updateConversationRunnable;
 
     private class UpdateConversationRunnable implements Runnable {
         Object object;
@@ -386,6 +388,8 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         @Override
         public void run() {
             DisplayMessage message = (DisplayMessage)object;
+            Log.d(TAG, "Received message ORIGINAL: " + message.operation + " terminal = "
+                    + message.terminals.get(0).terminalNumber);
             switch (message.operation){
                 case DisplayMessage.INIT_ROWS:
                     //System.out.println("Received message: INIT_ROWS");
@@ -398,14 +402,15 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
                     break;
                 case DisplayMessage.DELETE_ROW:
                     //System.out.println("Received message: DELETE_ROW");
-                    Log.d(TAG, "Received message: DELETE_ROW");
+                    Log.d(TAG, "Received message: DELETE_ROW terminal = " + message.terminals.get(0).terminalNumber);
                     for (MainActivityDelegate delegate : delegates){
                         delegate.onAcceptClient(message.terminals.get(0), message.restOfClients);
                     }
                     break;
                 case DisplayMessage.ADD_ROW:
                     //System.out.println("Received message: ADD_ROW");
-                    Log.d(TAG, "Received message: ADD_ROW");
+                    Log.d(TAG, "Received message: ADD_ROW terminal = " + message.terminals.get(0).terminalNumber +
+                            " client = " + message.terminals.get(0).clientNumber);
                     for (MainActivityDelegate delegate : delegates){
                         delegate.onAssignClient(message.terminals.get(0), message.restOfClients);
                     }
