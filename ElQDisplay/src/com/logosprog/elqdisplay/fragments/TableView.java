@@ -63,7 +63,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     private boolean requestedINIT = false;
 
     /**
-     * Indicates whether animation for deleting row has been started and not
+     * Indicates whether animation for adding row has been started and not
      * been finished yet.
      */
     private int addRowAnimationsInProgress = 0;
@@ -276,14 +276,15 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
             }
         });*/
         TextDrawable drawable = row.drawables[0];
+        int duration = 1000;
         ObjectAnimator clientToDelete = ObjectAnimator.ofFloat(drawable, "x", drawable.getX(),
-                panelWidth + (widthOffsets[0] * onePercentWidth)).setDuration(1000);
+                panelWidth + (widthOffsets[0] * onePercentWidth)).setDuration(duration);
         drawable = row.drawables[1];
         ObjectAnimator arrowToDelete = ObjectAnimator.ofFloat(drawable, "x", drawable.getX(),
-                panelWidth + (widthOffsets[1] * onePercentWidth)).setDuration(1000);
+                panelWidth + (widthOffsets[1] * onePercentWidth)).setDuration(duration);
         drawable = row.drawables[2];
         ObjectAnimator terminalToDelete = ObjectAnimator.ofFloat(drawable, "x", drawable.getX(),
-                panelWidth + (widthOffsets[2] * onePercentWidth)).setDuration(1000);
+                panelWidth + (widthOffsets[2] * onePercentWidth)).setDuration(duration);
         clientToDelete.addUpdateListener(this);
         SlideAsideAnimatorSetAdapter slideAside = new SlideAsideAnimatorSetAdapter(new AnimatorSet(), row);
         slideAside.playTogether(clientToDelete, arrowToDelete, terminalToDelete);
