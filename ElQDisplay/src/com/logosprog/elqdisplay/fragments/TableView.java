@@ -25,7 +25,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  * Created by forando on 08.11.14.
  */
 public class TableView extends View implements ValueAnimator.AnimatorUpdateListener,
-        DeleteRowQueue.DeleteRowQueueListener, ViewTreeObserver.OnGlobalLayoutListener{
+        TableAnimationQueue.TableAnimationQueueListener, ViewTreeObserver.OnGlobalLayoutListener{
 
     private final String TAG = getClass().getSimpleName();
 
@@ -91,7 +91,8 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     private TextDrawable l_clientTitle;
     private TextDrawable l_terminalTitle;
 
-    private DeleteRowQueue deleteRowQueue;
+    //private DeleteRowQueue deleteRowQueue;
+    private TableAnimationQueue tableAnimationQueue;
 
     AnimatorSet deleteRowAnim;
     AnimatorSet addRowAnim;
@@ -105,8 +106,11 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
 
         this.id = id;
 
-        deleteRowQueue = new DeleteRowQueue();
-        deleteRowQueue.addDeleteRowQueueListener(this);
+        /*deleteRowQueue = new DeleteRowQueue();
+        deleteRowQueue.addDeleteRowQueueListener(this);*/
+
+        tableAnimationQueue = new TableAnimationQueue();
+        tableAnimationQueue.addTableAnimationQueueListener(this);
 
         blinkingScheduler = new ScheduledThreadPoolExecutor(APP.TERMINAL_QUANTITY);
 
@@ -272,7 +276,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                 deleteRowQueue.onAnimationEnd();
                 TerminalRow r = (TerminalRow)object;
                 r.setVisible(false);
-                deleteNextRow();
+                performNextAnimation();
             }
         });*/
         TextDrawable drawable = row.drawables[0];
@@ -332,7 +336,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                 //System.out.println("Delete Animation Finished.");
                 Log.d(TAG, "deleteRow: Delete Animation Finished.");
                 deleteRowAnimationIsInProgress = false;
-                deleteNextRow();
+                performNextAnimation();
             }
         });
         deleteAnimation.start();*/
@@ -387,12 +391,12 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                     //System.out.println("Delete Animation Finished.");
                     Log.d(TAG, "slideUpRows: slideUpRows Animation Finished.");
                     //deleteRowAnimationIsInProgress = false;
-                    deleteNextRow();
+                    performNextAnimation();
                 }
             });
             slideUP.start();
         }else{
-            deleteNextRow();
+            performNextAnimation();
         }
     }
 
@@ -623,23 +627,45 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     }
 
     protected void assignClient(int terminalNumber, int clientNumber){
-        addRow(terminalNumber, clientNumber);
+        //addRow(terminalNumber, clientNumber);
+        tableAnimationQueue.offer(TableAnimationQueue.OPERATION_ADD, terminalNumber, clientNumber);
+        Log.d(TAG, "assignClient: tableAnimationQueue size = " + tableAnimationQueue.getSize());
     }
 
     protected void acceptClient(int terminal){
-        deleteRowQueue.offer(terminal);
-        Log.d(TAG, "acceptClient: deleteRowQueue size = " + deleteRowQueue.getSize());
+        /*deleteRowQueue.offer(terminal);
+        Log.d(TAG, "acceptClient: deleteRowQueue size = " + deleteRowQueue.getSize());*/
+        tableAnimationQueue.offer(TableAnimationQueue.OPERATION_DELETE, terminal);
+        Log.d(TAG, "acceptClient: tableAnimationQueue size = " + tableAnimationQueue.getSize());
     }
 
-    protected void deleteNextRow(){
+    protected void performNextAnimation(){
         if (!deleteRowAnimationIsInProgress) {
-            int terminalNumber = deleteRowQueue.poll();
-            if (terminalNumber >= 0) {
-                //System.out.println("Trying to delete row " + terminalNumber);
-                Log.d(TAG, "deleteNextRow: Trying to delete row " + terminalNumber);
-                deleteRow(terminalNumber);
+            //int terminalNumber = deleteRowQueue.poll();
+            HashMap<String, Integer> rowData = tableAnimationQueue.poll();
+            if (rowData != null) {
+                int terminalNumber;
+                switch (rowData.get(TableAnimationQueue.KEY_ANIMATION)){
+                    case TableAnimationQueue.OPERATION_DELETE:
+                        //System.out.println("Trying to delete row " + terminalNumber);
+                        terminalNumber = rowData.get(TableAnimationQueue.KEY_TERMINAL);
+                        Log.d(TAG, "performNextAnimation: Trying to DELETE row = " + terminalNumber);
+                        deleteRow(terminalNumber);
+                        break;
+                    case TableAnimationQueue.OPERATION_ADD:
+                        terminalNumber = rowData.get(TableAnimationQueue.KEY_TERMINAL);
+                        int clientNumber = rowData.get(TableAnimationQueue.KEY_CLIENT);
+                        Log.d(TAG, "performNextAnimation: Trying to ADD row = " +
+                                terminalNumber + " client = " + clientNumber);
+                        addRow(terminalNumber, clientNumber);
+                        break;
+                    default:
+                        Log.e(TAG, "rowData.get(TableAnimationQueue.KEY_ANIMATION) returned unknown value: "
+                                + rowData.get(TableAnimationQueue.KEY_ANIMATION));
+                        break;
+                }
             } else {
-                Log.d(TAG, "deleteNextRow: deleteRowQueue size = " + deleteRowQueue.getSize());
+                Log.d(TAG, "performNextAnimation: tableAnimationQueue size = " + tableAnimationQueue.getSize());
             }
         }
     }
@@ -713,9 +739,14 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         this.listener = listener;
     }
 
-    @Override
+    /*@Override
     public void onDeleteRowQueueInit() {
-        deleteNextRow();
+        performNextAnimation();
+    }*/
+
+    @Override
+    public void onTableAnimationQueueInit() {
+        performNextAnimation();
     }
 
     public interface TableViewlListener{

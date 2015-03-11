@@ -17,6 +17,26 @@ import java.util.*;
 public class TableAnimationQueue {
 
     private final String TAG = getClass().getSimpleName();
+    /**
+     * Type of operation that specifies delete animation
+     */
+    public static final int OPERATION_DELETE = 0;
+    /**
+     * Type of operation that specifies add animation
+     */
+    public static final int OPERATION_ADD = 1;
+    /**
+     * A key to get animation value from given HashMap<String, Integer>
+     */
+    public static final String KEY_ANIMATION = "animation";
+    /**
+     * A key to get terminal number from given HashMap<String, Integer>
+     */
+    public static final String KEY_TERMINAL = "terminal";
+    /**
+     * A key to get client number from given HashMap<String, Integer>
+     */
+    public static final String KEY_CLIENT = "client";
 
     private volatile Queue<HashMap<String, Integer>> queue;
 
@@ -30,14 +50,21 @@ public class TableAnimationQueue {
      * when before this method is called the queue was empty, it triggers
      * {@link com.logosprog.elqdisplay.fragments.tableutils.TableAnimationQueue.TableAnimationQueueListener#onTableAnimationQueueInit()}
      * callback.
-     * @param levelIndex Level index of the row
-     * @param animation Type of requested animation (0 - delete, 1 - add)
+     * @param terminal Terminal index of the row
+     * @param animation Type of requested animation can be
+     *              <ul>
+     *                  <li>{@link #OPERATION_DELETE}</li>
+     *                  <li>{@link #OPERATION_ADD}</li>
+     *              </ul>
      * @return boolean whether or not the element has been added to the queue
      */
-    public boolean offer(int levelIndex, int animation){
+    public boolean offer(int animation, int terminal, int... client)throws RuntimeException{
+        if (animation == OPERATION_ADD && client == null) throw new RuntimeException(
+                "NullPointerException In method TableAnimationQueue.offer(third argument)");
         HashMap<String, Integer> rowData = new HashMap<>();
-        rowData.put("levelIndex", levelIndex);
-        rowData.put("animation", animation);
+        rowData.put(KEY_ANIMATION, animation);
+        rowData.put(KEY_TERMINAL, terminal);
+        rowData.put(KEY_CLIENT, (client == null)? -1 : client[0]);
         int size = queue.size();
         boolean result = queue.offer(rowData);
         if (size == 0){
