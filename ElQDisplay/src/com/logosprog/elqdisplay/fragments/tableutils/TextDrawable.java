@@ -34,7 +34,6 @@ public class TextDrawable extends Drawable {
         paint.setTextAlign(Paint.Align.LEFT);
         bounds = new Rect();
         paint.getTextBounds(text, 0, text.length(), bounds);
-
     }
 
     public void setText(String value){

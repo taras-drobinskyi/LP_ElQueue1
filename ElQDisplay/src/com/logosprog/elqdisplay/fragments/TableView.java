@@ -8,6 +8,7 @@ import android.animation.*;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.util.Log;
 import android.view.View;
@@ -53,8 +54,8 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     protected int restOfClients = 0;
 
     private final static int[] terminalHeightOffsets = {27, 44, 61, 78, 95};
-    //private final static int[] widthOffsets = {30, 60, 85};
-    private final static int[] widthOffsets = {0, 30, 55};
+    private final static int[] widthOffsets = {30, 60, 85};
+    //private final static int[] widthOffsets = {10, 30, 55};
 
     /**
      * Flag that indicates whether or not the {@link #initTable(java.util.List, int)}
@@ -444,7 +445,6 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         h_loc = onePercentHeight*8;
         l_terminalTitle.setX(w_loc);
         l_terminalTitle.setY(h_loc);
-
     }
 
     private void relocateTerminalRows(){
@@ -670,34 +670,46 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     @Override
     protected void onDraw(Canvas canvas) {
         if (tableIsValid) {
-            /*canvas.drawColor(Color.DKGRAY);
-            canvas.drawLine(0f, 0f, panelWidth, panelHeight, paint);*/
+
+            //canvas.drawColor(Color.DKGRAY);
+            //canvas.drawLine(0f, 0f, panelWidth, panelHeight, paint);
         /*
         Shifting the canvas so that next drawing object's location (x and y)
          is on screen's x=0, y=0 coordinates
         */
-            canvas.translate(l_clientTitle.getX(), l_clientTitle.getY());
-        /*
-            draw the object with object.x and object.y arguments = 0
-             */
-            l_clientTitle.draw(canvas);
-            canvas.restore();
-            canvas.save();
+            float x = 0f;
+            float y = 0f;
 
-            canvas.translate(l_terminalTitle.getX(), l_terminalTitle.getY());
-            l_terminalTitle.draw(canvas);
-            canvas.restore();
+            x = l_clientTitle.getX();
+            y = l_clientTitle.getY();
+            canvas.translate(x, y);
+            l_clientTitle.draw(canvas);
             canvas.save();
+            //bug: next line works on 4.04, but doesn't work on 4.3 version of Android. That's why we use the line after next one.
+            //canvas.restore();
+            canvas.translate(0-x, 0-y);
+
+            x = l_terminalTitle.getX();
+            y = l_terminalTitle.getY();
+            canvas.translate(x, y);
+            l_terminalTitle.draw(canvas);
+            canvas.save();
+            //canvas.restore();
+            canvas.translate(0-x, 0-y);
 
             for (TerminalRow row : table) {
                 for (int i = 0; i < 3; ++i) {
                     TextDrawable drawable = row.drawables[i];
-                    canvas.translate(drawable.getX(), drawable.getY());
+                    x = drawable.getX();
+                    y = drawable.getY();
+                    canvas.translate(x, y);
                     drawable.draw(canvas);
-                    canvas.restore();
                     canvas.save();
+                    //canvas.restore();
+                    canvas.translate(0-x, 0-y);
                 }
             }
+
         }
     }
 
