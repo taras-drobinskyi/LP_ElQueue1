@@ -335,6 +335,18 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
     }
 
     @Override
+    public void onClientAssignAnimationStart(int terminal, int client) {
+        for (MainActivityDelegate delegate : delegates) {
+            delegate.onClientAssignAnimationStart(terminal, client);
+        }
+        controlsView.animate()
+                .translationY(0)
+                .setDuration(getResources().getInteger(
+                        android.R.integer.config_longAnimTime));
+        delayedHide(AUTO_HIDE_DELAY_MILLIS);
+    }
+
+    @Override
     public void onRegister(int id) {
 
     }

@@ -286,6 +286,11 @@ public class VideoLayout extends Fragment implements MainActivityDelegate {
 
     }
 
+    @Override
+    public void onClientAssignAnimationStart(int terminal, int client) {
+
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated

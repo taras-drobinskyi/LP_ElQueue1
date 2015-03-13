@@ -188,7 +188,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         /*this.listener.relocateBottomPanelChildren();*/
     }
 
-    protected void addRow(int terminalNumber, int clientNumber){
+    protected void addRow(final int terminalNumber, final int clientNumber){
         TerminalRow row = getTerminalRow(terminalNumber);
         if (row.state != TerminalRow.ACCEPTED){
             row.state = TerminalRow.ACCEPTED;
@@ -226,6 +226,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
                 ++addRowAnimationsInProgress;
                 animationIsInProgress = true;
                 setLevelsToBeUsed(true, true);
+                listener.onRowAdd(terminalNumber, clientNumber);
                 super.onAnimationStart(animation);
             }
 
@@ -760,6 +761,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         //public Dimension getMediaContentPanelSize();
         public void submitAction(int keyCode);
         public void playNotificationSound();
+        public void onRowAdd(int terminal, int client);
         //public List<JLabel> getTableTitleLabels();
     }
 }

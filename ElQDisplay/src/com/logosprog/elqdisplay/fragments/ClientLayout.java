@@ -87,9 +87,9 @@ public class ClientLayout extends Fragment implements MainActivityDelegate {
     @Override
     public void onAssignClient(TerminalData terminalRowData, int restOfClients) {
 
-        clientView.client = terminalRowData.clientNumber;
+        /*clientView.client = terminalRowData.clientNumber;
         clientView.terminal = terminalRowData.terminalNumber;
-        clientView.invalidate();
+        clientView.invalidate();*/
         /*clientView.animate()
                 .translationY(0)
                 .setDuration(getResources().getInteger(
@@ -107,6 +107,13 @@ public class ClientLayout extends Fragment implements MainActivityDelegate {
     @Override
     public void onInitTable(List<TerminalData> terminals, int restOfClients) {
 
+    }
+
+    @Override
+    public void onClientAssignAnimationStart(int terminal, int client) {
+        clientView.terminal = terminal + 1;
+        clientView.client = client;
+        clientView.invalidate();
     }
 
     /**

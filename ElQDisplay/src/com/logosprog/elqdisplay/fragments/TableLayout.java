@@ -7,17 +7,15 @@ package com.logosprog.elqdisplay.fragments;
 import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import com.logosprog.elqdisplay.fragments.tableutils.DeleteRowQueue;
-import com.logosprog.elqdisplay.fragments.tableutils.TerminalRow;
 import com.logosprog.elqdisplay.interfaces.MainActivityController;
 import com.logosprog.elqdisplay.interfaces.MainActivityDelegate;
 import display.TerminalData;
 import sockets.DisplayMessage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,6 +30,8 @@ public class TableLayout extends Fragment implements MainActivityDelegate,
 
     //MyAnimationView tableView;
     TableView tableView;
+
+    MainActivityController controller;
 
     public TableLayout(){
         // Required empty public constructor
@@ -72,8 +72,7 @@ public class TableLayout extends Fragment implements MainActivityDelegate,
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        final MainActivityController controller =
-                (MainActivityController) getActivity();
+        controller = (MainActivityController) getActivity();
         controller.onAttachDelegate(this);
     }
 
@@ -94,6 +93,12 @@ public class TableLayout extends Fragment implements MainActivityDelegate,
     }
 
     @Override
+    public void onClientAssignAnimationStart(int terminal, int client) {
+        /*dummy. This callback is supposed to be used in other
+        Main Activity Children, but not this one.*/
+    }
+
+    @Override
     public void relocateBottomPanelChildren() {
 
     }
@@ -111,5 +116,10 @@ public class TableLayout extends Fragment implements MainActivityDelegate,
     @Override
     public void playNotificationSound() {
 
+    }
+
+    @Override
+    public void onRowAdd(int terminal, int client) {
+        controller.onClientAssignAnimationStart(terminal, client);
     }
 }
