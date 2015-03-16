@@ -4,14 +4,12 @@
 
 package com.logosprog.elqdisplay.fragments;
 
-import android.app.Fragment;
-import android.content.Context;
+import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import com.logosprog.elqdisplay.interfaces.MainActivityController;
-import com.logosprog.elqdisplay.interfaces.MainActivityDelegate;
 import display.TerminalData;
 
 import java.util.List;
@@ -38,7 +36,20 @@ public class BottomLineLayout extends MainActivityFragment {
     }
 
     @Override
+    public void onInitTable(List<TerminalData> terminals, int restOfClients) {
+        if (bottomLineView != null){
+            bottomLineView.setRestOfClients(restOfClients);
+        }else {
+            Log.e(TAG, "Cannot set restOfClients value. bottomLineView is NULL.");
+        }
+    }
+
+    @Override
     public void onPrintTicket(int restOfClients) {
-        super.onPrintTicket(restOfClients);
+        if (bottomLineView != null){
+            bottomLineView.setRestOfClients(restOfClients);
+        }else {
+            Log.e(TAG, "Cannot set restOfClients value. bottomLineView is NULL.");
+        }
     }
 }

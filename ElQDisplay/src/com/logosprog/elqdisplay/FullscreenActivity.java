@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.Window;
 import client.ClientConnectorProvider;
 import client.ClientServer;
+import com.logosprog.elqdisplay.fragments.BottomLineLayout;
 import com.logosprog.elqdisplay.fragments.ClientLayout;
 import com.logosprog.elqdisplay.fragments.TableLayout;
 import com.logosprog.elqdisplay.fragments.VideoLayout;
@@ -106,9 +107,11 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         Fragment fragmentClient = new ClientLayout();
         Fragment fragmentTable = new TableLayout();
         Fragment fragmentVideo = VideoLayout.newInstance(false);
+        Fragment fragmentSystem = new BottomLineLayout();
         //transaction.replace(R.id.frame_video, fragmentVideo, "fragmentVideo");
         transaction.replace(R.id.frame_client, fragmentClient, "fragmentClient");
         transaction.replace(R.id.frame_table, fragmentTable, "fragmentTable");
+        transaction.replace(R.id.frame_system, fragmentSystem, "fragmentSystem");
         transaction.commit();
 
         /*VideoView video = (VideoView) findViewById(R.id.frame_video);
@@ -401,8 +404,6 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         @Override
         public void run() {
             DisplayMessage message = (DisplayMessage)object;
-            Log.d(TAG, "Received message ORIGINAL: " + message.operation + " terminal = "
-                    + message.terminals.get(0).terminalNumber);
             switch (message.operation){
                 case DisplayMessage.INIT_ROWS:
                     //System.out.println("Received message: INIT_ROWS");
@@ -430,7 +431,9 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
                     break;
                 case APP.PRINT_TICKET:
                     Log.d(TAG, "Received message: PRINT_TICKET restOfClients = " + message.restOfClients);
-
+                    for (MainActivityDelegate delegate : delegates){
+                        delegate.onPrintTicket(message.restOfClients);
+                    }
                     break;
             }
         }

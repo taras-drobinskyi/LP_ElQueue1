@@ -16,12 +16,21 @@ import android.view.View;
  */
 public class BottomLineView extends View {
 
-    Typeface font;
-    protected int restOfClients = 0;
+    private Typeface font;
+    private int restOfClients = 0;
 
     public BottomLineView(Context context) {
         super(context);
         font=Typeface.createFromAsset(context.getAssets(), "G-Unit.ttf");
+    }
+
+    public void setRestOfClients(int val){
+        this.restOfClients = val;
+        invalidate();
+    }
+
+    public int getRestOfClients(){
+        return restOfClients;
     }
 
     @Override
@@ -36,7 +45,7 @@ public class BottomLineView extends View {
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(50);
         textPaint.setTypeface(font);
-        canvas.drawText("Client" + restOfClients, canvas.getWidth()/2, 200, textPaint);
+        canvas.drawText("Всего в очереди: " + restOfClients, canvas.getWidth()/2, canvas.getHeight()/2, textPaint);
 
 
         /*

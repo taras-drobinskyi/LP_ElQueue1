@@ -5,19 +5,11 @@
 package com.logosprog.elqdisplay.fragments;
 
 import android.app.Activity;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import com.logosprog.elqdisplay.interfaces.MainActivityController;
-import com.logosprog.elqdisplay.interfaces.MainActivityDelegate;
-import display.TerminalData;
-
-import java.util.List;
 
 /**
  * A simple {@link android.app.Fragment} subclass.
