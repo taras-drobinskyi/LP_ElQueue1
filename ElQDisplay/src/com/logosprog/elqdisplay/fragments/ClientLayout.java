@@ -23,7 +23,8 @@ import java.util.List;
  * A simple {@link android.app.Fragment} subclass.
  * Activities that contain this fragment must implement the
  * {@link com.logosprog.elqdisplay.fragments.ClientLayout.ClientInteractionListener} interface
- * to handle interaction events.
+ * to handle interaction events.<br>
+ * This class is a direct child to Main Activity class ({@link com.logosprog.elqdisplay.FullscreenActivity})
  *
  */
 public class ClientLayout extends MainActivityFragment {
@@ -69,31 +70,6 @@ public class ClientLayout extends MainActivityFragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
-    }
-
-    @Override
-    public void onAssignClient(TerminalData terminalRowData, int restOfClients) {
-
-        /*clientView.client = terminalRowData.clientNumber;
-        clientView.terminal = terminalRowData.terminalNumber;
-        clientView.invalidate();*/
-        /*clientView.animate()
-                .translationY(0)
-                .setDuration(getResources().getInteger(
-                        android.R.integer.config_longAnimTime));*/
-    }
-
-    @Override
-    public void onAcceptClient(TerminalData terminalRowData, int restOfClients) {
-        /*clientView.animate()
-                .translationY(clientView.getHeight())
-                .setDuration(getResources().getInteger(
-                        android.R.integer.config_longAnimTime));*/
-    }
-
-    @Override
-    public void onInitTable(List<TerminalData> terminals, int restOfClients) {
-
     }
 
     @Override

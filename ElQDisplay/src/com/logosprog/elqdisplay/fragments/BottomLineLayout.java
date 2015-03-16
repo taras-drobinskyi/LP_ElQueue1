@@ -17,24 +17,17 @@ import display.TerminalData;
 import java.util.List;
 
 /**
- * Created by forando on 13.03.15.
+ * Created by forando on 13.03.15.<br>
+ * This class is a direct child to Main Activity class ({@link com.logosprog.elqdisplay.FullscreenActivity})
  */
-public class BottomLineLayout extends Fragment implements MainActivityDelegate {
+public class BottomLineLayout extends MainActivityFragment {
 
     private final String TAG = getClass().getSimpleName();
-
-    Context activityContext;
 
     BottomLineView bottomLineView;
 
     public BottomLineLayout(){
         // Required empty public constructor
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        activityContext = this.getActivity();
     }
 
 
@@ -45,29 +38,7 @@ public class BottomLineLayout extends Fragment implements MainActivityDelegate {
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        final MainActivityController controller = (MainActivityController) getActivity();
-        controller.onAttachDelegate(this);
-    }
-
-    @Override
-    public void onAssignClient(TerminalData terminalRowData, int restOfClients) {
-
-    }
-
-    @Override
-    public void onAcceptClient(TerminalData terminalRowData, int restOfClients) {
-
-    }
-
-    @Override
-    public void onInitTable(List<TerminalData> terminals, int restOfClients) {
-
-    }
-
-    @Override
-    public void onClientAssignAnimationStart(int terminal, int client) {
-
+    public void onPrintTicket(int restOfClients) {
+        super.onPrintTicket(restOfClients);
     }
 }

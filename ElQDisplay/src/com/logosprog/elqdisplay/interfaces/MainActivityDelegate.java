@@ -33,6 +33,14 @@ public interface MainActivityDelegate {
      * @param restOfClients Indicates how many clients are waiting for being serviced.
      */
     public void onInitTable (List<TerminalData> terminals, int restOfClients);
+
+    /**
+     * Indicates that ClientServer has received a message to update <b>restOfClients</b>
+     * value on a screen.
+     * @param restOfClients Indicates how many clients are waiting for being serviced.
+     */
+    public void onPrintTicket(int restOfClients);
+
     /**
      *
      * Indicates that addRowAnimation in {@link com.logosprog.elqdisplay.fragments.TableView},

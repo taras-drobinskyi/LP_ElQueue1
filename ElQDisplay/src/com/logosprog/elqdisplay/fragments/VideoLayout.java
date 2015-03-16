@@ -31,7 +31,8 @@ import java.util.List;
  * {@link com.logosprog.elqdisplay.fragments.VideoLayout.OnFragmentInteractionListener} interface
  * to handle interaction events.
  * Use the {@link com.logosprog.elqdisplay.fragments.VideoLayout#newInstance} factory method to
- * create an instance of this fragment.
+ * create an instance of this fragment.<br>
+ * This class is a direct child to Main Activity class ({@link com.logosprog.elqdisplay.FullscreenActivity})
  *
  */
 public class VideoLayout extends MainActivityFragment {
@@ -196,9 +197,7 @@ public class VideoLayout extends MainActivityFragment {
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        final MainActivityController controller = (MainActivityController) getActivity();
-        //controller.onAttachDelegate(this);
+        super.onActivityCreated(savedInstanceState, false);
     }
 
     // TODO: Rename method, update argument and hook method into UI event

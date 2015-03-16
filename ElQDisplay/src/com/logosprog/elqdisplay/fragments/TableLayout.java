@@ -19,15 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by forando on 30.10.14.
+ * Created by forando on 30.10.14.<br>
+ * This class is a direct child to Main Activity class ({@link com.logosprog.elqdisplay.FullscreenActivity})
  */
 public class TableLayout extends MainActivityFragment implements TableView.TableViewlListener{
 
     private final String TAG = getClass().getSimpleName();
 
-    //Context activityContext;
-
-    //MyAnimationView tableView;
     TableView tableView;
 
     MainActivityController controller;
@@ -35,12 +33,6 @@ public class TableLayout extends MainActivityFragment implements TableView.Table
     public TableLayout(){
         // Required empty public constructor
     }
-
-    /*@Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        activityContext = this.getActivity();
-    }*/
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -51,7 +43,6 @@ public class TableLayout extends MainActivityFragment implements TableView.Table
         } catch (Exception e) {
             e.printStackTrace();
         }
-        //tableView = new MyAnimationView(activityContext);
 
         return tableView;
     }
@@ -89,12 +80,6 @@ public class TableLayout extends MainActivityFragment implements TableView.Table
     @Override
     public void onInitTable(List<TerminalData> terminals, int restOfClients) {
         tableView.initTable(terminals, restOfClients);
-    }
-
-    @Override
-    public void onClientAssignAnimationStart(int terminal, int client) {
-        /*dummy. This callback is supposed to be used in other
-        Main Activity Children, but not this one.*/
     }
 
     @Override

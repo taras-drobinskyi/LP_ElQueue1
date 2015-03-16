@@ -14,7 +14,10 @@ import display.TerminalData;
 import java.util.List;
 
 /**
- * Created by forando on 13.03.15.
+ * Created by forando on 13.03.15.<br>
+ * All children of Main Activity Class ({@link com.logosprog.elqdisplay.FullscreenActivity})
+ * have to extend from this class.<br> Doing this way, simplifies
+ * {@link com.logosprog.elqdisplay.interfaces.MainActivityDelegate} callbacks implementation.
  */
 public abstract class MainActivityFragment extends Fragment implements MainActivityDelegate {
 
@@ -32,9 +35,12 @@ public abstract class MainActivityFragment extends Fragment implements MainActiv
     }
 
     /**
+     * This is an overloading of {@link android.app.Fragment#onActivityCreated} method.<br>
+     *     It accepts additional <b>registerDelegate</b> flag to register Main Activity Delegate
+     *     (implemented by Main Activity Children) to Main Activity Controller (implemented by Main Activity).
      *
      * @param savedInstanceState If the fragment is being re-created from a previous saved state, this is the state.
-     * @param registerDelegate The flag to register this delegate to a Main Activity Controller.
+     * @param registerDelegate The flag to register this Delegate to a Main Activity Controller.
      */
     protected void onActivityCreated(Bundle savedInstanceState, boolean registerDelegate){
         super.onActivityCreated(savedInstanceState);
@@ -57,6 +63,11 @@ public abstract class MainActivityFragment extends Fragment implements MainActiv
 
     @Override
     public void onInitTable(List<TerminalData> terminals, int restOfClients) {
+        //dummy
+    }
+
+    @Override
+    public void onPrintTicket(int restOfClients) {
         //dummy
     }
 
