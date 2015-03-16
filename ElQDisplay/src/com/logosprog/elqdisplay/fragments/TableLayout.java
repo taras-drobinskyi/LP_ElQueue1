@@ -21,12 +21,11 @@ import java.util.List;
 /**
  * Created by forando on 30.10.14.
  */
-public class TableLayout extends Fragment implements MainActivityDelegate,
-        TableView.TableViewlListener{
+public class TableLayout extends MainActivityFragment implements TableView.TableViewlListener{
 
     private final String TAG = getClass().getSimpleName();
 
-    Context activityContext;
+    //Context activityContext;
 
     //MyAnimationView tableView;
     TableView tableView;
@@ -37,11 +36,11 @@ public class TableLayout extends Fragment implements MainActivityDelegate,
         // Required empty public constructor
     }
 
-    @Override
+    /*@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         activityContext = this.getActivity();
-    }
+    }*/
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -71,7 +70,7 @@ public class TableLayout extends Fragment implements MainActivityDelegate,
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+        super.onActivityCreated(savedInstanceState, false);
         controller = (MainActivityController) getActivity();
         controller.onAttachDelegate(this);
     }

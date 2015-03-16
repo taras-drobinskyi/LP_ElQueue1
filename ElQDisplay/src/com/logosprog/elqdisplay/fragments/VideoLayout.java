@@ -34,11 +34,9 @@ import java.util.List;
  * create an instance of this fragment.
  *
  */
-public class VideoLayout extends Fragment implements MainActivityDelegate {
+public class VideoLayout extends MainActivityFragment {
 
-    static final String TAG = "VideoLayout";
-
-    Context activityContext;
+    private final String TAG = getClass().getSimpleName();
 
     public VideoView video;
 
@@ -269,26 +267,6 @@ public class VideoLayout extends Fragment implements MainActivityDelegate {
     public void onDetach() {
         super.onDetach();
         mListener = null;
-    }
-
-    @Override
-    public void onAssignClient(TerminalData terminalRowData, int restOfClients) {
-
-    }
-
-    @Override
-    public void onAcceptClient(TerminalData terminalRowData, int restOfClients) {
-
-    }
-
-    @Override
-    public void onInitTable(List<TerminalData> terminals, int restOfClients) {
-
-    }
-
-    @Override
-    public void onClientAssignAnimationStart(int terminal, int client) {
-
     }
 
     /**

@@ -26,9 +26,9 @@ import java.util.List;
  * to handle interaction events.
  *
  */
-public class ClientLayout extends Fragment implements MainActivityDelegate {
+public class ClientLayout extends MainActivityFragment {
 
-    Context activityContext;
+    private final String TAG = getClass().getSimpleName();
 
     ClientView clientView;
 
@@ -39,25 +39,12 @@ public class ClientLayout extends Fragment implements MainActivityDelegate {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        activityContext = this.getActivity();
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         //return inflater.inflate(R.layout.fragment_client, container, false);
         clientView = new ClientView(activityContext);
         return clientView;
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        final MainActivityController controller = (MainActivityController) getActivity();
-        controller.onAttachDelegate(this);
     }
 
     // TODO: Rename method, update argument and hook method into UI event

@@ -21,6 +21,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.view.WindowManager;
+import main.APP;
 import sockets.DisplayMessage;
 import sockets.SocketMessage;
 
@@ -426,6 +427,10 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
                     for (MainActivityDelegate delegate : delegates){
                         delegate.onAssignClient(message.terminals.get(0), message.restOfClients);
                     }
+                    break;
+                case APP.PRINT_TICKET:
+                    Log.d(TAG, "Received message: PRINT_TICKET restOfClients = " + message.restOfClients);
+
                     break;
             }
         }
