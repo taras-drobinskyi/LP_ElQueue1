@@ -25,9 +25,9 @@ public class TerminalRow extends TerminalData implements Comparable {
         super(terminalData.levelIndex, terminalData.clientNumber
                 , terminalData.terminalNumber, terminalData.visible, terminalData.state);
         drawables = new TextDrawable[3];
-        drawables[0] = new TextDrawable(String.valueOf(terminalData.clientNumber));
-        drawables[1] = new TextDrawable(">");
-        drawables[2] = new TextDrawable(String.valueOf(terminalData.terminalNumber +1));
+        drawables[0] = new TextDrawable(String.valueOf(terminalData.clientNumber), true, true);
+        drawables[1] = new TextDrawable(">", true, true);
+        drawables[2] = new TextDrawable(String.valueOf(terminalData.terminalNumber +1), true, true);
         setVisible(this.visible);
         /*blinkingScheduler = new ScheduledThreadPoolExecutor(1);
         ScheduledFuture<?> futureTask = blinkingScheduler.scheduleAtFixedRate(new Blinker(), 0, 500, TimeUnit.SECONDS);

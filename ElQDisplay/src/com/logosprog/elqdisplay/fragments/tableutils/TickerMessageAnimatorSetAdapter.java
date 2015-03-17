@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
+ * Copyright (c) 2015. This code is a LogosProg property. All Rights Reserved.
  */
 
 package com.logosprog.elqdisplay.fragments.tableutils;
@@ -9,25 +9,22 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 
 /**
- * Created by forando on 29.12.14.<br>
- *
+ * Created by forando on 17.03.15.<br>
  * This class wraps {@link android.animation.AnimatorSet} object.
  * It adapts {@link android.animation.Animator.AnimatorListener}
- * interface returning for further proceeding
- * {@link com.logosprog.elqdisplay.fragments.tableutils.TerminalRow} object,
- * that has just been removed from the table.
+ * interface returning for further proceeding an index of animated message,
  */
-public class SlideAsideAnimatorSetAdapter {
+public class TickerMessageAnimatorSetAdapter {
 
     /**
-     * An object to be returned after
+     * An index to be returned after
      * {@link android.animation.Animator.AnimatorListener}
      * is called.<br>
      * The whole point of the
-     * {@link com.logosprog.elqdisplay.fragments.tableutils.SlideAsideAnimatorSetAdapter}
-     * is to return, when needed, this object.
+     * {@link com.logosprog.elqdisplay.fragments.tableutils.TickerMessageAnimatorSetAdapter}
+     * is to return, when needed, this index.
      */
-    private TerminalRow row;
+    private int index;
     /**
      * wrapping object
      */
@@ -37,25 +34,25 @@ public class SlideAsideAnimatorSetAdapter {
      * An adapter listener. <br> Adapts
      * {@link android.animation.Animator.AnimatorListener} calls.
      */
-    SlideAsideListener listener;
+    TickerMessageSlideAsideListener listener;
 
-    public SlideAsideAnimatorSetAdapter(AnimatorSet animator, TerminalRow row){
+    public TickerMessageAnimatorSetAdapter(AnimatorSet animator, int index){
         this.animator = animator;
-        this.row = row;
+        this.index = index;
     }
 
-    public void addSlideAsideListener(final SlideAsideListener listener){
+    public void addTickerMessageSlideAsideListener(final TickerMessageSlideAsideListener listener){
         this.listener = listener;
         animator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-                listener.onAnimationEnd(row);
+                listener.onAnimationEnd(index);
             }
 
             @Override
             public void onAnimationStart(Animator animation) {
-                listener.onAnimationStart(row);
+                listener.onAnimationStart(index);
                 super.onAnimationStart(animation);
             }
         });
@@ -74,9 +71,9 @@ public class SlideAsideAnimatorSetAdapter {
         animator.start();
     }
 
-    public interface SlideAsideListener{
-        void onAnimationStart(TerminalRow row);
+    public interface TickerMessageSlideAsideListener{
+        void onAnimationStart(int index);
 
-        void onAnimationEnd(TerminalRow row);
+        void onAnimationEnd(int index);
     }
 }

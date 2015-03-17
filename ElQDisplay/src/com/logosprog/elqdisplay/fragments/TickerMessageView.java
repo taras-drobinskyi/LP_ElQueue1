@@ -4,6 +4,7 @@
 
 package com.logosprog.elqdisplay.fragments;
 
+import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -12,7 +13,9 @@ import android.graphics.Paint;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import com.logosprog.elqdisplay.fragments.tableutils.TextDrawable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,7 +27,8 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
     private final String TAG = getClass().getSimpleName();
 
     private List<String> messages;
-    private Paint paint;
+    private TextDrawable message;
+    //private Paint paint;
 
     /**
      * Flag that indicates whether or not the init
@@ -51,9 +55,13 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
          */
         getViewTreeObserver().addOnGlobalLayoutListener(this);
 
-        this.paint = new Paint();
+        messages = new ArrayList<>();
+        messages.add("Это тестовый образец электронной очереди.");
+        messages.add("Данное решение расчитано на 10 терминалов / окон.");
+        message = new TextDrawable(messages.get(0));
+        /*this.paint = new Paint();
         this.paint.setColor(Color.WHITE);
-        this.paint.setStrokeWidth(5f);
+        this.paint.setStrokeWidth(5f);*/
     }
 
     private void init(){
@@ -68,13 +76,22 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
 
     }
 
+    private void runAnimation(String textMessage){
+        int duration = 4000;
+        TextDrawable drawable = new TextDrawable(textMessage);
+        ObjectAnimator slidingAnimator = ObjectAnimator.ofFloat(drawable, "x", panelWidth + (10 * onePercentWidth),
+                0 - drawable.getTextWidth() - 10).setDuration(duration);
+    }
+
     private void redraw() {
         invalidate();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-
+        canvas.translate(message.getX(), message.getY());
+        message.draw(canvas);
+        canvas.restore();
     }
 
     @Override

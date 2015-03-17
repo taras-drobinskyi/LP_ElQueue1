@@ -21,6 +21,20 @@ public class TextDrawable extends Drawable {
     private float x = 0, y = 0;
 
     public TextDrawable(String text) {
+        this(text, false, false);
+        /*this.text = text;
+
+        this.paint = new Paint();
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(50f);
+        paint.setAntiAlias(true);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setTextAlign(Paint.Align.LEFT);
+        bounds = new Rect();
+        paint.getTextBounds(text, 0, text.length(), bounds);*/
+    }
+
+    public TextDrawable(String text, boolean bold, boolean shadow) {
 
         this.text = text;
 
@@ -28,10 +42,10 @@ public class TextDrawable extends Drawable {
         paint.setColor(Color.WHITE);
         paint.setTextSize(50f);
         paint.setAntiAlias(true);
-        paint.setFakeBoldText(true);
-        paint.setShadowLayer(12f, 10f, 10f, Color.DKGRAY);
         paint.setStyle(Paint.Style.FILL);
         paint.setTextAlign(Paint.Align.LEFT);
+        if (bold)paint.setFakeBoldText(true);
+        if (shadow)paint.setShadowLayer(12f, 10f, 10f, Color.DKGRAY);
         bounds = new Rect();
         paint.getTextBounds(text, 0, text.length(), bounds);
     }
