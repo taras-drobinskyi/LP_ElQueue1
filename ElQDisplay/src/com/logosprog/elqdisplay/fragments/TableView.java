@@ -87,7 +87,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     private int onePercentWidth;
     private int onePercentHeight;
 
-    private float mDensity;
+    //private float mDensity;
 
     private TextDrawable l_clientTitle;
     private TextDrawable l_terminalTitle;
@@ -95,12 +95,12 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
     //private DeleteRowQueue deleteRowQueue;
     private TableAnimationQueue tableAnimationQueue;
 
-    AnimatorSet deleteRowAnim;
-    AnimatorSet addRowAnim;
+    //AnimatorSet deleteRowAnim;
+    //AnimatorSet addRowAnim;
 
     Paint paint;
 
-    private ScheduledThreadPoolExecutor blinkingScheduler;
+    //private ScheduledThreadPoolExecutor blinkingScheduler;
 
     public TableView(Context context, int id) {
         super(context);
@@ -113,7 +113,7 @@ public class TableView extends View implements ValueAnimator.AnimatorUpdateListe
         tableAnimationQueue = new TableAnimationQueue();
         tableAnimationQueue.addTableAnimationQueueListener(this);
 
-        blinkingScheduler = new ScheduledThreadPoolExecutor(APP.TERMINAL_QUANTITY);
+        //blinkingScheduler = new ScheduledThreadPoolExecutor(APP.TERMINAL_QUANTITY);
 
         /*this.mDensity = getContext().getResources().getDisplayMetrics().density;
         this.panelWidth = getContext().getResources().getDisplayMetrics().widthPixels;
