@@ -46,6 +46,11 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
     public TickerMessageView(Context context) {
         super(context);
 
+        /*
+        Register for measuring layout height and width
+         */
+        getViewTreeObserver().addOnGlobalLayoutListener(this);
+
         this.paint = new Paint();
         this.paint.setColor(Color.WHITE);
         this.paint.setStrokeWidth(5f);
@@ -82,7 +87,7 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
         getViewTreeObserver().removeGlobalOnLayoutListener(this);
         panelWidth = getMeasuredWidth();
         panelHeight = getMeasuredHeight();
-        Log.d(TAG, "Got TickerLayout Dimensions! Height = " + panelHeight +
+        Log.d(TAG, "Got TickerMessage View Dimensions! Height = " + panelHeight +
                 " Width = " + panelWidth);
         onePercentWidth = panelWidth / 100;
         onePercentHeight = panelHeight / 100;

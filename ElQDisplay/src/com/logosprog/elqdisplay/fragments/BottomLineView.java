@@ -12,9 +12,13 @@ import android.graphics.Typeface;
 import android.view.View;
 
 /**
- * Created by forando on 13.03.15.
+ * Created by forando on 13.03.15.<br>
+ *     This view shows system messages.
  */
 public class BottomLineView extends View {
+
+    private final String TAG = getClass().getSimpleName();
+
 
     private Typeface font;
     private String text = "";
@@ -43,9 +47,11 @@ public class BottomLineView extends View {
         Paint textPaint =new Paint();
         textPaint.setARGB(50, 254, 10, 50);
         textPaint.setTextAlign(Paint.Align.CENTER);
-        textPaint.setTextSize(50);
+
+        float height = canvas.getHeight()/1.5f;
+        textPaint.setTextSize(height);
         textPaint.setTypeface(font);
-        canvas.drawText(text, canvas.getWidth()/2, canvas.getHeight()/2, textPaint);
+        canvas.drawText(text, canvas.getWidth()/2, canvas.getHeight()/2 + height/2, textPaint);
 
 
         /*
