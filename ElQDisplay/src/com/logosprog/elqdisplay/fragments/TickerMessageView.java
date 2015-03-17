@@ -4,7 +4,9 @@
 
 package com.logosprog.elqdisplay.fragments;
 
+import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -14,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import com.logosprog.elqdisplay.fragments.tableutils.TextDrawable;
+import com.logosprog.elqdisplay.fragments.tableutils.TickerMessageAnimatorSetAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +30,7 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
     private final String TAG = getClass().getSimpleName();
 
     private List<String> messages;
-    private TextDrawable message;
+    private TextDrawable drawable;
     //private Paint paint;
 
     /**
@@ -58,13 +61,13 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
         messages = new ArrayList<>();
         messages.add("Это тестовый образец электронной очереди.");
         messages.add("Данное решение расчитано на 10 терминалов / окон.");
-        message = new TextDrawable(messages.get(0));
+        //message = new TextDrawable(messages.get(0));
         /*this.paint = new Paint();
         this.paint.setColor(Color.WHITE);
         this.paint.setStrokeWidth(5f);*/
     }
 
-    private void init(){
+    public void init(){
         requestedINIT = true;
 
         if (layoutDimensionsAreValid){
@@ -73,30 +76,56 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
     }
 
     private void initTickerAnimation(){
-
+        runAnimation(0);
+        Log.d(TAG, "initTickerAnimation: Exiting method.");
     }
 
-    private void runAnimation(String textMessage){
-        int duration = 4000;
-        TextDrawable drawable = new TextDrawable(textMessage);
-        ObjectAnimator slidingAnimator = ObjectAnimator.ofFloat(drawable, "x", panelWidth + (10 * onePercentWidth),
-                0 - drawable.getTextWidth() - 10).setDuration(duration);
-    }
+    private void runAnimation(int index){
+        int duration = 8000;
+        drawable = new TextDrawable(messages.get(index), true, true);
+        float fontHeight = panelHeight/1.5f;
+        drawable.setFontSize(fontHeight);
+        drawable.setY(panelHeight/2 + fontHeight/2);
+        drawable.setX(panelWidth + 10);
 
-    private void redraw() {
-        invalidate();
+        ObjectAnimator slidingAnimator = ObjectAnimator.ofFloat(drawable, "x", drawable.getX(),
+                0 - drawable.getTextWidth() -10).setDuration(duration);
+        slidingAnimator.setInterpolator(null);
+        slidingAnimator.addUpdateListener(this);
+        TickerMessageAnimatorSetAdapter animatorAdapter = new TickerMessageAnimatorSetAdapter(new AnimatorSet(), index);
+        animatorAdapter.playTogether(slidingAnimator);
+        animatorAdapter.addTickerMessageSlideAsideListener(new TickerMessageAnimatorSetAdapter.TickerMessageSlideAsideListener() {
+            @Override
+            public void onAnimationStart(int index) {
+                Log.d(TAG, "slidingAnimator: Slide Aside Animation Started");
+            }
+
+            @Override
+            public void onAnimationEnd(int index) {
+                Log.d(TAG, "slidingAnimator: Slide Aside Animation Finished");
+                if (index +1 <messages.size()){
+                    runAnimation(index + 1);
+                }else{
+                    runAnimation(0);
+                }
+            }
+        });
+
+        animatorAdapter.start();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        canvas.translate(message.getX(), message.getY());
-        message.draw(canvas);
-        canvas.restore();
+        canvas.translate(drawable.getX(), drawable.getY());
+        drawable.draw(canvas);
+        canvas.save();
+        canvas.translate(0-drawable.getX(), 0-drawable.getY());
+        //canvas.restore();
     }
 
     @Override
     public void onAnimationUpdate(ValueAnimator valueAnimator) {
-        redraw();
+        invalidate();
     }
 
     @Override

@@ -8,10 +8,7 @@ import android.util.Log;
 import android.view.Window;
 import client.ClientConnectorProvider;
 import client.ClientServer;
-import com.logosprog.elqdisplay.fragments.BottomLineLayout;
-import com.logosprog.elqdisplay.fragments.ClientLayout;
-import com.logosprog.elqdisplay.fragments.TableLayout;
-import com.logosprog.elqdisplay.fragments.VideoLayout;
+import com.logosprog.elqdisplay.fragments.*;
 import com.logosprog.elqdisplay.interfaces.MainActivityController;
 import com.logosprog.elqdisplay.interfaces.MainActivityDelegate;
 
@@ -108,10 +105,12 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         Fragment fragmentTable = new TableLayout();
         Fragment fragmentVideo = VideoLayout.newInstance(false);
         Fragment fragmentSystem = new BottomLineLayout();
+        Fragment fragmentTicker = new TickerMessageLayout();
         //transaction.replace(R.id.frame_video, fragmentVideo, "fragmentVideo");
         transaction.replace(R.id.frame_client, fragmentClient, "fragmentClient");
         transaction.replace(R.id.frame_table, fragmentTable, "fragmentTable");
         transaction.replace(R.id.frame_system, fragmentSystem, "fragmentSystem");
+        transaction.replace(R.id.frame_messages, fragmentTicker, "fragmentTicker");
         transaction.commit();
 
         /*VideoView video = (VideoView) findViewById(R.id.frame_video);
