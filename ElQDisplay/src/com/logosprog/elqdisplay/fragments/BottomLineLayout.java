@@ -34,6 +34,13 @@ public class BottomLineLayout extends MainActivityFragment {
      * Indicates that the text line shows "Insert Paper" message
      */
     public static final int STATE_TEXT_PRINTER_ERROR = 2;
+    /**
+     * Indicates that the text line shows "Service Stopped" message
+     */
+    public static final int STATE_TEXT_SERVICE_STOPPED = 3;
+
+    private boolean PRINTER_ERROR = false;
+    private boolean SERVICE_STOPPED = false;
 
     private int textState = STATE_TEXT_REST_OF_CLIENTS;
     private int restOfClients = 0;
@@ -55,9 +62,10 @@ public class BottomLineLayout extends MainActivityFragment {
         }
     }
 
-    private void reInitAnimation(){
+    private void reInitAnimation(Runnable runnable, int textState){
         timerHandler.removeCallbacks(timerRunnable);
-        textState = STATE_TEXT_TAKE_TICKET;
+        this.textState = textState;
+        timerRunnable = runnable;
         timerHandler.postDelayed(timerRunnable, 0);
     }
 
@@ -72,14 +80,40 @@ public class BottomLineLayout extends MainActivityFragment {
     public void onInitTable(List<TerminalData> terminals, int restOfClients) {
         setTextMessage("Всего в очереди: " + restOfClients);
         this.restOfClients = restOfClients;
-        reInitAnimation();
+        reInitAnimation(new NormalWorkRunnable(), STATE_TEXT_TAKE_TICKET);
     }
 
     @Override
     public void onPrintTicket(int restOfClients) {
         setTextMessage("Всего в очереди: " + restOfClients);
         this.restOfClients = restOfClients;
-        reInitAnimation();
+        reInitAnimation(new NormalWorkRunnable(), STATE_TEXT_TAKE_TICKET);
+    }
+
+    @Override
+    public void onPrinterError(boolean printerError) {
+        if (!SERVICE_STOPPED) {
+            PRINTER_ERROR = printerError;
+            if (printerError) {
+                reInitAnimation(new PrinterErrorRunnable(), STATE_TEXT_REST_OF_CLIENTS);
+            } else {
+                reInitAnimation(new NormalWorkRunnable(), STATE_TEXT_TAKE_TICKET);
+            }
+        }
+    }
+
+    @Override
+    public void onServiceChange(boolean stopService) {
+        SERVICE_STOPPED = stopService;
+        if (stopService){
+            reInitAnimation(new ServiceStoppedRunnable(), STATE_TEXT_REST_OF_CLIENTS);
+        }else{
+            if (PRINTER_ERROR){
+                reInitAnimation(new PrinterErrorRunnable(), STATE_TEXT_REST_OF_CLIENTS);
+            }else {
+                reInitAnimation(new NormalWorkRunnable(), STATE_TEXT_TAKE_TICKET);
+            }
+        }
     }
 
     private class NormalWorkRunnable implements Runnable{
@@ -112,6 +146,26 @@ public class BottomLineLayout extends MainActivityFragment {
                     setTextMessage("Вставте Бумагу!");
                     break;
                 case STATE_TEXT_PRINTER_ERROR:
+                    textState = STATE_TEXT_REST_OF_CLIENTS;
+                    setTextMessage("Всего в очереди: " + restOfClients);
+                    break;
+                default:
+                    break;
+            }
+            timerHandler.postDelayed(this, 2000);
+        }
+    }
+
+    private class ServiceStoppedRunnable implements Runnable{
+
+        @Override
+        public void run() {
+            switch (textState){
+                case STATE_TEXT_REST_OF_CLIENTS:
+                    textState = STATE_TEXT_SERVICE_STOPPED;
+                    setTextMessage("Обслуживания Нет");
+                    break;
+                case STATE_TEXT_SERVICE_STOPPED:
                     textState = STATE_TEXT_REST_OF_CLIENTS;
                     setTextMessage("Всего в очереди: " + restOfClients);
                     break;

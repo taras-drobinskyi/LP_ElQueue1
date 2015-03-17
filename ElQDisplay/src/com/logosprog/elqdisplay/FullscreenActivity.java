@@ -68,9 +68,6 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
 
     private int id = -1;
 
-    private boolean PRINTER_ERROR = false;
-    private boolean SERVICE_STOPPED = false;
-
 
 
     @Override
@@ -391,27 +388,6 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         }
     }
 
-    private void stopService(){
-        SERVICE_STOPPED = true;
-        /*List<JLabel>labels = new ArrayList<>();
-        labels.add(l_takeTicket);
-        labels.add(l_serviceStopped);
-        bottomPanel.startStopServiceBlinker(labels);*/
-    }
-
-    private void resetService(){
-        SERVICE_STOPPED = false;
-        if (PRINTER_ERROR){
-            //bottomPanel.startPrinterErrorBlinker(l_takeTicket);
-        }else{
-            /*List<JLabel>labels = new ArrayList<>();
-            labels.add(l_totalTitle);
-            labels.add(l_total);
-            labels.add(l_takeTicket);
-            bottomPanel.startDefaultBlinker(labels);*/
-        }
-    }
-
     /**
      * We need this handler in order to perform UI initialize UI animation
      * within UI-Thread.
@@ -460,19 +436,22 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
                     }
                     break;
                 case APP.PRINTER_ERROR_ON:
-                    if (!SERVICE_STOPPED) {
-                        PRINTER_ERROR = true;
-
+                    Log.d(TAG, "Received message: PRINTER_ERROR_ON");
+                    for (MainActivityDelegate delegate : delegates){
+                        delegate.onPrinterError(true);
                     }
                     break;
                 case APP.PRINTER_ERROR_OFF:
-                    if (!SERVICE_STOPPED) {
-                        PRINTER_ERROR = false;
-
+                    Log.d(TAG, "Received message: PRINTER_ERROR_OFF");
+                    for (MainActivityDelegate delegate : delegates){
+                        delegate.onPrinterError(false);
                     }
                     break;
                 case APP.STOP_SERVICE:
-                    stopService();
+                    Log.d(TAG, "Received message: STOP_SERVICE");
+                    for (MainActivityDelegate delegate : delegates){
+                        delegate.onServiceChange(true);
+                    }
                     break;
                 case APP.RESET_SERVICE:
                     if (message.terminals != null){
@@ -481,10 +460,15 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
                             delegate.onInitTable(message.terminals, message.restOfClients);
                         }
                     }else{
-                        resetService();
+                        Log.d(TAG, "Received message: RESET_SERVICE");
+                        for (MainActivityDelegate delegate : delegates){
+                            delegate.onServiceChange(false);
+                        }
                     }
                     break;
                 default:
+                    Log.e(TAG, "updateConversationHandler: Client server has received a message, " +
+                            "but message.operation has not been recognized. message.operation = " + message.operation);
                     break;
             }
         }

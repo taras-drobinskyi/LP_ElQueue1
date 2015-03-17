@@ -72,6 +72,16 @@ public abstract class MainActivityFragment extends Fragment implements MainActiv
     }
 
     @Override
+    public void onPrinterError(boolean printerError) {
+        //dummy
+    }
+
+    @Override
+    public void onServiceChange(boolean stopService) {
+        //dummy
+    }
+
+    @Override
     public void onClientAssignAnimationStart(int terminal, int client) {
         //dummy
     }

@@ -42,6 +42,18 @@ public interface MainActivityDelegate {
     public void onPrintTicket(int restOfClients);
 
     /**
+     * Indicates that ClientServer has received a message to display printer error message.
+     * @param printerError True if there is a printer error, false - if there is not.
+     */
+    public void onPrinterError(boolean printerError);
+
+    /**
+     * Indicates that ClientServer has received a message to change the mode of functioning.
+     * @param stopService If true - the service must be stopped, if false - than it must be reset.
+     */
+    public void onServiceChange(boolean stopService);
+
+    /**
      *
      * Indicates that addRowAnimation in {@link com.logosprog.elqdisplay.fragments.TableView},
      * with assigned client, is about to begin.
