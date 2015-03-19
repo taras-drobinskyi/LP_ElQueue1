@@ -61,10 +61,15 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
         messages = new ArrayList<>();
         messages.add("Это тестовый образец электронной очереди.");
         messages.add("Данное решение расчитано на 10 терминалов / окон.");
-        //message = new TextDrawable(messages.get(0));
-        /*this.paint = new Paint();
-        this.paint.setColor(Color.WHITE);
-        this.paint.setStrokeWidth(5f);*/
+
+        /*
+        We need next three lines only for this view initialization.
+        Without them first system call to this.onDraw() will through
+        a NullPointer exception.
+         */
+        drawable = new TextDrawable("");
+        drawable.setX(0f);
+        drawable.setY(0f);
     }
 
     public void init(){
@@ -82,7 +87,7 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
 
     private void runAnimation(int index){
         int duration = 8000;
-        drawable = new TextDrawable(messages.get(index), true, true);
+        drawable = new TextDrawable(messages.get(index));
         float fontHeight = panelHeight/1.5f;
         drawable.setFontSize(fontHeight);
         drawable.setY(panelHeight/2 + fontHeight/2);
@@ -119,8 +124,8 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
         canvas.translate(drawable.getX(), drawable.getY());
         drawable.draw(canvas);
         canvas.save();
-        canvas.translate(0-drawable.getX(), 0-drawable.getY());
-        //canvas.restore();
+        //canvas.translate(0-drawable.getX(), 0-drawable.getY());
+        canvas.restore();
     }
 
     @Override

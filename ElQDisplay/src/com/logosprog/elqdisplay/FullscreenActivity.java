@@ -81,21 +81,9 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LOW_PROFILE;
         decorView.setSystemUiVisibility(uiOptions);
 
-        /*try {
-            Runtime.getRuntime().exec(new String[]{"su","-c","service call activity 79 s16 com.android.systemui"});
-            Log.e(TAG, "--------Working!!!--------");
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.e(TAG, "ERRRRRRROOORRRRR!!!");
-        }*/
-
         createDirIfNotExists();
 
         setContentView(R.layout.activity_main);
-        //setContentView(new ClientView(this));
-
-        /*final View controlsView = findViewById(R.id.fullscreen_content_controls);
-        final View contentView = findViewById(R.id.fullscreen_content);*/
         controlsView = findViewById(R.id.frame_client);
         final View contentView = findViewById(R.id.frame_video);
 
@@ -106,116 +94,12 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         Fragment fragmentVideo = VideoLayout.newInstance(false);
         Fragment fragmentSystem = new BottomLineLayout();
         Fragment fragmentTicker = new TickerMessageLayout();
-        //transaction.replace(R.id.frame_video, fragmentVideo, "fragmentVideo");
+        transaction.replace(R.id.frame_video, fragmentVideo, "fragmentVideo");
         transaction.replace(R.id.frame_client, fragmentClient, "fragmentClient");
         transaction.replace(R.id.frame_table, fragmentTable, "fragmentTable");
         transaction.replace(R.id.frame_system, fragmentSystem, "fragmentSystem");
         transaction.replace(R.id.frame_messages, fragmentTicker, "fragmentTicker");
         transaction.commit();
-
-        /*VideoView video = (VideoView) findViewById(R.id.frame_video);
-        Uri vid_Uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.test);
-        video.setVideoURI(vid_Uri);
-        try{
-            video.start();
-        }catch (Exception ex){
-            ex.printStackTrace();
-        }*/
-
-
-        // Set up an instance of SystemUiHider to control the system UI for
-        // this activity.
-
-
-
-        /*mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
-        mSystemUiHider.setup();
-        mSystemUiHider
-                .setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
-                    // Cached values.
-                    int mControlsHeight;
-                    int mShortAnimTime;
-
-                    @Override
-                    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-                    public void onVisibilityChange(boolean visible) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-                            // If the ViewPropertyAnimator API is available
-                            // (Honeycomb MR2 and later), use it to animate the
-                            // in-layout UI controls at the bottom of the
-                            // screen.
-                            if (mControlsHeight == 0) {
-                                mControlsHeight = controlsView.getHeight();
-                            }
-                            if (mShortAnimTime == 0) {
-                                mShortAnimTime = getResources().getInteger(
-                                        android.R.integer.config_longAnimTime);
-                            }
-                            if (!visible){
-                                counter++;
-                                for (MainActivityDelegate delegate : delegates){
-                                    delegate.onAssignClient(counter, counter);
-                                }
-                            }
-                            controlsView.animate()
-                                    .translationY(visible ? 0 : mControlsHeight)
-                                    .setDuration(mShortAnimTime);
-                        } else {
-                            // If the ViewPropertyAnimator APIs aren't
-                            // available, simply show or hide the in-layout UI
-                            // controls.
-                            controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
-                        }
-
-                        if (visible && AUTO_HIDE) {
-                            // Schedule a hide().
-                            delayedHide(AUTO_HIDE_DELAY_MILLIS);
-                        }
-                    }
-                });*/
-
-        // Set up the user interaction to manually show or hide the system UI.
-        contentView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                /*if (TOGGLE_ON_CLICK) {
-                    mSystemUiHider.toggle();
-                } else {
-                    mSystemUiHider.show();
-                    counter++;
-                    for (MainActivityDelegate delegate : delegates){
-                        delegate.onAssignClient(counter, counter);
-                    }
-                }*/
-                counter++;
-
-                /*for (MainActivityDelegate delegate : delegates){
-                    delegate.onAssignClient(counter, counter);
-                }*/
-
-                controlsView.animate()
-                        .translationY(0)
-                        .setDuration(getResources().getInteger(
-                                android.R.integer.config_longAnimTime));
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
-
-
-                /*Animation a = new TranslateAnimation(0.0f, 0.0f, target.getHeight() + targetParent.getPaddingBottom(),
-                        -(targetParent.getHeight() - target.getHeight() -
-                                targetParent.getPaddingTop() - targetParent.getPaddingBottom()));
-                a.setDuration(1000);
-                a.setStartOffset(300);
-
-                a.setInterpolator(AnimationUtils.loadInterpolator(context, android.R.anim.decelerate_interpolator));
-                target.startAnimation(a);*/
-            }
-        });
-
-        // Upon interacting with UI controls, delay any scheduled hide()
-        // operations to prevent the jarring behavior of controls going away
-        // while interacting with the UI.
-        //findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
-        this.clientServerListeners = this;
         startClientServer();
     }
 
@@ -224,8 +108,6 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         super.onSaveInstanceState(outState);
     }
 
-    //private int clientViewHeight;
-
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
@@ -233,25 +115,7 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         // Trigger the initial hide() shortly after the activity has been
         // created, to briefly hint to the user that UI controls
         // are available.
-        delayedHide(100);
-
-        /*Animation b = new TranslateAnimation(0.0f, 0.0f, targetParent.getHeight() - target.getHeight() -
-        targetParent.getPaddingTop() - targetParent.getPaddingBottom(), 0.0f);
-
-        Animation a = new TranslateAnimation(0.0f,
-                targetParent.getWidth() - target.getWidth() - targetParent.getPaddingLeft() -
-                        targetParent.getPaddingRight(), 0.0f, 0.0f);
-
-        a.setDuration(1000);
-        a.setStartOffset(300);
-        a.setRepeatMode(Animation.RESTART);
-        a.setRepeatCount(Animation.INFINITE);
-        a.setInterpolator(AnimationUtils.loadInterpolator(this,
-                android.R.anim.decelerate_interpolator));
-        target.startAnimation(a);*/
-
-
-
+        delayedHide(200);
     }
 
     Handler assignClientHandler = new Handler();
@@ -286,33 +150,14 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         clientServerConnectionThread.start();
     }
 
-
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
-    /*View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            if (AUTO_HIDE) {
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
-            }
-            return false;
-        }
-    };*/
     Handler mHideHandler = new Handler();
     Runnable mHideRunnable = new Runnable() {
         @Override
         public void run() {
-            //mSystemUiHider.hide();
             controlsView.animate()
                     .translationY(controlsView.getHeight())
                     .setDuration(getResources().getInteger(
                             android.R.integer.config_longAnimTime));
-            /*for (MainActivityDelegate delegate : delegates){
-                delegate.onAcceptClient(counter, counter);
-            }*/
         }
     };
 
@@ -357,11 +202,6 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
     @Override
     public void onInputMessage(Object object) {
         updateConversationHandler.post(new UpdateConversationRunnable(object));
-
-        /*if (updateConversationRunnable != null)updateConversationHandler.removeCallbacks(updateConversationRunnable);
-
-        updateConversationRunnable = new UpdateConversationRunnable(object);
-        updateConversationHandler.post(updateConversationRunnable);*/
     }
 
     @Override
