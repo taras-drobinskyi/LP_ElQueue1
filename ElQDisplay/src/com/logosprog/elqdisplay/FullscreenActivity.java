@@ -61,7 +61,7 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
 
     ClientServer clientServer;
 
-    ClientServer.ClientServerListener clientServerListeners;
+    ClientServer.ClientServerListener clientServerListener;
 
     private int id = -1;
 
@@ -101,21 +101,8 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         transaction.replace(R.id.frame_messages, fragmentTicker, "fragmentTicker");
         transaction.commit();
 
-        // Set up the user interaction to manually show or hide the system UI.
-        contentView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                counter++;
 
-                controlsView.animate()
-                        .translationY(0)
-                        .setDuration(getResources().getInteger(
-                                android.R.integer.config_longAnimTime));
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
-            }
-        });
-
-        this.clientServerListeners = this;
+        this.clientServerListener = this;
         startClientServer();
     }
 
@@ -148,7 +135,7 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
             @Override
             public void run() {
                 ClientConnectorProvider clientConnectorProvider =
-                        new ClientConnectorProvider(clientServerListeners, SocketMessage.DISPLAY, id);
+                        new ClientConnectorProvider(clientServerListener, SocketMessage.DISPLAY, id);
                 try {
                     clientConnectorProvider.addClientConnectorListener(new ClientConnectorProvider.ClientConnectorListener() {
                         @Override
