@@ -124,8 +124,6 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         super.onSaveInstanceState(outState);
     }
 
-    //private int clientViewHeight;
-
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
@@ -134,24 +132,6 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
         // created, to briefly hint to the user that UI controls
         // are available.
         delayedHide(200);
-
-        /*Animation b = new TranslateAnimation(0.0f, 0.0f, targetParent.getHeight() - target.getHeight() -
-        targetParent.getPaddingTop() - targetParent.getPaddingBottom(), 0.0f);
-
-        Animation a = new TranslateAnimation(0.0f,
-                targetParent.getWidth() - target.getWidth() - targetParent.getPaddingLeft() -
-                        targetParent.getPaddingRight(), 0.0f, 0.0f);
-
-        a.setDuration(1000);
-        a.setStartOffset(300);
-        a.setRepeatMode(Animation.RESTART);
-        a.setRepeatCount(Animation.INFINITE);
-        a.setInterpolator(AnimationUtils.loadInterpolator(this,
-                android.R.anim.decelerate_interpolator));
-        target.startAnimation(a);*/
-
-
-
     }
 
     Handler assignClientHandler = new Handler();
@@ -187,32 +167,14 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
     }
 
 
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
-    /*View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            if (AUTO_HIDE) {
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
-            }
-            return false;
-        }
-    };*/
     Handler mHideHandler = new Handler();
     Runnable mHideRunnable = new Runnable() {
         @Override
         public void run() {
-            //mSystemUiHider.hide();
             controlsView.animate()
                     .translationY(controlsView.getHeight())
                     .setDuration(getResources().getInteger(
                             android.R.integer.config_longAnimTime));
-            /*for (MainActivityDelegate delegate : delegates){
-                delegate.onAcceptClient(counter, counter);
-            }*/
         }
     };
 
@@ -257,11 +219,6 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
     @Override
     public void onInputMessage(Object object) {
         updateConversationHandler.post(new UpdateConversationRunnable(object));
-
-        /*if (updateConversationRunnable != null)updateConversationHandler.removeCallbacks(updateConversationRunnable);
-
-        updateConversationRunnable = new UpdateConversationRunnable(object);
-        updateConversationHandler.post(updateConversationRunnable);*/
     }
 
     @Override
@@ -292,7 +249,6 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
      * within UI-Thread.
      */
     Handler updateConversationHandler = new Handler();
-    //Runnable updateConversationRunnable;
 
     private class UpdateConversationRunnable implements Runnable {
         Object object;
