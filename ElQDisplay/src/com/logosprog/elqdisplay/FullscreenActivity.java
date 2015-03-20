@@ -57,8 +57,6 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
 
     View controlsView;
 
-    int counter = 0;
-
     ClientServer clientServer;
 
     ClientServer.ClientServerListener clientServerListener;
@@ -85,16 +83,15 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
 
         setContentView(R.layout.activity_main);
         controlsView = findViewById(R.id.frame_client);
-        final View contentView = findViewById(R.id.frame_video);
 
         final FragmentManager manager = getFragmentManager();
         final FragmentTransaction transaction = manager.beginTransaction();
         Fragment fragmentClient = new ClientLayout();
         Fragment fragmentTable = new TableLayout();
-        Fragment fragmentVideo = VideoLayout.newInstance(false);
+        //Fragment fragmentVideo = VideoLayout.newInstance(false);
         Fragment fragmentSystem = new BottomLineLayout();
         Fragment fragmentTicker = new TickerMessageLayout();
-        transaction.replace(R.id.frame_video, fragmentVideo, "fragmentVideo");
+        //transaction.replace(R.id.frame_video, fragmentVideo, "fragmentVideo");
         transaction.replace(R.id.frame_client, fragmentClient, "fragmentClient");
         transaction.replace(R.id.frame_table, fragmentTable, "fragmentTable");
         transaction.replace(R.id.frame_system, fragmentSystem, "fragmentSystem");
@@ -211,8 +208,8 @@ public class FullscreenActivity extends ActivityBase implements MainActivityCont
     @Override
     public void onCloseSocket() {
 
-        //startClientServer();
-        clientServer = null;
+        startClientServer();
+        //clientServer = null;
     }
 
     private class AssignClientRunnable implements Runnable{

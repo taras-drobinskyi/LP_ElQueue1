@@ -6,12 +6,9 @@ package com.logosprog.elqdisplay.fragments;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
-import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -31,7 +28,6 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
 
     private List<String> messages;
     private TextDrawable drawable;
-    //private Paint paint;
 
     /**
      * Flag that indicates whether or not the init
@@ -46,8 +42,6 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
 
     private int panelWidth;
     private int panelHeight;
-    private int onePercentWidth;
-    private int onePercentHeight;
 
 
     public TickerMessageView(Context context) {
@@ -59,6 +53,7 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
         getViewTreeObserver().addOnGlobalLayoutListener(this);
 
         messages = new ArrayList<>();
+        //some initialization for testing:
         messages.add("Это тестовый образец электронной очереди.");
         messages.add("Данное решение расчитано на 10 терминалов / окон.");
 
@@ -82,7 +77,6 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
 
     private void initTickerAnimation(){
         runAnimation(0);
-        Log.d(TAG, "initTickerAnimation: Exiting method.");
     }
 
     private void runAnimation(int index){
@@ -102,12 +96,12 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
         animatorAdapter.addTickerMessageSlideAsideListener(new TickerMessageAnimatorSetAdapter.TickerMessageSlideAsideListener() {
             @Override
             public void onAnimationStart(int index) {
-                Log.d(TAG, "slidingAnimator: Slide Aside Animation Started");
+                //Log.d(TAG, "slidingAnimator: Slide Aside Animation Started");
             }
 
             @Override
             public void onAnimationEnd(int index) {
-                Log.d(TAG, "slidingAnimator: Slide Aside Animation Finished");
+                //Log.d(TAG, "slidingAnimator: Slide Aside Animation Finished");
                 if (index +1 <messages.size()){
                     runAnimation(index + 1);
                 }else{
@@ -124,7 +118,6 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
         canvas.translate(drawable.getX(), drawable.getY());
         drawable.draw(canvas);
         canvas.save();
-        //canvas.translate(0-drawable.getX(), 0-drawable.getY());
         canvas.restore();
     }
 
@@ -140,8 +133,6 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
         panelHeight = getMeasuredHeight();
         Log.d(TAG, "Got TickerMessage View Dimensions! Height = " + panelHeight +
                 " Width = " + panelWidth);
-        onePercentWidth = panelWidth / 100;
-        onePercentHeight = panelHeight / 100;
         layoutDimensionsAreValid = true;
 
         if (requestedINIT){

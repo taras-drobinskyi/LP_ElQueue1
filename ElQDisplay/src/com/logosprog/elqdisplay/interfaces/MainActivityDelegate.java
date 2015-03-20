@@ -6,7 +6,7 @@ import display.TerminalData;
 import java.util.List;
 
 /**
- * Created by logosprog on 16.10.2014.
+ * Created by forando on 16.10.2014.
  * This interface is implemented by all children of Main Activity
  */
 public interface MainActivityDelegate {

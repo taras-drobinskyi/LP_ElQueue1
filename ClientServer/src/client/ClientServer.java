@@ -110,9 +110,10 @@ public class ClientServer {
             validator.stopThread();
         }
         try {
-            in.close();
-            out.close();
-            socket.close();
+            //bug: if this block kicks out a NullPointer exception this shuts down android app
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }finally {

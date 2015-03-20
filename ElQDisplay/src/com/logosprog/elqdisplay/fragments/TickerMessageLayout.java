@@ -13,7 +13,8 @@ import display.TerminalData;
 import java.util.List;
 
 /**
- * Created by forando on 17.03.15.
+ * Created by forando on 17.03.15.<br>
+ *     This class is a direct child to Main Activity class ({@link com.logosprog.elqdisplay.FullscreenActivity})
  */
 public class TickerMessageLayout extends MainActivityFragment {
 
