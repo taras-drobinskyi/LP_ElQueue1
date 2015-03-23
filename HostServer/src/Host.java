@@ -523,7 +523,7 @@ public class Host implements HostServer.HostServerListener {
                 triggerService(SERVICE_STOPPED);
                 break;
             default:
-                System.out.println(TAG + ".onDisplayMessage: Host server has received a message, " +
+                APP.printErrorMessage(TAG + ".onDisplayMessage: Host server has received a message, " +
                         "but message.operation has not been recognized. message.operation = " + message.operation);
                 break;
         }

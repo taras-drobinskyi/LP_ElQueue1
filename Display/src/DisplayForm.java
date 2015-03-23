@@ -547,7 +547,7 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 }
                 break;
             default:
-                System.out.println(TAG + ": Client server has received a message, " +
+                APP.printErrorMessage(TAG + ": Client server has received a message, " +
                         "but message.operation has not been recognized. message.operation = " + message.operation);
                 break;
         }

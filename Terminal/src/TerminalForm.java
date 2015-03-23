@@ -120,7 +120,7 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
         b_next.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                switch (state){
+                switch (state) {
                     case TerminalMessage.REQUEST_CLIENT:
                         //clientServer.message.operation = TerminalMessage.REQUEST_CLIENT;
 
@@ -157,6 +157,37 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
 
                 setBounds(nx, ny, formWidth, formHeight);
                 snapped = true;
+            }
+        });
+
+        r1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                id = 0;
+            }
+        });
+        r2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                id = 1;
+            }
+        });
+        r3.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                id = 2;
+            }
+        });
+        r4.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                id = 3;
+            }
+        });
+        r5.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                id = 4;
             }
         });
 
@@ -210,7 +241,7 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
 
     private synchronized void doSlideIN() {
         //locked = true;
-        Timer timer = new Timer(10, new SliderTimerListener(nx, ny, 10, 250, formHeight, true));
+        Timer timer = new Timer(10, new SliderTimerListener(nx, ny, 10, 270, formHeight, true));
         timer.setInitialDelay(0);
         timer.start();
     }
@@ -468,7 +499,7 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
                 }
                 break;
             default:
-                System.out.println(TAG + ": Client server has received a message, " +
+                APP.printErrorMessage(TAG + ".onInputMessage: Client server has received a message, " +
                         "but message.operation has not been recognized. message.operation = " + message.operation);
                 break;
         }

@@ -68,7 +68,12 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
     }
 
     public void init(){
+        /*
+        If the server was restarted when display was ON
+        then we don't need run animation again.
+         */
         if (requestedINIT) return;
+
         requestedINIT = true;
 
         if (layoutDimensionsAreValid){

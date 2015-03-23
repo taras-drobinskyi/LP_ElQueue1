@@ -388,7 +388,7 @@ public class HostServer {
 
             /**
              * This method notifies the {@link Host} that the socket is now available.<br>
-             *     It also inits input listener for the socket
+             *     It also init input listener for the socket
              * @param clientTalksWithObject Can be <b>1</b> - if a client talks to this
              *                              socket using {@link SocketMessage} object, or <b>0</b> - if it doesn't.
              */
@@ -514,6 +514,11 @@ public class HostServer {
                         return; // stopped before started.
                     }
                     try {
+                        /*
+                        b[0]: 1 - the client talks using serializable Objects, 0 - talks with bytes only
+                        b[1]: type of a client (printer, terminal, display etc.)
+                        b[2]: client id
+                         */
                         byte[] b = new byte[3];
                         //ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
                         ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());

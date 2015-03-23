@@ -75,15 +75,9 @@ public class ClientServer {
 
     void closeSocketStreams(){
         try {
-            if (in != null) {
-                in.close();
-            }
-            if (out != null) {
-                out.close();
-            }
-            if (socket != null) {
-                socket.close();
-            }
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -177,6 +171,11 @@ public class ClientServer {
 
                 System.out.println("client: connected!");
 
+                /*
+                outBuffer[0]: 1 - this client talks using serializable Objects, 0 - talks with bytes only
+                outBuffer[1]: type of a client (printer, terminal, display etc.)
+                outBuffer[2]: client id
+                 */
                 byte[] outBuffer = {0x01, (byte)type, (byte) id};
 
                 ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
@@ -186,6 +185,11 @@ public class ClientServer {
                 ReadableByteChannel channel = Channels.newChannel(socket.getInputStream());
                 ObjectInputStream input = new ObjectInputStream(Channels.newInputStream(channel));
 
+                /*
+                inputBuffer[0]: 1 - this client talks using serializable Objects, 0 - talks with bytes only
+                inputBuffer[1]: type of a client (printer, terminal, display etc.)
+                inputBuffer[2]: client id
+                 */
                 byte[] inputBuffer = new byte[2];
                 int val = input.read(inputBuffer);
                 if (val > 0 && inputBuffer[0]==0x01 && inputBuffer[1]>=0){
