@@ -224,7 +224,7 @@ public class Host implements HostServer.HostServerListener {
 
     }
 
-    private void assignTerminal(int terminalIndex) {
+    /*private void assignTerminal(int terminalIndex) {
 
         Terminal terminal = terminals.get(terminalIndex);
         System.out.println("assignTerminal index = " + terminalIndex);
@@ -266,8 +266,59 @@ public class Host implements HostServer.HostServerListener {
             usedLevels--;
             terminal.saveToXML();
         }
-        /*buttonClicked++;
-        variables.setButtonClicked(buttonClicked);*/
+        *//*buttonClicked++;
+        variables.setButtonClicked(buttonClicked);*//*
+    }*/
+
+    private int requestClient(int terminalIndex){
+        int client = -1;
+        Terminal terminal = terminals.get(terminalIndex);
+        System.out.println(TAG + ".requestClient: terminalIndex = " + terminalIndex);
+        if (terminal.state == TerminalData.ACCEPTED) {
+            if (nextClient > 0) {
+                terminal.clientNumber = nextClient;
+                if (nextClient < lastClient) {
+                    nextClient++;
+                } else {
+                    nextClient = 0;
+                }
+                terminal.saveToXML();
+                terminal.resetFromXML();
+                client = terminal.clientNumber;
+                List<Terminal> terminalsToSend = new ArrayList<>();
+                terminalsToSend.add(terminal);
+                sendToDisplay(DisplayMessage.ADD_ROW, terminalsToSend);
+                terminal.state = TerminalData.WAITING;
+                terminal.levelIndex = usedLevels;
+                terminal.visible = true;
+                usedLevels++;
+                terminal.saveToXML();
+                variables.setNextClient(nextClient);
+            }
+        }
+        return client;
+    }
+
+    private void acceptClient(int terminalIndex){
+        Terminal terminal = terminals.get(terminalIndex);
+        System.out.println(TAG + ".acceptClient: terminalIndex = " + terminalIndex);
+        if (terminal.state == TerminalData.WAITING){
+            List<Terminal> terminalsToSend = new ArrayList<>();
+            terminalsToSend.add(terminal);
+            sendToDisplay(DisplayMessage.DELETE_ROW, terminalsToSend);
+
+            for (Terminal r : terminals){
+                if (r.levelIndex > terminal.levelIndex){
+                    r.levelIndex --;
+                    r.saveToXML();
+                }
+            }
+            terminal.state = TerminalData.ACCEPTED;
+            terminal.levelIndex = -1;
+            terminal.visible = false;
+            usedLevels--;
+            terminal.saveToXML();
+        }
     }
 
 
@@ -376,10 +427,18 @@ public class Host implements HostServer.HostServerListener {
                 }
                 break;
             case TerminalMessage.REQUEST_CLIENT:
-                assignTerminal(message.id);
+                message.value = requestClient(message.id);
+                message.operation = TerminalMessage.REQUEST_CLIENT;
+                message.received = true;
+                message.date = new Date();
+                soc.send(message);
                 break;
             case TerminalMessage.ACCEPT_CLIENT:
-                assignTerminal(message.id);
+                acceptClient(message.id);
+                message.operation = TerminalMessage.ACCEPT_CLIENT;
+                message.received = true;
+                message.date = new Date();
+                soc.send(message);
                 break;
             default:
                 System.out.println(TAG + ".onTerminalMessage: Host server has received a message, " +
@@ -437,10 +496,10 @@ public class Host implements HostServer.HostServerListener {
                 }
                 break;
             case DisplayMessage.ADD_ROW:
-                assignTerminal(message.terminals.get(0).terminalNumber);
+                requestClient(message.terminals.get(0).terminalNumber);
                 break;
             case DisplayMessage.DELETE_ROW:
-                assignTerminal(message.terminals.get(0).terminalNumber);
+                acceptClient(message.terminals.get(0).terminalNumber);
                 break;
             case APP.RESET_SYSTEM:
                 resetSystem();

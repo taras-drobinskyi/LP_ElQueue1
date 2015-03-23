@@ -68,6 +68,7 @@ public class TickerMessageView extends View implements ValueAnimator.AnimatorUpd
     }
 
     public void init(){
+        if (requestedINIT) return;
         requestedINIT = true;
 
         if (layoutDimensionsAreValid){
