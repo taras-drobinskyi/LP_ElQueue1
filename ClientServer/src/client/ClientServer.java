@@ -43,14 +43,8 @@ public class ClientServer {
 
     private boolean registered = false;
 
-    private List<ClientServerListener> listeners;
-
     public static void main(String[] args) {
         new ClientServer(APP.IP, APP.PORT, SocketMessage.DISPLAY, 0).startClient();
-    }
-
-    public void addClientServerListener(ClientServerListener listener){
-        listeners.add(listener);
     }
 
     public void removeClientServerListener(ClientServerListener listener){
@@ -229,6 +223,12 @@ public class ClientServer {
         }
         output = new OutPut(out, id, messageObject);
         output.start();
+    }
+
+    private List<ClientServerListener> listeners;
+
+    public void addClientServerListener(ClientServerListener listener){
+        listeners.add(listener);
     }
 
     public interface ClientServerListener {

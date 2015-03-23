@@ -108,7 +108,7 @@ public class HostServer {
             invalidSockets = new ArrayList<>();
         }
 
-        public synchronized void addSocketObject(Socket socket){
+        public void addSocketObject(Socket socket){
             SocketObject socketObject = new SocketObject(socket);
             socketObject.addSocketObjectListener(new SocketObjectListener() {
                 @Override
@@ -174,9 +174,9 @@ public class HostServer {
                     }
                     break;
                 case SocketMessage.TERMINAL:
-                            /*for (HostServerListener l : hostServerListeners){
-                                l.onTerminalServerMessage(soc);
-                            }*/
+                    for (HostServerListener l : hostServerListeners){
+                        l.onTerminalMessage(soc);
+                    }
                     break;
                 case SocketMessage.PRINTER:
                             /*for (HostServerListener l : hostServerListeners){

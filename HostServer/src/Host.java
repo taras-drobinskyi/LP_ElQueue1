@@ -4,6 +4,7 @@ import main.XMLVARIABLES;
 import sockets.DisplayMessage;
 import sockets.PrinterMessage;
 import sockets.SocketMessage;
+import sockets.TerminalMessage;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -16,6 +17,8 @@ import java.util.List;
  * The starting point
  */
 public class Host implements HostServer.HostServerListener {
+
+    public static final String TAG = "Host";
 
     List<Terminal>terminals;
 
@@ -58,7 +61,7 @@ public class Host implements HostServer.HostServerListener {
         variables.setLastClient(variables.getLastClient() + 1);
         lastClient = variables.getLastClient();
 
-        //fixme: the next line is just for testing and must be deleted when printer i connected
+        //fixme: the next line is just for testing and must be deleted when printer is connected
         total = lastClient +1;
 
         terminals = new ArrayList<>();
@@ -267,6 +270,7 @@ public class Host implements HostServer.HostServerListener {
         variables.setButtonClicked(buttonClicked);*/
     }
 
+
     private class Terminal extends TerminalData implements Serializable{
 
         public Terminal(HashMap<String, Integer> terminalData) {
@@ -359,7 +363,29 @@ public class Host implements HostServer.HostServerListener {
 
     @Override
     public void onTerminalMessage(HostServer.SocketOrganizer.SocketObject soc) {
-
+        TerminalMessage message = (TerminalMessage)soc.message;
+        switch (message.operation){
+            case SocketMessage.SOCKET_READY:
+                Terminal terminal = terminals.get(message.id);
+                if (terminal.state == Terminal.WAITING && terminal.visible){
+                    message.operation = TerminalMessage.REQUEST_CLIENT;
+                    message.value = terminal.clientNumber;
+                    message.received = true;
+                    message.date = new Date();
+                    soc.send(message);
+                }
+                break;
+            case TerminalMessage.REQUEST_CLIENT:
+                assignTerminal(message.id);
+                break;
+            case TerminalMessage.ACCEPT_CLIENT:
+                assignTerminal(message.id);
+                break;
+            default:
+                System.out.println(TAG + ".onTerminalMessage: Host server has received a message, " +
+                        "but message.operation has not been recognized. message.operation = " + message.operation);
+                break;
+        }
     }
 
     @Override
@@ -438,6 +464,8 @@ public class Host implements HostServer.HostServerListener {
                 triggerService(SERVICE_STOPPED);
                 break;
             default:
+                System.out.println(TAG + ".onDisplayMessage: Host server has received a message, " +
+                        "but message.operation has not been recognized. message.operation = " + message.operation);
                 break;
         }
     }

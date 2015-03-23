@@ -26,6 +26,8 @@ import java.util.List;
  */
 public class DisplayForm extends JFrame implements ClientServer.ClientServerListener {
 
+    public static final String TAG = "DisplayForm";
+
     private int id = -1;
 
     HashMap<String, String> currentVideo;
@@ -71,12 +73,12 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
     private int tickerPanelWidth;
     private int tickerPanelHeight;
 
-    ClientServer.ClientServerListener clientServerListeners;
+    ClientServer.ClientServerListener clientServerListener;
 
     public DisplayForm(){
         //Form Title
         super("Продукт Компании \"ВЕРСИЯ\"");
-        this.clientServerListeners = this;
+        this.clientServerListener = this;
         startClientServer();
         initForm();
 
@@ -199,14 +201,16 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ClientConnectorProvider clientConnectorProvider = new ClientConnectorProvider(clientServerListeners, SocketMessage.DISPLAY, id);
+                ClientConnectorProvider clientConnectorProvider = new ClientConnectorProvider(clientServerListener,
+                        SocketMessage.DISPLAY, id);
                 try {
-                    clientConnectorProvider.addClientConnectorListener(new ClientConnectorProvider.ClientConnectorListener() {
-                        @Override
-                        public void onClientConnected(ClientServer client) {
-                            assignClientServer(client);
-                        }
-                    });
+                    clientConnectorProvider.
+                            addClientConnectorListener(new ClientConnectorProvider.ClientConnectorListener() {
+                                @Override
+                                public void onClientConnected(ClientServer client) {
+                                    assignClientServer(client);
+                                }
+                            });
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -543,6 +547,8 @@ public class DisplayForm extends JFrame implements ClientServer.ClientServerList
                 }
                 break;
             default:
+                System.out.println(TAG + ": Client server has received a message, " +
+                        "but message.operation has not been recognized. message.operation = " + message.operation);
                 break;
         }
 

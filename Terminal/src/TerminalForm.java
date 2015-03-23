@@ -2,6 +2,7 @@
  * Copyright (c) 2014. This code is a LogosProg property. All Rights Reserved.
  */
 
+import client.ClientConnectorProvider;
 import client.ClientServer;
 import main.APP;
 import sockets.SocketMessage;
@@ -10,13 +11,19 @@ import sockets.TerminalMessage;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Date;
 
 /**
  * Created by forando on 14.08.14.
  */
 public class TerminalForm extends JFrame implements ClientServer.ClientServerListener {
 
+    public static final String TAG = "TerminalForm";
+
+    private int id = 0;
+
     ClientServer clientServer;
+    ClientServer.ClientServerListener clientServerListener;
 
     private JPanel rootPanel;
     private JButton b_next;
@@ -55,6 +62,8 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
     public TerminalForm() {
         //Form Title
         super("Slider");
+
+        this.clientServerListener = this;
 
         setContentPane(rootPanel);
         setUndecorated(true);
@@ -113,14 +122,19 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
             public void actionPerformed(ActionEvent e) {
                 switch (state){
                     case TerminalMessage.REQUEST_CLIENT:
-                        clientServer.message.operation = TerminalMessage.REQUEST_CLIENT;
-                        clientServer.message.received = false;
-                        clientServer.send();
+                        //clientServer.message.operation = TerminalMessage.REQUEST_CLIENT;
+
+                        clientServer.send(new TerminalMessage(id, TerminalMessage.REQUEST_CLIENT,
+                                1, new Date(), true));
+                        /*clientServer.message.received = false;
+                        clientServer.send();*/
                         break;
                     case TerminalMessage.ACCEPT_CLIENT:
-                        clientServer.message.operation = TerminalMessage.ACCEPT_CLIENT;
+                        clientServer.send(new TerminalMessage(id, TerminalMessage.ACCEPT_CLIENT,
+                                1, new Date(), true));
+                        /*clientServer.message.operation = TerminalMessage.ACCEPT_CLIENT;
                         clientServer.message.received = false;
-                        clientServer.send();
+                        clientServer.send();*/
                         break;
                     default://Open Terminal
                         startClientServer();
@@ -149,10 +163,40 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
         setVisible(true);
     }
 
-    private void startClientServer(){
+    /*private void startClientServer(){
         clientServer = new ClientServer(APP.IP, APP.PORT, SocketMessage.TERMINAL, 4);
         clientServer.addClientServerListener(this);
         clientServer.startClient();
+    }*/
+
+    private void assignClientServer(ClientServer client){
+        this.clientServer = client;
+        //this.id = client.id;
+        this.clientServer.send(new TerminalMessage(id, TerminalMessage.SOCKET_READY, 1, new Date(), true));
+        b_next.setText(NEXT);
+        state = TerminalMessage.REQUEST_CLIENT;
+        l_client.setText("0");
+    }
+
+    private void startClientServer(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ClientConnectorProvider clientConnectorProvider = new ClientConnectorProvider(clientServerListener,
+                        SocketMessage.TERMINAL, id);
+                try {
+                    clientConnectorProvider.
+                            addClientConnectorListener(new ClientConnectorProvider.ClientConnectorListener() {
+                                @Override
+                                public void onClientConnected(ClientServer client) {
+                                    assignClientServer(client);
+                                }
+                            });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     private synchronized void doSlideOUT() {
@@ -312,7 +356,7 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
         }
     }
 
-    private synchronized void submitInputMessage(){
+    /*private void submitInputMessage(){
         switch (clientServer.message.operation){
             case TerminalMessage.ACCEPT_CLIENT:
                 if (clientServer.message.received){
@@ -357,8 +401,12 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
             default:
                 break;
         }
-    }
+    }*/
 
+    /**
+     * This callback is implemented in {@link ClientConnectorProvider}. Here it's never used.
+     * @param id An ID of the client.
+     */
     @Override
     public void onRegister(int id) {
         /*if (clientServer.message.operation == sockets.SocketMessage.HOLD_TERMINAL &&
@@ -376,7 +424,54 @@ public class TerminalForm extends JFrame implements ClientServer.ClientServerLis
 
     @Override
     public void onInputMessage(Object object) {
-        submitInputMessage();
+        TerminalMessage message = (TerminalMessage)object;
+        switch (message.operation){
+            case TerminalMessage.ACCEPT_CLIENT:
+                if (message.received){
+                    l_client.setText("0");
+                    state = TerminalMessage.REQUEST_CLIENT;
+                    if (requestIsStopped) {
+                        b_next.setEnabled(false);
+                        b_next.setText(WAIT);
+                    }else{
+                        b_next.setText(NEXT);
+                    }
+                }
+                break;
+            case TerminalMessage.REQUEST_CLIENT:
+                if (message.received){
+                    l_client.setText(String.valueOf(message.value));
+                    b_next.setText(ACCEPT);
+                    state = TerminalMessage.ACCEPT_CLIENT;
+                    new Timer(500, new BlinkTimerListener()).start();
+                    if (minimized){
+                        minimized = false;
+                        slidingINInProgress = true;
+                        doSlideIN();
+                    }
+                }
+                break;
+            case TerminalMessage.HOLD_TERMINAL:
+                System.out.println(TAG + ": TERMINAL onHOLD value = " + message.value);
+                if (message.value == 1){
+                    requestIsStopped = true;
+                    if (state == TerminalMessage.REQUEST_CLIENT) {
+                        b_next.setEnabled(false);
+                        b_next.setText(WAIT);
+                    }
+                }else{
+                    requestIsStopped = false;
+                    if (state == TerminalMessage.REQUEST_CLIENT) {
+                        b_next.setEnabled(true);
+                        b_next.setText(NEXT);
+                    }
+                }
+                break;
+            default:
+                System.out.println(TAG + ": Client server has received a message, " +
+                        "but message.operation has not been recognized. message.operation = " + message.operation);
+                break;
+        }
     }
 
     @Override

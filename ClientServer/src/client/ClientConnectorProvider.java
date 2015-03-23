@@ -75,7 +75,6 @@ public class ClientConnectorProvider implements ClientServer.ClientServerListene
 
     @Override
     public void onInputMessage(Object object) {
-
     }
 
     @Override
