@@ -19,7 +19,7 @@ public class UploadFile extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		uploads.mkdir();
-
+		String name = null;
 		// process only if its multipart content
 		if (ServletFileUpload.isMultipartContent(req)) {
 			try {
@@ -27,23 +27,23 @@ public class UploadFile extends HttpServlet {
 
 				for (FileItem item : multiparts) {
 					if (!item.isFormField()) {
-						String name = new File(item.getName()).getName();
+						name = new File(item.getName()).getName();
 						item.write(new File(uploads.getCanonicalPath() + File.separator + name));
 						
 					}
 				}
 
 				// File uploaded successfully
-				req.setAttribute("message", "File Uploaded Successfully");
+				req.setAttribute("message", "Файл ,<b>" + name + "</b> завантажився успішно");
 			} catch (Exception ex) {
-				req.setAttribute("message", "File Upload Failed due to " + ex);
+				req.setAttribute("message", "Помилка завантаження файлу з причини, " + ex);
 			}
 
 		} else {
-			req.setAttribute("message", "Sorry this Servlet only handles file upload request");
+			req.setAttribute("message", "Вибачте, ця функція працює тільки для завантаження файлів!");
 		}
 
-		req.getRequestDispatcher("/index.jsp").forward(req, resp);
+		req.getRequestDispatcher("/result.jsp").forward(req, resp);
 
 	}
 

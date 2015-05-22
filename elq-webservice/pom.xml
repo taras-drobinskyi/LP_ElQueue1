@@ -3,10 +3,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.versiya</groupId>
-  <artifactId>jetty-elq</artifactId>
+  <artifactId>elq-webservice</artifactId>
   <version>0.1</version>
   <packaging>jar</packaging>
-  <name>jetty-elq</name>
+  <name>elq-webservice</name>
   <url>http://maven.apache.org</url>
 
   <properties>

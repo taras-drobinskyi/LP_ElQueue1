@@ -19,3 +19,36 @@ $(document).ready( function() {
         
     });
 });
+
+$(document).ready(function() {
+	 $("#progressbox").hide();
+var options = {
+        beforeSend : function() {
+                $("#progressbox").show();
+                // clear everything
+                $("#progressbar").width('0%');
+                $("#message").empty();
+                $("#percent").html("0%");
+        },
+        uploadProgress : function(event, position, total, percentComplete) {
+                $("#progressbar").width(percentComplete + '%');
+                $("#percent").html(percentComplete + '%');
+                $("#percent").width(percentComplete + '%');
+
+        },
+        success : function() {
+                $("#progressbar").width('100%');
+                $("#percent").html('100%');
+                $("#percent").width('100%');
+                
+        },
+        complete : function(response) {
+        	 $("#progressbox").hide();
+        $("#message").html("<h3>Файл успішно завантажився!</h3>");
+        },
+        error : function() {
+        $("#message").html("<font color='red'> ERROR: unable to upload files</font>");
+        }
+};
+$("#uploadForm").ajaxForm(options);
+});
