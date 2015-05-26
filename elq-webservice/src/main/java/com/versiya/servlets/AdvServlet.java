@@ -1,7 +1,6 @@
 package com.versiya.servlets;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,6 +35,7 @@ public class AdvServlet extends HttpServlet {
 	}
 
 	private List<String> JAXBmarshal(Map<String, String[]> parameters) throws IOException {
+		FileOutputStream fos = new FileOutputStream(uploads.getCanonicalPath() + File.separator + "Ads.xml");
 		WebServiceInfo wsi = new WebServiceInfo();
 		List<String> resultList = new ArrayList<>();
 		for (Entry<String, String[]> entry : parameters.entrySet()) {
@@ -53,12 +53,9 @@ public class AdvServlet extends HttpServlet {
 			}
 		}
 
-		try {
-			JAXB.marshal(wsi, new FileOutputStream(uploads.getCanonicalPath() + File.separator + "Ads.xml"));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-
+		JAXB.marshal(wsi, fos);
+		fos.flush();
+		fos.close();
 		return resultList;
 	}
 
