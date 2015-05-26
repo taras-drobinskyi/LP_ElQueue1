@@ -35,7 +35,6 @@ public class AdvServlet extends HttpServlet {
 	}
 
 	private List<String> JAXBmarshal(Map<String, String[]> parameters) throws IOException {
-		FileOutputStream fos = new FileOutputStream(uploads.getCanonicalPath() + File.separator + "Ads.xml");
 		WebServiceInfo wsi = new WebServiceInfo();
 		List<String> resultList = new ArrayList<>();
 		for (Entry<String, String[]> entry : parameters.entrySet()) {
@@ -52,10 +51,14 @@ public class AdvServlet extends HttpServlet {
 				}
 			}
 		}
+		if (!wsi.getAdvertisement().isEmpty()) {
+			FileOutputStream fos = new FileOutputStream(uploads.getCanonicalPath() + File.separator + "Ads.xml");
 
-		JAXB.marshal(wsi, fos);
-		fos.flush();
-		fos.close();
+			JAXB.marshal(wsi, fos);
+			fos.flush();
+			fos.close();
+
+		}
 		return resultList;
 	}
 
