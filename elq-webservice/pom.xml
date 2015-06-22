@@ -47,6 +47,11 @@
      <artifactId>commons-io</artifactId>
      <version>2.4</version>
 </dependency>
+<dependency>
+      <groupId>com.versiya</groupId>  
+       <artifactId>resources</artifactId>  
+       <version>1.0</version> 
+</dependency>
 
 
           
@@ -63,18 +68,18 @@
 			
  
 			<!-- download source code in Eclipse, best practice -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-eclipse-plugin</artifactId>
-				<version>2.9</version>
-				<configuration>
-					<downloadSources>true</downloadSources>
-					<downloadJavadocs>false</downloadJavadocs>
-				</configuration>
-			</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-eclipse-plugin</artifactId>
+					<version>2.9</version>
+					<configuration>
+						<downloadSources>true</downloadSources>
+						<downloadJavadocs>false</downloadJavadocs>
+					</configuration>
+				</plugin> 
  
 			<!-- Set a compiler level -->
-			<plugin>
+			 <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
@@ -82,10 +87,10 @@
 					<source>${jdk.version}</source>
 					<target>${jdk.version}</target>
 				</configuration>
-			</plugin>
+			</plugin> 
  
 			<!-- Make this jar executable -->
-			<plugin>
+			<!-- <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
@@ -97,10 +102,27 @@
 				    </manifest>
 				  </archive>
 				</configuration>
-			</plugin>
+			</plugin> -->
  
+  <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+      </plugin>
+      
 			<!-- Copy project dependency -->
-			<plugin>
+			<!-- <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
 				<version>2.5.1</version>
@@ -112,13 +134,13 @@
 						<goal>copy-dependencies</goal>
 					</goals>
 					<configuration>
-					  <!-- exclude junit, we need runtime dependency only -->
+					  exclude junit, we need runtime dependency only
 					  <includeScope>runtime</includeScope>
 					  <outputDirectory>${project.build.directory}/libs/</outputDirectory>
 					</configuration>
 				  </execution>
 				</executions>
-		</plugin>
+		</plugin> --> 
 
  
 		</plugins>

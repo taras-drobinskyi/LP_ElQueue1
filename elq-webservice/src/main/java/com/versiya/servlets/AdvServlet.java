@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXB;
 
+import main.XMLMediaContent;
 import Dto.Advertisement;
 import Dto.WebServiceInfo;
 
@@ -25,16 +26,56 @@ public class AdvServlet extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
-		uploads.mkdir();
+
 		Map<String, String[]> parameters = req.getParameterMap();
-		List<String> resultList = JAXBmarshal(parameters);
+		String[] parameterValues = req.getParameterValues("textInfo");
+
+		List<String> resultList = generateXML(parameterValues);
+		// List<String> resultList = JAXBmarshal(parameters);
 
 		req.setAttribute("message", resultList);
 		req.getRequestDispatcher("/result.jsp").forward(req, resp);
 
 	}
 
+	/**
+	 * generates list of input messages and saves it to XML
+	 * 
+	 * @param parameterValues
+	 * @return
+	 * @throws IOException
+	 */
+	private List<String> generateXML(String[] parameterValues) throws IOException {
+
+		XMLMediaContent dataMediaContent = new XMLMediaContent();
+		dataMediaContent.getMessageList();
+		List<String> messagesList = new ArrayList<String>();
+
+		for (int i = 0; i < parameterValues.length; i++) {
+			if (!parameterValues[i].isEmpty()) {
+				messagesList.add(parameterValues[i]);
+			}
+		}
+
+		dataMediaContent.setMessageList(messagesList);
+		dataMediaContent.saveXMLDocument();
+
+		return messagesList;
+
+
+
+	}
+
+	/**
+	 * generates XML file using JAXB
+	 * 
+	 * @param parameters
+	 * @return
+	 * @throws IOException
+	 */
 	private List<String> JAXBmarshal(Map<String, String[]> parameters) throws IOException {
+
+		uploads.mkdir();
 		WebServiceInfo wsi = new WebServiceInfo();
 		List<String> resultList = new ArrayList<>();
 		for (Entry<String, String[]> entry : parameters.entrySet()) {

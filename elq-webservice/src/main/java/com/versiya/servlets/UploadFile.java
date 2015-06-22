@@ -35,8 +35,10 @@ public class UploadFile extends HttpServlet {
 
 				// File uploaded successfully
 				req.setAttribute("message", "Файл ,<b>" + name + "</b> завантажився успішно");
+				resp.setHeader("upload", "true");
 			} catch (Exception ex) {
 				req.setAttribute("message", "Помилка завантаження файлу з причини, " + ex);
+				resp.setHeader("upload", "false");
 			}
 
 		} else {
