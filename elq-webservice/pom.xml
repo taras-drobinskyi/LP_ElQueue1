@@ -12,6 +12,8 @@
   <properties>
 		<jdk.version>1.7</jdk.version>
 		<junit.version>4.11</junit.version>
+		<log4j.version>1.2.17</log4j.version>
+		<jetty.version>9.2.11.M0</jetty.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -23,19 +25,24 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>${log4j.version}</version>
+    </dependency>
+    <dependency>
      <groupId>org.eclipse.jetty</groupId> 
      <artifactId>jetty-server</artifactId> 
-     <version>9.2.11.M0</version>
+     <version>${jetty.version}</version>
       </dependency> 
       <dependency> 
       <groupId>org.eclipse.jetty</groupId> 
       <artifactId>jetty-webapp</artifactId> 
-      <version>9.2.11.M0</version> 
+      <version>${jetty.version}</version> 
       </dependency>
       <dependency>
 	<groupId>org.eclipse.jetty</groupId>
 	<artifactId>jetty-jsp</artifactId>
-	<version>9.2.11.M0</version>
+	<version>${jetty.version}</version>
 </dependency>
 <dependency>
      <groupId>commons-fileupload</groupId>

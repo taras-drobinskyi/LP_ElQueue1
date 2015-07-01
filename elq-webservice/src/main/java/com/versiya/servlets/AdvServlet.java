@@ -15,6 +15,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXB;
 
 import main.XMLMediaContent;
+
+import org.apache.log4j.Logger;
+
 import Dto.Advertisement;
 import Dto.WebServiceInfo;
 
@@ -22,6 +25,8 @@ public class AdvServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 	File uploads = new File("uploads");
+	Logger log = Logger.getLogger(AdvServlet.class.getName());
+
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
@@ -32,6 +37,12 @@ public class AdvServlet extends HttpServlet {
 
 		List<String> resultList = generateXML(parameterValues);
 		// List<String> resultList = JAXBmarshal(parameters);
+		if (!resultList.isEmpty()) {
+			resp.setHeader("ticker", "true");
+		} else {
+			resp.setHeader("ticker", "false");
+
+		}
 
 		req.setAttribute("message", resultList);
 		req.getRequestDispatcher("/result.jsp").forward(req, resp);
@@ -56,9 +67,13 @@ public class AdvServlet extends HttpServlet {
 				messagesList.add(parameterValues[i]);
 			}
 		}
-
 		dataMediaContent.setMessageList(messagesList);
 		dataMediaContent.saveXMLDocument();
+		if (!messagesList.isEmpty()) {
+			log.debug(messagesList.size() + " new ticker(s)");
+		} else {
+			log.debug("No new tickers");
+		}
 
 		return messagesList;
 
@@ -94,6 +109,7 @@ public class AdvServlet extends HttpServlet {
 		}
 		if (!wsi.getAdvertisement().isEmpty()) {
 			FileOutputStream fos = new FileOutputStream(uploads.getCanonicalPath() + File.separator + "Ads.xml");
+			log.debug("Xml file was generated using JAXB");
 
 			JAXB.marshal(wsi, fos);
 			fos.flush();

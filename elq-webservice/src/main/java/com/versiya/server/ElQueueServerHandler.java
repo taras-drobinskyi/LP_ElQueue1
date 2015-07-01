@@ -27,8 +27,12 @@ public class ElQueueServerHandler extends AbstractHandler {
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
 
 		try {
-			if (Boolean.valueOf(response.getHeader("upload")))
+			if (Boolean.valueOf(response.getHeader("upload"))) {
 				listener.onFileUpload(true);
+			} else if (Boolean.valueOf(response.getHeader("ticker"))) {
+				listener.onTickerChanched(true);
+			}
+
 		} catch (NullPointerException ex) {
 			ex.printStackTrace();
 		}

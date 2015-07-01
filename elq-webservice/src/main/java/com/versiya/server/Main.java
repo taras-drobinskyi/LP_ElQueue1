@@ -2,6 +2,8 @@ package com.versiya.server;
 
 import java.awt.EventQueue;
 
+import org.apache.log4j.Logger;
+
 public class Main {
 	
 	public static void main(String[] args) {
@@ -19,6 +21,9 @@ public class Main {
 		 * contexts, new ElQueueServerHandler(client) });
 		 * jettyServer.setHandler(handlers);
 		 */
+
+		Logger log = Logger.getLogger(Main.class.getName());
+		log.debug("Main class launched");
 		JettyServerRunnable jsr = new JettyServerRunnable(client);
 
 		EventQueue.invokeLater(jsr);

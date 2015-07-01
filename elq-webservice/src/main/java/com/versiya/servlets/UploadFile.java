@@ -12,10 +12,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.log4j.Logger;
 
 public class UploadFile extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	File uploads = new File("uploads");
+	Logger log = Logger.getLogger(UploadFile.class.getName());
+
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		uploads.mkdir();
@@ -32,17 +35,22 @@ public class UploadFile extends HttpServlet {
 						
 					}
 				}
-
 				// File uploaded successfully
+				log.debug("File " + name + " uploaded successfully");
+
 				req.setAttribute("message", "Файл ,<b>" + name + "</b> завантажився успішно");
 				resp.setHeader("upload", "true");
 			} catch (Exception ex) {
+				log.debug("File " + name + " failed to upload");
+
 				req.setAttribute("message", "Помилка завантаження файлу з причини, " + ex);
 				resp.setHeader("upload", "false");
 			}
 
 		} else {
 			req.setAttribute("message", "Вибачте, ця функція працює тільки для завантаження файлів!");
+			log.debug("Content is not a file");
+
 		}
 
 		req.getRequestDispatcher("/result.jsp").forward(req, resp);
