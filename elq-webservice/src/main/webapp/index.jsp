@@ -13,7 +13,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="resources/css/bootstrap.min.css" rel="stylesheet">
+<link href="resources/css/bootstrap.css" rel="stylesheet">
         <script src="resources/js/jquery-2.1.4.js"></script>
         <script src="resources/js/bootstrap.min.js" type="text/javascript"></script>
 <link href="resources/css/fileinput.css" rel="stylesheet">
@@ -22,14 +22,17 @@
 
 	</head>
 	<body class="container">
-	<div class="jumbotron" style="background-image: url(resources/img/1.jpg); background-size: 100%;">
-  </div>
-   
+	<div class="jumbotron" style="background-image: url(resources/img/bg3.jpg); background-size: 100%;">
+		
+   <div style="size:100%; align:center; background-color:#FFFFFF"><img draggable="false" src="resources/img/versiya_logo_ua.gif" height="100" >
+   </div>
+		  </div>
   
+ <div style="height:100%; min-height:100%; height:auto;  position:absolute;"> 
 <div class="container" >
   <h2>Форма вводу</h2>
 <p>Введіть дані для відображення на електронному табло</p> 
-<button type="button" class="btn btn-success" onclick="addInput()">Додати поле</button> 
+<button type="button" class="btn btn-warning" onclick="addInput()">Додати поле</button> 
  <form role="form" method="post" action="advertisement" >
    <div id="textForm">
 	   
@@ -39,7 +42,7 @@
     </div>
    
      </div>
-<button type="submit" class="btn btn-primary">Завантажити</button> 
+<button type="submit" class="btn btn-danger">Завантажити</button> 
 </form>
 <hr>
 
@@ -49,7 +52,7 @@
 <label for="file">Завантажте відео :</label>
             <div class="input-group">
                 <span class="input-group-btn">
-                    <span class="btn btn-primary btn-file">
+                    <span class="btn btn-warning btn-file">
                         Пошук... <input name="file" type="file" id="file" accept="video/*">
                     </span>
                 </span>
@@ -57,13 +60,13 @@
             </div>
    <br>
  <div class="progress" id="progressbox" style="width:400px">
-  <div  id="percent"class="progress-bar progress-bar-success progress-bar-striped" role="progressbar"
+  <div  id="percent"class="progress-bar progress-bar-danger progress-bar-striped" role="progressbar"
   aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">
    0%
   </div>
 </div>
    
-   <button type="submit" class="btn btn-primary">Завантажити</button>
+   <button type="submit" class="btn btn-danger">Завантажити</button>
    
     </form>
    
@@ -74,6 +77,12 @@
 
 </div>
 
+<div id="footer" style="position:absolute; bottom:0; background-image: url(resources/img/footer3.jpg); background-size:100%; width:100%; background-color:#000000; height:55px; border-radius:6px; padding:5px; padding-left:20px;padding-right:20px;">
+<p style="background-image: url(resources/img/logo1.png); float:right; height:40px; width:133px; ">
+</p>
+<h4 style="color:#FFFFFF;">Copyright © 2015</h4>
+</div>
+</div>
 
 
 <script type="text/javascript">
@@ -105,7 +114,7 @@ divFormGroup.className = 'form-group';
     removalLink.onclick = function(){
         field_area.removeChild(divFormGroup)
     }
-    var removalText = document.createTextNode('Remove Field');
+    var removalText = document.createTextNode('Видалити поле');
     removalLink.appendChild(removalText);
     spanInputGroup.appendChild(removalLink);
     count++

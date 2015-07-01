@@ -14,19 +14,22 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="resources/css/bootstrap.min.css" rel="stylesheet">
+<link href="resources/css/bootstrap.css" rel="stylesheet">
         <script src="resources/js/jquery-2.1.4.min.js"></script>
         <script src="resources/js/bootstrap.min.js" type="text/javascript"></script>
 <link href="resources/css/fileinput.css" rel="stylesheet">
         <script src="resources/js/fileinput.js"></script>
 
 	</head>
-	<body class="container">
-	<div class="jumbotron" style="background-image: url(resources/img/1.jpg); background-size: 100%;">
+	<body class="container" >
+	<div class="jumbotron" style="background-image: url(resources/img/bg3.jpg); background-size: 100%;">
+	<div style="size:100%; align:center; background-color:#FFFFFF"><img draggable="false" src="resources/img/versiya_logo_ua.gif" height="100" >
+   </div>
+	
   </div>
    
-  
-<div class="container">
+  <div style="height:100%; min-height:100%; height:auto;  position:absolute;">
+<div class="container" >
 <h1>Результат вводу даних</h1>
 <%
 if(request.getAttribute("message") instanceof List){
@@ -44,7 +47,15 @@ for(String ad: resultList){
 %>
 
 </div>
+  
 
+<div  style="position:absolute; bottom:0; background-image: url(resources/img/footer3.jpg); background-size:100%; width:100%; background-color:#000000; height:55px; border-radius:6px; padding:5px; padding-left:20px;padding-right:20px;">
+<p style="background-image: url(resources/img/logo1.png); float:right; height:40px; width:133px; ">
+</p>
+<h4 style="color:#FFFFFF;">Copyright © 2015</h4>
+</div>
+
+</div>
 	</body>
 	
 </html>  
